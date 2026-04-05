@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - Pioche à gauche</title>
+    <title>Test jeu - Double pioche (Butin + Descente)</title>
     <style>
         .zone {
             transition: all 0.1s ease;
@@ -56,7 +56,7 @@
             display: none;
         }
 
-        /* Layout principal : pioche à gauche, contenu à droite */
+        /* Layout principal */
         .main-layout {
             display: flex;
             gap: 40px;
@@ -67,30 +67,96 @@
         
         .pioche-col {
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         
         .game-col {
             flex: 1;
             min-width: 500px;
         }
+
+        .descente-container {
+            background: #2a2a4a;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px auto;
+            border: 2px solid #aa88ff;
+            max-width: 400px;
+        }
+
+        .descente-container h4 {
+            color: #ccaaFF;
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .descente-cartes {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 100px;
+        }
+
+        .descente-card {
+            width: 80px;
+            height: 110px;
+            background: #3a3a6a;
+            border-radius: 8px;
+            border: 2px solid #aa88ff;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .descente-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .descente-card:hover {
+            transform: scale(1.05);
+            border-color: gold;
+        }
     </style>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; background: #1a2a1a; margin: 0; padding: 20px;">
 
     <div class="main-layout">
-        <!-- COLONNE GAUCHE : Pioche -->
+        <!-- COLONNE GAUCHE : Deux pioches -->
         <div class="pioche-col">
-            <div id="pioche" style="background: #8b5a2b; color: white; width: 120px; height: 170px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.2rem;">
+            <!-- Pioche Butin -->
+            <div id="pioche-butin" style="background: #8b5a2b; color: white; width: 120px; height: 170px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.2rem;">
                 🃏<br>
-                Pioche
+                Butin
+            </div>
+            
+            <!-- Pioche Descente -->
+            <div id="pioche-descente" style="background: #5a3a7a; color: white; width: 120px; height: 170px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.2rem;">
+                ⬇️<br>
+                Descente
             </div>
         </div>
 
         <!-- COLONNE DROITE : Jeu -->
         <div class="game-col">
-            <!-- Carte piochée -->
-            <div id="courante" style="background: #fdf5e6; width: 120px; height: 170px; margin: 0 auto 20px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border: 2px solid gold; overflow: hidden;">
-                <div style="text-align: center; font-size: 1rem;">⬅️ Pioche</div>
+            <!-- Carte Butin piochée -->
+            <div id="courante-butin" style="background: #fdf5e6; width: 120px; height: 170px; margin: 0 auto 20px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border: 2px solid #ffaa44; overflow: hidden;">
+                <div style="text-align: center; font-size: 0.9rem;">⬅️ Butin</div>
+            </div>
+
+            <!-- ZONE DESCENTE (cartes piochées spéciales) -->
+            <div class="descente-container">
+                <h4>📦 Cartes Descente (clique pour les utiliser)</h4>
+                <div id="descente-cartes" class="descente-cartes">
+                    <!-- Les cartes Descente apparaîtront ici -->
+                </div>
+            </div>
+
+            <!-- Carte Descente courante (quand on clique sur une carte Descente) -->
+            <div id="courante-descente" style="background: #2a2a4a; width: 100px; height: 140px; margin: 10px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid #aa88ff; overflow: hidden;">
+                <div style="text-align: center; font-size: 0.8rem; color: white;">Choisis<br>une carte<br>⬇️</div>
             </div>
 
             <!-- 4 GROUPES -->
@@ -144,52 +210,128 @@
     </div>
 
     <script>
-        let deck = [];
-        let carteCourante = null;
+        // Deux decks différents
+        let deckButin = [];
+        let deckDescente = [];
+        let carteButinCourante = null;
+        let carteDescenteCourante = null;
+        let cartesDescentePiochees = []; // Stocke les cartes Descente piochées
         let hoverPreview = null;
 
-        function getImagePath(carteId) {
+        function getButinPath(carteId) {
             return `images/Butin_card${carteId}.png`;
         }
 
-        function initDeck() {
-            deck = [];
+        function getDescentePath(carteId) {
+            return `images/Descente_card${carteId}.png`;
+        }
+
+        // Initialisation
+        function initDecks() {
+            // Deck Butin (15 cartes)
+            deckButin = [];
             for (let i = 1; i <= 15; i++) {
-                deck.push({ 
+                deckButin.push({ 
                     id: i, 
                     nom: `Butin ${i}`,
-                    image: getImagePath(i)
+                    type: 'butin',
+                    image: getButinPath(i)
                 });
             }
-            for (let i = deck.length - 1; i > 0; i--) {
+            for (let i = deckButin.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
+                [deckButin[i], deckButin[j]] = [deckButin[j], deckButin[i]];
+            }
+
+            // Deck Descente (exemple : 10 cartes)
+            deckDescente = [];
+            for (let i = 1; i <= 10; i++) {
+                deckDescente.push({ 
+                    id: i, 
+                    nom: `Descente ${i}`,
+                    type: 'descente',
+                    image: getDescentePath(i)
+                });
+            }
+            for (let i = deckDescente.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deckDescente[i], deckDescente[j]] = [deckDescente[j], deckDescente[i]];
+            }
+
+            cartesDescentePiochees = [];
+            mettreAJourAffichageDescente();
+        }
+
+        // Affichage des cartes Descente piochées
+        function mettreAJourAffichageDescente() {
+            const container = document.getElementById("descente-cartes");
+            if (!container) return;
+            
+            container.innerHTML = "";
+            cartesDescentePiochees.forEach((carte, index) => {
+                const cardDiv = document.createElement("div");
+                cardDiv.className = "descente-card";
+                cardDiv.innerHTML = `<img src="${carte.image}" alt="${carte.nom}">`;
+                cardDiv.addEventListener("click", () => {
+                    // Cliquer sur une carte Descente la met dans l'emplacement "courante"
+                    carteDescenteCourante = carte;
+                    afficherCarteDescenteCourante();
+                });
+                container.appendChild(cardDiv);
+            });
+            
+            if (cartesDescentePiochees.length === 0) {
+                container.innerHTML = '<div style="color: #aa88ff; padding: 20px;">Aucune carte Descente</div>';
             }
         }
 
-        function afficherCarteCourante() {
-            const zoneCourante = document.getElementById("courante");
-            if (!carteCourante) {
-                zoneCourante.innerHTML = '<div style="text-align: center; font-size: 1rem;">⬅️ Pioche</div>';
+        function afficherCarteButinCourante() {
+            const zoneCourante = document.getElementById("courante-butin");
+            if (!carteButinCourante) {
+                zoneCourante.innerHTML = '<div style="text-align: center; font-size: 0.9rem;">⬅️ Butin</div>';
                 zoneCourante.style.background = "#fdf5e6";
                 return;
             }
-            zoneCourante.innerHTML = `<img src="${carteCourante.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" alt="${carteCourante.nom}">`;
+            zoneCourante.innerHTML = `<img src="${carteButinCourante.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" alt="${carteButinCourante.nom}">`;
             zoneCourante.style.background = "#ffe5b4";
         }
 
-        function piocher() {
-            if (deck.length === 0) {
-                alert("Plus de cartes !");
+        function afficherCarteDescenteCourante() {
+            const zoneCourante = document.getElementById("courante-descente");
+            if (!carteDescenteCourante) {
+                zoneCourante.innerHTML = '<div style="text-align: center; font-size: 0.8rem; color: white;">Choisis<br>une carte<br>⬇️</div>';
+                zoneCourante.style.background = "#2a2a4a";
                 return;
             }
-            carteCourante = deck.shift();
-            afficherCarteCourante();
+            zoneCourante.innerHTML = `<img src="${carteDescenteCourante.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" alt="${carteDescenteCourante.nom}">`;
+            zoneCourante.style.background = "#4a4a7a";
         }
 
-        function deposerDansZone(zoneElement) {
-            if (!carteCourante) {
-                alert("Pioche d'abord une carte !");
+        // Piocher Butin
+        function piocherButin() {
+            if (deckButin.length === 0) {
+                alert("Plus de cartes Butin !");
+                return;
+            }
+            carteButinCourante = deckButin.shift();
+            afficherCarteButinCourante();
+        }
+
+        // Piocher Descente
+        function piocherDescente() {
+            if (deckDescente.length === 0) {
+                alert("Plus de cartes Descente !");
+                return;
+            }
+            const carte = deckDescente.shift();
+            cartesDescentePiochees.push(carte);
+            mettreAJourAffichageDescente();
+        }
+
+        // Déposer une carte (générique)
+        function deposerDansZone(zoneElement, carte) {
+            if (!carte) {
+                alert("Sélectionne d'abord une carte ! (pioche Butin ou clique sur une carte Descente)");
                 return false;
             }
             
@@ -198,18 +340,42 @@
             
             const carteContainer = zoneElement.querySelector(".carte-dans-zone");
             if (carteContainer) {
-                carteContainer.innerHTML = `<img src="${carteCourante.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;" alt="${carteCourante.nom}">`;
+                carteContainer.innerHTML = `<img src="${carte.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;" alt="${carte.nom}">`;
             }
             
             zoneElement.style.border = "2px solid gold";
             
-            console.log(`Carte ${carteCourante.nom} → Groupe ${groupe} - Zone ${zoneId}`);
+            console.log(`Carte ${carte.nom} (${carte.type}) → Groupe ${groupe} - Zone ${zoneId}`);
             
-            carteCourante = null;
-            afficherCarteCourante();
             return true;
         }
 
+        // Gestion du clic sur les zones
+        function handleZoneClick(zoneElement) {
+            // Priorité à la carte Descente courante
+            if (carteDescenteCourante) {
+                deposerDansZone(zoneElement, carteDescenteCourante);
+                // Retirer la carte Descente de la liste
+                const index = cartesDescentePiochees.findIndex(c => c.id === carteDescenteCourante.id);
+                if (index !== -1) {
+                    cartesDescentePiochees.splice(index, 1);
+                }
+                carteDescenteCourante = null;
+                afficherCarteDescenteCourante();
+                mettreAJourAffichageDescente();
+            }
+            // Sinon, utiliser la carte Butin courante
+            else if (carteButinCourante) {
+                deposerDansZone(zoneElement, carteButinCourante);
+                carteButinCourante = null;
+                afficherCarteButinCourante();
+            }
+            else {
+                alert("Pioche une carte Butin ou sélectionne une carte Descente !");
+            }
+        }
+
+        // Preview hover
         function createHoverPreview() {
             const preview = document.createElement('div');
             preview.className = 'zone-hover-preview';
@@ -273,12 +439,14 @@
             }
         }
 
-        document.getElementById("pioche").addEventListener("click", piocher);
+        // Événements
+        document.getElementById("pioche-butin").addEventListener("click", piocherButin);
+        document.getElementById("pioche-descente").addEventListener("click", piocherDescente);
 
         const zones = document.querySelectorAll(".zone");
         zones.forEach(zone => {
             zone.addEventListener("click", () => {
-                deposerDansZone(zone);
+                handleZoneClick(zone);
             });
             
             zone.addEventListener("dragover", (e) => {
@@ -293,7 +461,7 @@
             zone.addEventListener("drop", (e) => {
                 e.preventDefault();
                 zone.style.transform = "scale(1)";
-                deposerDansZone(zone);
+                handleZoneClick(zone);
             });
             
             zone.addEventListener("mouseenter", (e) => {
@@ -309,22 +477,38 @@
             });
         });
 
-        const carteElem = document.getElementById("courante");
-        carteElem.setAttribute("draggable", "true");
-        carteElem.addEventListener("dragstart", (e) => {
-            if (!carteCourante) {
+        // Drag & drop depuis les cartes courantes
+        const butinElem = document.getElementById("courante-butin");
+        butinElem.setAttribute("draggable", "true");
+        butinElem.addEventListener("dragstart", (e) => {
+            if (!carteButinCourante) {
                 e.preventDefault();
                 return false;
             }
-            e.dataTransfer.setData("text/plain", "carte");
-            if (carteCourante.image) {
+            e.dataTransfer.setData("text/plain", "butin");
+            if (carteButinCourante.image) {
                 const dragIcon = new Image();
-                dragIcon.src = carteCourante.image;
+                dragIcon.src = carteButinCourante.image;
                 e.dataTransfer.setDragImage(dragIcon, 40, 60);
             }
         });
 
-        initDeck();
+        const descenteElem = document.getElementById("courante-descente");
+        descenteElem.setAttribute("draggable", "true");
+        descenteElem.addEventListener("dragstart", (e) => {
+            if (!carteDescenteCourante) {
+                e.preventDefault();
+                return false;
+            }
+            e.dataTransfer.setData("text/plain", "descente");
+            if (carteDescenteCourante.image) {
+                const dragIcon = new Image();
+                dragIcon.src = carteDescenteCourante.image;
+                e.dataTransfer.setDragImage(dragIcon, 40, 60);
+            }
+        });
+
+        initDecks();
     </script>
 </body>
 </html>
