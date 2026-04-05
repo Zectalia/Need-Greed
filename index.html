@@ -4,7 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test jeu - Pioche & Zones</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #2c3e2f;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #f9e0a0;
+        }
+
+        .pioche-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .pioche {
+            background: #8b5a2b;
+            color: white;
+            width: 120px;
+            height: 160px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+            transition: 0.1s linear;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .pioche:active {
+            transform: scale(0.97);
+        }
+
+        .carte-courante {
+            background: #fdf5e6;
+            width: 150px;
+            height: 200px;
+            margin: 20px auto;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid gold;
+            transition: 0.1s;
+        }
+
+        .zones {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .zone {
+            background: #5a3e2b;
+            color: #ffefc0;
+            width: 140px;
+            height: 180px;
+            border: 3px dashed #d4b87a;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: 0.1s;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .zone.drag-over {
+            background: #7e5a3c;
+            border: 3px solid #ffcc66;
+            transform: scale(1.02);
+        }
+    </style>
 </head>
 <body>
     <h1>🧪 Test basique - Mon jeu de société</h1>
@@ -30,6 +115,114 @@
         <div class="zone" data-zone="4">Zone 4</div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // === État du jeu ===
+        let deck = [];
+        let carteCourante = null;
+
+        // Initialisation : créer 15 cartes numérotées
+        function initDeck() {
+            deck = [];
+            for (let i = 1; i <= 15; i++) {
+                deck.push({ id: i, nom: `Carte ${i}` });
+            }
+            melanger(deck);
+            mettreAJourPioche();
+        }
+
+        // Mélange aléatoire
+        function melanger(tableau) {
+            for (let i = tableau.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [tableau[i], tableau[j]] = [tableau[j], tableau[i]];
+            }
+        }
+
+        // Met à jour l'affichage du nombre de cartes
+        function mettreAJourPioche() {
+            const nbSpan = document.getElementById("nbCartes");
+            if (nbSpan) nbSpan.innerText = deck.length;
+        }
+
+        // Affiche la carte courante dans la zone du milieu
+        function afficherCarteCourante() {
+            const zoneCourante = document.getElementById("courante");
+            if (!carteCourante) {
+                zoneCourante.innerHTML = "⬅️ Pioche une carte";
+                zoneCourante.style.background = "#fdf5e6";
+                return;
+            }
+            zoneCourante.innerHTML = carteCourante.nom;
+            zoneCourante.style.background = "#ffe5b4";
+        }
+
+        // Piocher
+        function piocher() {
+            if (deck.length === 0) {
+                alert("Plus de cartes !");
+                return;
+            }
+            carteCourante = deck.shift();
+            mettreAJourPioche();
+            afficherCarteCourante();
+        }
+
+        // Déposer la carte courante dans une zone
+        function deposerDansZone(zoneId) {
+            if (!carteCourante) {
+                alert("Pioche d'abord une carte !");
+                return false;
+            }
+            
+            console.log(`Carte ${carteCourante.nom} déposée dans zone ${zoneId}`);
+            
+            carteCourante = null;
+            afficherCarteCourante();
+            return true;
+        }
+
+        // --- Gestion des événements ---
+        document.getElementById("pioche").addEventListener("click", piocher);
+
+        const carteCouranteElement = document.getElementById("courante");
+        carteCouranteElement.setAttribute("draggable", "true");
+
+        carteCouranteElement.addEventListener("dragstart", (e) => {
+            if (!carteCourante) {
+                e.preventDefault();
+                return false;
+            }
+            e.dataTransfer.setData("text/plain", "carte");
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        const zones = document.querySelectorAll(".zone");
+
+        zones.forEach(zone => {
+            zone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                zone.classList.add("drag-over");
+            });
+            
+            zone.addEventListener("dragleave", () => {
+                zone.classList.remove("drag-over");
+            });
+            
+            zone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                zone.classList.remove("drag-over");
+                const zoneId = zone.getAttribute("data-zone");
+                deposerDansZone(zoneId);
+            });
+            
+            zone.addEventListener("click", () => {
+                const zoneId = zone.getAttribute("data-zone");
+                deposerDansZone(zoneId);
+            });
+        });
+
+        initDeck();
+    </script>
 </body>
 </html>
