@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - 16 zones</title>
+    <title>Test jeu - 4 groupes de 4 zones</title>
 </head>
-<body style="font-family: Arial, sans-serif; text-align: center; background: #2c3e2f; margin: 0; padding: 20px;">
+<body style="font-family: Arial, sans-serif; text-align: center; background: #1a2a1a; margin: 0; padding: 20px;">
 
     <!-- Pioche -->
     <div style="display: flex; justify-content: center; margin-bottom: 30px;">
@@ -20,31 +20,52 @@
         ⬅️ Pioche
     </div>
 
-    <!-- 16 zones : 4 lignes x 4 colonnes -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 800px; margin: 30px auto 0 auto; padding: 10px;">
-        <!-- Ligne 1 -->
-        <div class="zone" data-zone="1" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 1</div>
-        <div class="zone" data-zone="2" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 2</div>
-        <div class="zone" data-zone="3" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 3</div>
-        <div class="zone" data-zone="4" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 4</div>
+    <!-- 4 GROUPES de 4 zones -->
+    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 30px;">
         
-        <!-- Ligne 2 -->
-        <div class="zone" data-zone="5" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 5</div>
-        <div class="zone" data-zone="6" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 6</div>
-        <div class="zone" data-zone="7" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 7</div>
-        <div class="zone" data-zone="8" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 8</div>
-        
-        <!-- Ligne 3 -->
-        <div class="zone" data-zone="9" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 9</div>
-        <div class="zone" data-zone="10" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 10</div>
-        <div class="zone" data-zone="11" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 11</div>
-        <div class="zone" data-zone="12" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 12</div>
-        
-        <!-- Ligne 4 -->
-        <div class="zone" data-zone="13" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 13</div>
-        <div class="zone" data-zone="14" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 14</div>
-        <div class="zone" data-zone="15" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 15</div>
-        <div class="zone" data-zone="16" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 16</div>
+        <!-- GROUPE 1 - ROUGE -->
+        <div style="background: #4a1a1a; border-radius: 20px; padding: 15px; border: 3px solid #ff6666;">
+            <h3 style="color: #ff8888; margin-top: 0; margin-bottom: 15px;">🔥 Groupe Feu</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
+                <div class="zone" data-zone="1" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 1<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #ffcc88;"></span></div>
+                <div class="zone" data-zone="2" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 2<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #ffcc88;"></span></div>
+                <div class="zone" data-zone="3" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 3<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #ffcc88;"></span></div>
+                <div class="zone" data-zone="4" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 4<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #ffcc88;"></span></div>
+            </div>
+        </div>
+
+        <!-- GROUPE 2 - BLEU -->
+        <div style="background: #1a1a4a; border-radius: 20px; padding: 15px; border: 3px solid #6666ff;">
+            <h3 style="color: #8888ff; margin-top: 0; margin-bottom: 15px;">💧 Groupe Eau</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
+                <div class="zone" data-zone="5" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 5<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #aaffff;"></span></div>
+                <div class="zone" data-zone="6" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 6<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #aaffff;"></span></div>
+                <div class="zone" data-zone="7" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 7<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #aaffff;"></span></div>
+                <div class="zone" data-zone="8" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 8<br><span class="carte-dans-zone" style="font-size: 0.7rem; color: #aaffff;"></span></div>
+            </div>
+        </div>
+
+        <!-- GROUPE 3 - VERT -->
+        <div style="background: #1a4a1a; border-radius: 20px; padding: 15px; border: 3px solid #66ff66;">
+            <h3 style="color: #88ff88; margin-top: 0; margin-bottom: 15px;">🌿 Groupe Terre</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
+                <div class="zone" data-zone="9" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 9<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ccffaa;"></span></div>
+                <div class="zone" data-zone="10" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 10<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ccffaa;"></span></div>
+                <div class="zone" data-zone="11" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 11<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ccffaa;"></span></div>
+                <div class="zone" data-zone="12" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 12<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ccffaa;"></span></div>
+            </div>
+        </div>
+
+        <!-- GROUPE 4 - JAUNE/ORANGE -->
+        <div style="background: #4a3a1a; border-radius: 20px; padding: 15px; border: 3px solid #ffcc66;">
+            <h3 style="color: #ffcc66; margin-top: 0; margin-bottom: 15px;">⚡ Groupe Foudre</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
+                <div class="zone" data-zone="13" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 13<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ffffaa;"></span></div>
+                <div class="zone" data-zone="14" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 14<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ffffaa;"></span></div>
+                <div class="zone" data-zone="15" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 15<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ffffaa;"></span></div>
+                <div class="zone" data-zone="16" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer; font-weight: bold; flex-direction: column;">Zone 16<br><span class="carte-dans-zone" style="font-size: 0.7rem; color:#ffffaa;"></span></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -90,12 +111,28 @@
             afficherCarteCourante();
         }
 
-        function deposerDansZone(zoneId) {
+        function deposerDansZone(zoneElement) {
             if (!carteCourante) {
                 alert("Pioche d'abord une carte !");
                 return false;
             }
-            console.log(`Carte ${carteCourante.nom} → zone ${zoneId}`);
+            
+            const zoneId = zoneElement.getAttribute("data-zone");
+            const groupe = zoneElement.getAttribute("data-groupe");
+            
+            // Afficher la carte dans la zone
+            const spanCarte = zoneElement.querySelector(".carte-dans-zone");
+            if (spanCarte) {
+                spanCarte.innerHTML = carteCourante.nom;
+            }
+            
+            // Changer légèrement le style pour montrer qu'elle est occupée
+            zoneElement.style.opacity = "0.9";
+            zoneElement.style.border = "3px solid gold";
+            
+            console.log(`Carte ${carteCourante.nom} → Groupe ${groupe} - Zone ${zoneId}`);
+            
+            // Vider la carte courante
             carteCourante = null;
             afficherCarteCourante();
             return true;
@@ -108,25 +145,23 @@
         const zones = document.querySelectorAll(".zone");
         zones.forEach(zone => {
             zone.addEventListener("click", () => {
-                deposerDansZone(zone.getAttribute("data-zone"));
+                deposerDansZone(zone);
             });
             
             zone.addEventListener("dragover", (e) => {
                 e.preventDefault();
-                zone.style.background = "#7e5a3c";
-                zone.style.border = "3px solid #ffcc66";
+                zone.style.transform = "scale(1.02)";
+                zone.style.transition = "0.05s linear";
             });
             
             zone.addEventListener("dragleave", () => {
-                zone.style.background = "#5a3e2b";
-                zone.style.border = "3px dashed #d4b87a";
+                zone.style.transform = "scale(1)";
             });
             
             zone.addEventListener("drop", (e) => {
                 e.preventDefault();
-                zone.style.background = "#5a3e2b";
-                zone.style.border = "3px dashed #d4b87a";
-                deposerDansZone(zone.getAttribute("data-zone"));
+                zone.style.transform = "scale(1)";
+                deposerDansZone(zone);
             });
         });
 
