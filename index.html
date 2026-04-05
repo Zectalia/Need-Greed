@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - Grandes cartes Descente</title>
+    <title>Test jeu - Hover sur cartes Descente</title>
     <style>
         .zone {
             transition: all 0.1s ease;
@@ -24,8 +24,8 @@
             justify-content: center;
         }
 
-        /* ZONE DE SURVOL */
-        .zone-hover-preview {
+        /* ZONE DE SURVOL (pour les zones ET les cartes Descente) */
+        .hover-preview {
             position: fixed;
             z-index: 9999;
             width: 280px;
@@ -41,7 +41,7 @@
             justify-content: center;
             backdrop-filter: blur(3px);
         }
-        .zone-hover-preview img {
+        .hover-preview img {
             width: 100%;
             height: 100%;
             object-fit: contain;
@@ -81,41 +81,40 @@
             flex-shrink: 0;
         }
 
-        /* ZONE DESCENTE - GRAND FORMAT */
+        /* ZONE DESCENTE */
         .descente-container {
             background: #2a2a4a;
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 15px;
+            padding: 15px;
             margin: 20px auto;
-            border: 3px solid #aa88ff;
-            max-width: 600px;
+            border: 2px solid #aa88ff;
+            max-width: 400px;
         }
 
         .descente-container h4 {
             color: #ccaaFF;
-            margin: 0 0 15px 0;
-            font-size: 1.3rem;
+            margin: 0 0 10px 0;
+            font-size: 1rem;
         }
 
         .descente-cartes {
             display: flex;
-            gap: 20px;
+            gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
-            min-height: 180px;
+            min-height: 100px;
         }
 
-        /* CARTES DESCENTE TRÈS GRANDES */
+        /* CARTES DESCENTE - taille normale avec hover */
         .descente-card {
-            width: 140px;
-            height: 190px;
+            width: 80px;
+            height: 110px;
             background: #3a3a6a;
-            border-radius: 12px;
-            border: 3px solid #aa88ff;
+            border-radius: 8px;
+            border: 2px solid #aa88ff;
             overflow: hidden;
             cursor: pointer;
             transition: 0.1s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         .descente-card img {
             width: 100%;
@@ -125,7 +124,6 @@
         .descente-card:hover {
             transform: scale(1.05);
             border-color: gold;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
         }
 
         /* STYLE POUBELLE */
@@ -185,16 +183,16 @@
                 <div style="text-align: center; font-size: 0.9rem;">⬅️ Butin</div>
             </div>
 
-            <!-- ZONE DESCENTE - GRANDES CARTES -->
+            <!-- ZONE DESCENTE -->
             <div class="descente-container">
                 <h4>📦 Cartes Descente (clique pour les utiliser)</h4>
                 <div id="descente-cartes" class="descente-cartes">
-                    <!-- Les cartes Descente apparaîtront ici (grand format) -->
+                    <!-- Les cartes Descente apparaîtront ici -->
                 </div>
             </div>
 
-            <!-- Carte Descente courante (quand on clique sur une carte Descente) -->
-            <div id="courante-descente" style="background: #2a2a4a; width: 120px; height: 170px; margin: 10px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 3px solid #aa88ff; overflow: hidden;">
+            <!-- Carte Descente courante -->
+            <div id="courante-descente" style="background: #2a2a4a; width: 100px; height: 140px; margin: 10px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid #aa88ff; overflow: hidden;">
                 <div style="text-align: center; font-size: 0.8rem; color: white;">Choisis<br>une carte<br>⬇️</div>
             </div>
 
@@ -314,16 +312,28 @@
             cartesDescentePiochees.forEach((carte, index) => {
                 const cardDiv = document.createElement("div");
                 cardDiv.className = "descente-card";
-                cardDiv.innerHTML = `<img src="${carte.image}" alt="${carte.nom}" title="${carte.nom}">`;
+                cardDiv.innerHTML = `<img src="${carte.image}" alt="${carte.nom}">`;
                 cardDiv.addEventListener("click", () => {
                     carteDescenteCourante = carte;
                     afficherCarteDescenteCourante();
                 });
+                
+                // AJOUT DU HOVER pour les cartes Descente
+                cardDiv.addEventListener("mouseenter", (e) => {
+                    showHoverPreview(carte.image, e);
+                });
+                cardDiv.addEventListener("mousemove", (e) => {
+                    updatePreviewPosition(e);
+                });
+                cardDiv.addEventListener("mouseleave", () => {
+                    hideHoverPreview();
+                });
+                
                 container.appendChild(cardDiv);
             });
             
             if (cartesDescentePiochees.length === 0) {
-                container.innerHTML = '<div style="color: #aa88ff; padding: 30px; font-size: 1.1rem;">Aucune carte Descente</div>';
+                container.innerHTML = '<div style="color: #aa88ff; padding: 20px;">Aucune carte Descente</div>';
             }
         }
 
@@ -341,11 +351,11 @@
         function afficherCarteDescenteCourante() {
             const zoneCourante = document.getElementById("courante-descente");
             if (!carteDescenteCourante) {
-                zoneCourante.innerHTML = '<div style="text-align: center; font-size: 0.9rem; color: white;">Choisis<br>une carte<br>⬇️</div>';
+                zoneCourante.innerHTML = '<div style="text-align: center; font-size: 0.8rem; color: white;">Choisis<br>une carte<br>⬇️</div>';
                 zoneCourante.style.background = "#2a2a4a";
                 return;
             }
-            zoneCourante.innerHTML = `<img src="${carteDescenteCourante.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" alt="${carteDescenteCourante.nom}">`;
+            zoneCourante.innerHTML = `<img src="${carteDescenteCourante.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" alt="${carteDescenteCourante.nom}">`;
             zoneCourante.style.background = "#4a4a7a";
         }
 
@@ -434,24 +444,21 @@
             }
         }
 
+        // HOVER PREVIEW (générique pour zones et cartes Descente)
         function createHoverPreview() {
             const preview = document.createElement('div');
-            preview.className = 'zone-hover-preview';
+            preview.className = 'hover-preview';
             preview.style.display = 'none';
             document.body.appendChild(preview);
             return preview;
         }
 
-        function showHoverPreview(zoneElement, event) {
-            const imgElement = zoneElement.querySelector('.carte-dans-zone img');
-            if (!imgElement) return;
-            
+        function showHoverPreview(imageSrc, event) {
             if (!hoverPreview) {
                 hoverPreview = createHoverPreview();
             }
             
-            const imgSrc = imgElement.src;
-            hoverPreview.innerHTML = `<img src="${imgSrc}" alt="Aperçu">`;
+            hoverPreview.innerHTML = `<img src="${imageSrc}" alt="Aperçu">`;
             hoverPreview.style.display = 'flex';
             
             let mouseX = event.clientX + 20;
@@ -540,7 +547,10 @@
             });
             
             zone.addEventListener("mouseenter", (e) => {
-                showHoverPreview(zone, e);
+                const imgElement = zone.querySelector('.carte-dans-zone img');
+                if (imgElement) {
+                    showHoverPreview(imgElement.src, e);
+                }
             });
             
             zone.addEventListener("mousemove", (e) => {
