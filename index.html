@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prototype jeu de société - Pioche et emplacements</title>
+    <title>Test jeu - Pioche & Zones</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Prototype jeu de cartes</h1>
-        
-        <div class="pioche-area">
-            <button id="piocheBtn">📤 Piocher une carte</button>
-            <div id="piocheCount">Cartes restantes : 20</div>
-        </div>
+    <h1>🧪 Test basique - Mon jeu de société</h1>
 
-        <div class="courante" id="carteCourante">
-            <!-- Carte piochée apparaîtra ici -->
-            <div class="card-placeholder">Carte piochée</div>
+    <!-- Zone du haut : la pioche -->
+    <div class="pioche-container">
+        <div id="pioche" class="pioche">
+            🃏 Pioche<br>
+            <span id="nbCartes">15</span> cartes
         </div>
+    </div>
 
-        <div class="emplacements">
-            <div class="slot" data-slot="0">Emplacement 1</div>
-            <div class="slot" data-slot="1">Emplacement 2</div>
-            <div class="slot" data-slot="2">Emplacement 3</div>
-            <div class="slot" data-slot="3">Emplacement 4</div>
-        </div>
+    <!-- Carte piochée (milieu) -->
+    <div id="courante" class="carte-courante">
+        ⬅️ Pioche une carte
+    </div>
+
+    <!-- Les 4 emplacements -->
+    <div class="zones">
+        <div class="zone" data-zone="1">Zone 1</div>
+        <div class="zone" data-zone="2">Zone 2</div>
+        <div class="zone" data-zone="3">Zone 3</div>
+        <div class="zone" data-zone="4">Zone 4</div>
     </div>
 
     <script src="script.js"></script>
