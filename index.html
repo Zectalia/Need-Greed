@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - Double pioche (Butin + Descente)</title>
+    <title>Test jeu - Double pioche + Poubelle</title>
     <style>
         .zone {
             transition: all 0.1s ease;
@@ -59,7 +59,7 @@
         /* Layout principal */
         .main-layout {
             display: flex;
-            gap: 40px;
+            gap: 30px;
             align-items: flex-start;
             justify-content: center;
             flex-wrap: wrap;
@@ -75,6 +75,10 @@
         .game-col {
             flex: 1;
             min-width: 500px;
+        }
+
+        .right-col {
+            flex-shrink: 0;
         }
 
         .descente-container {
@@ -119,6 +123,37 @@
             transform: scale(1.05);
             border-color: gold;
         }
+
+        /* STYLE POUBELLE */
+        .poubelle {
+            background: #3a1a1a;
+            color: #ff8888;
+            width: 100px;
+            height: 140px;
+            border-radius: 12px;
+            border: 3px dashed #ff4444;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.1s;
+            font-size: 2rem;
+        }
+        .poubelle:hover {
+            background: #5a2a2a;
+            border: 3px solid #ff6666;
+            transform: scale(1.02);
+        }
+        .poubelle.drag-over {
+            background: #7a3a3a;
+            border: 3px solid #ff8888;
+            transform: scale(1.05);
+        }
+        .poubelle p {
+            margin: 5px 0 0 0;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; background: #1a2a1a; margin: 0; padding: 20px;">
@@ -139,7 +174,7 @@
             </div>
         </div>
 
-        <!-- COLONNE DROITE : Jeu -->
+        <!-- COLONNE CENTRALE : Jeu -->
         <div class="game-col">
             <!-- Carte Butin piochée -->
             <div id="courante-butin" style="background: #fdf5e6; width: 120px; height: 170px; margin: 0 auto 20px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border: 2px solid #ffaa44; overflow: hidden;">
@@ -207,6 +242,15 @@
                 </div>
             </div>
         </div>
+
+        <!-- COLONNE DROITE : Poubelle -->
+        <div class="right-col">
+            <div id="poubelle" class="poubelle">
+                🗑️<br>
+                <p>Poubelle</p>
+                <p style="font-size: 0.7rem;">(glisse ou clique)</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -215,7 +259,7 @@
         let deckDescente = [];
         let carteButinCourante = null;
         let carteDescenteCourante = null;
-        let cartesDescentePiochees = []; // Stocke les cartes Descente piochées
+        let cartesDescentePiochees = [];
         let hoverPreview = null;
 
         function getButinPath(carteId) {
@@ -228,7 +272,6 @@
 
         // Initialisation
         function initDecks() {
-            // Deck Butin (15 cartes)
             deckButin = [];
             for (let i = 1; i <= 15; i++) {
                 deckButin.push({ 
@@ -243,7 +286,6 @@
                 [deckButin[i], deckButin[j]] = [deckButin[j], deckButin[i]];
             }
 
-            // Deck Descente (exemple : 10 cartes)
             deckDescente = [];
             for (let i = 1; i <= 10; i++) {
                 deckDescente.push({ 
@@ -262,7 +304,6 @@
             mettreAJourAffichageDescente();
         }
 
-        // Affichage des cartes Descente piochées
         function mettreAJourAffichageDescente() {
             const container = document.getElementById("descente-cartes");
             if (!container) return;
@@ -273,7 +314,6 @@
                 cardDiv.className = "descente-card";
                 cardDiv.innerHTML = `<img src="${carte.image}" alt="${carte.nom}">`;
                 cardDiv.addEventListener("click", () => {
-                    // Cliquer sur une carte Descente la met dans l'emplacement "courante"
                     carteDescenteCourante = carte;
                     afficherCarteDescenteCourante();
                 });
@@ -307,7 +347,6 @@
             zoneCourante.style.background = "#4a4a7a";
         }
 
-        // Piocher Butin
         function piocherButin() {
             if (deckButin.length === 0) {
                 alert("Plus de cartes Butin !");
@@ -317,7 +356,6 @@
             afficherCarteButinCourante();
         }
 
-        // Piocher Descente
         function piocherDescente() {
             if (deckDescente.length === 0) {
                 alert("Plus de cartes Descente !");
@@ -328,7 +366,33 @@
             mettreAJourAffichageDescente();
         }
 
-        // Déposer une carte (générique)
+        // VIDER LA CARTE (Poubelle)
+        function viderCarte() {
+            if (carteButinCourante) {
+                carteButinCourante = null;
+                afficherCarteButinCourante();
+                console.log("Carte Butin jetée à la poubelle");
+                return true;
+            }
+            else if (carteDescenteCourante) {
+                // Retirer la carte Descente de la liste
+                const index = cartesDescentePiochees.findIndex(c => c.id === carteDescenteCourante.id);
+                if (index !== -1) {
+                    cartesDescentePiochees.splice(index, 1);
+                }
+                carteDescenteCourante = null;
+                afficherCarteDescenteCourante();
+                mettreAJourAffichageDescente();
+                console.log("Carte Descente jetée à la poubelle");
+                return true;
+            }
+            else {
+                alert("Aucune carte à jeter !");
+                return false;
+            }
+        }
+
+        // Déposer une carte dans une zone
         function deposerDansZone(zoneElement, carte) {
             if (!carte) {
                 alert("Sélectionne d'abord une carte ! (pioche Butin ou clique sur une carte Descente)");
@@ -350,12 +414,9 @@
             return true;
         }
 
-        // Gestion du clic sur les zones
         function handleZoneClick(zoneElement) {
-            // Priorité à la carte Descente courante
             if (carteDescenteCourante) {
                 deposerDansZone(zoneElement, carteDescenteCourante);
-                // Retirer la carte Descente de la liste
                 const index = cartesDescentePiochees.findIndex(c => c.id === carteDescenteCourante.id);
                 if (index !== -1) {
                     cartesDescentePiochees.splice(index, 1);
@@ -364,7 +425,6 @@
                 afficherCarteDescenteCourante();
                 mettreAJourAffichageDescente();
             }
-            // Sinon, utiliser la carte Butin courante
             else if (carteButinCourante) {
                 deposerDansZone(zoneElement, carteButinCourante);
                 carteButinCourante = null;
@@ -442,6 +502,26 @@
         // Événements
         document.getElementById("pioche-butin").addEventListener("click", piocherButin);
         document.getElementById("pioche-descente").addEventListener("click", piocherDescente);
+
+        // Poubelle
+        const poubelle = document.getElementById("poubelle");
+        poubelle.addEventListener("click", viderCarte);
+        
+        // Drag & drop vers la poubelle
+        poubelle.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            poubelle.classList.add("drag-over");
+        });
+        
+        poubelle.addEventListener("dragleave", () => {
+            poubelle.classList.remove("drag-over");
+        });
+        
+        poubelle.addEventListener("drop", (e) => {
+            e.preventDefault();
+            poubelle.classList.remove("drag-over");
+            viderCarte();
+        });
 
         const zones = document.querySelectorAll(".zone");
         zones.forEach(zone => {
