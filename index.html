@@ -3,124 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - Butin cards</title>
+    <title>Test jeu - Grandes zones visibles</title>
     <style>
         .zone {
             transition: all 0.1s ease;
         }
         .zone img {
-            max-width: 80%;
-            max-height: 60%;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
+            border-radius: 8px;
+        }
+        .carte-dans-zone {
+            width: 100%;
+            height: 70%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+        }
+        /* Sur mobile, on réduit un peu mais ça reste grand */
+        @media (max-width: 900px) {
+            .groupe-container {
+                transform: scale(0.85);
+            }
         }
     </style>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; background: #1a2a1a; margin: 0; padding: 20px;">
 
-    <!-- Pioche -->
-    <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-        <div id="pioche" style="background: #8b5a2b; color: white; width: 120px; height: 160px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.2rem;">
+    <!-- Pioche (agrandie aussi) -->
+    <div style="display: flex; justify-content: center; margin-bottom: 40px;">
+        <div id="pioche" style="background: #8b5a2b; color: white; width: 160px; height: 220px; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.4rem;">
             🃏 Pioche<br>
-            <span id="nbCartes">15</span> cartes
+            <span id="nbCartes" style="font-size: 2rem;">15</span> cartes
         </div>
     </div>
 
-    <!-- Carte piochée -->
-    <div id="courante" style="background: #fdf5e6; width: 150px; height: 200px; margin: 20px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border: 2px solid gold; overflow: hidden;">
-        <div style="text-align: center;">⬅️ Pioche</div>
+    <!-- Carte piochée (plus grande aussi) -->
+    <div id="courante" style="background: #fdf5e6; width: 200px; height: 280px; margin: 20px auto; border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border: 3px solid gold; overflow: hidden;">
+        <div style="text-align: center; font-size: 1.3rem;">⬅️ Pioche</div>
     </div>
 
-    <!-- 4 GROUPES -->
-    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 30px;">
+    <!-- 4 GROUPES avec ZONES TRÈS GRANDES -->
+    <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 40px;">
         
         <!-- GROUPE 1 - ROUGE -->
-        <div style="background: #4a1a1a; border-radius: 20px; padding: 15px; border: 3px solid #ff6666;">
-            <h3 style="color: #ff8888; margin-top: 0; margin-bottom: 15px;">🔥 Groupe Feu</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
-                <div class="zone" data-zone="1" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 1
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+        <div class="groupe-container" style="background: #4a1a1a; border-radius: 25px; padding: 20px; border: 3px solid #ff6666;">
+            <h3 style="color: #ff8888; margin-top: 0; margin-bottom: 20px; font-size: 1.5rem;">🔥 Groupe Feu</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 400px;">
+                <div class="zone" data-zone="1" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ff8888; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 1</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="2" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 2
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="2" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ff8888; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 2</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="3" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 3
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="3" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ff8888; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 3</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="4" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ff8888; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 4
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="4" data-groupe="feu" style="background: #8b3a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ff8888; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 4</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
             </div>
         </div>
 
         <!-- GROUPE 2 - BLEU -->
-        <div style="background: #1a1a4a; border-radius: 20px; padding: 15px; border: 3px solid #6666ff;">
-            <h3 style="color: #8888ff; margin-top: 0; margin-bottom: 15px;">💧 Groupe Eau</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
-                <div class="zone" data-zone="5" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 5
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+        <div class="groupe-container" style="background: #1a1a4a; border-radius: 25px; padding: 20px; border: 3px solid #6666ff;">
+            <h3 style="color: #8888ff; margin-top: 0; margin-bottom: 20px; font-size: 1.5rem;">💧 Groupe Eau</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 400px;">
+                <div class="zone" data-zone="5" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 3px solid #8888ff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 5</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="6" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 6
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="6" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 3px solid #8888ff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 6</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="7" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 7
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="7" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 3px solid #8888ff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 7</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="8" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 2px solid #8888ff; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 8
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="8" data-groupe="eau" style="background: #3a3a8b; color: white; aspect-ratio: 1 / 1; border: 3px solid #8888ff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 8</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
             </div>
         </div>
 
         <!-- GROUPE 3 - VERT -->
-        <div style="background: #1a4a1a; border-radius: 20px; padding: 15px; border: 3px solid #66ff66;">
-            <h3 style="color: #88ff88; margin-top: 0; margin-bottom: 15px;">🌿 Groupe Terre</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
-                <div class="zone" data-zone="9" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 9
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+        <div class="groupe-container" style="background: #1a4a1a; border-radius: 25px; padding: 20px; border: 3px solid #66ff66;">
+            <h3 style="color: #88ff88; margin-top: 0; margin-bottom: 20px; font-size: 1.5rem;">🌿 Groupe Terre</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 400px;">
+                <div class="zone" data-zone="9" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #88ff88; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 9</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="10" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 10
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="10" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #88ff88; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 10</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="11" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 11
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="11" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #88ff88; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 11</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="12" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #88ff88; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 12
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="12" data-groupe="terre" style="background: #3a8b3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #88ff88; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 12</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
             </div>
         </div>
 
         <!-- GROUPE 4 - JAUNE -->
-        <div style="background: #4a3a1a; border-radius: 20px; padding: 15px; border: 3px solid #ffcc66;">
-            <h3 style="color: #ffcc66; margin-top: 0; margin-bottom: 15px;">⚡ Groupe Foudre</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 200px;">
-                <div class="zone" data-zone="13" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 13
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+        <div class="groupe-container" style="background: #4a3a1a; border-radius: 25px; padding: 20px; border: 3px solid #ffcc66;">
+            <h3 style="color: #ffcc66; margin-top: 0; margin-bottom: 20px; font-size: 1.5rem;">⚡ Groupe Foudre</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 400px;">
+                <div class="zone" data-zone="13" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ffcc66; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 13</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="14" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 14
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="14" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ffcc66; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 14</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="15" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 15
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="15" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ffcc66; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 15</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
-                <div class="zone" data-zone="16" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 2px solid #ffcc66; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding: 5px;">
-                    Zone 16
-                    <div class="carte-dans-zone" style="margin-top: 5px; width: 80%; height: 50%; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="zone" data-zone="16" data-groupe="foudre" style="background: #8b7a3a; color: white; aspect-ratio: 1 / 1; border: 3px solid #ffcc66; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; font-weight: bold; padding: 12px;">
+                    <span style="font-size: 1.1rem;">Zone 16</span>
+                    <div class="carte-dans-zone"></div>
                 </div>
             </div>
         </div>
@@ -130,7 +145,6 @@
         let deck = [];
         let carteCourante = null;
 
-        // 👇 ICI le nom de tes images
         function getImagePath(carteId) {
             return `images/Butin_card${carteId}.png`;
         }
@@ -159,11 +173,11 @@
         function afficherCarteCourante() {
             const zoneCourante = document.getElementById("courante");
             if (!carteCourante) {
-                zoneCourante.innerHTML = '<div style="text-align: center;">⬅️ Pioche</div>';
+                zoneCourante.innerHTML = '<div style="text-align: center; font-size: 1.3rem;">⬅️ Pioche</div>';
                 zoneCourante.style.background = "#fdf5e6";
                 return;
             }
-            zoneCourante.innerHTML = `<img src="${carteCourante.image}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" alt="${carteCourante.nom}">`;
+            zoneCourante.innerHTML = `<img src="${carteCourante.image}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;" alt="${carteCourante.nom}">`;
             zoneCourante.style.background = "#ffe5b4";
         }
 
@@ -188,11 +202,11 @@
             
             const carteContainer = zoneElement.querySelector(".carte-dans-zone");
             if (carteContainer) {
-                carteContainer.innerHTML = `<img src="${carteCourante.image}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 5px;" alt="${carteCourante.nom}">`;
+                carteContainer.innerHTML = `<img src="${carteCourante.image}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" alt="${carteCourante.nom}">`;
             }
             
             zoneElement.style.opacity = "0.95";
-            zoneElement.style.border = "3px solid gold";
+            zoneElement.style.border = "4px solid gold";
             
             console.log(`Carte ${carteCourante.nom} → Groupe ${groupe} - Zone ${zoneId}`);
             
@@ -212,6 +226,7 @@
             zone.addEventListener("dragover", (e) => {
                 e.preventDefault();
                 zone.style.transform = "scale(1.02)";
+                zone.style.transition = "0.05s linear";
             });
             
             zone.addEventListener("dragleave", () => {
@@ -236,7 +251,7 @@
             if (carteCourante.image) {
                 const dragIcon = new Image();
                 dragIcon.src = carteCourante.image;
-                e.dataTransfer.setDragImage(dragIcon, 40, 50);
+                e.dataTransfer.setDragImage(dragIcon, 50, 70);
             }
         });
 
