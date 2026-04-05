@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - Pioche & Zones</title>
+    <title>Test jeu - 16 zones</title>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; background: #2c3e2f; margin: 0; padding: 20px;">
-
-    <!-- Le titre est optionnel, tu peux le supprimer plus tard -->
-    <!-- <h1 style="color: #f9e0a0;">🧪 Test jeu</h1> -->
 
     <!-- Pioche -->
     <div style="display: flex; justify-content: center; margin-bottom: 30px;">
@@ -23,12 +20,31 @@
         ⬅️ Pioche
     </div>
 
-    <!-- 4 zones -->
-    <div style="display: flex; justify-content: center; gap: 30px; margin-top: 50px; flex-wrap: wrap;">
-        <div class="zone" data-zone="1" style="background: #5a3e2b; color: #ffefc0; width: 140px; height: 180px; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; font-weight: bold;">Zone 1</div>
-        <div class="zone" data-zone="2" style="background: #5a3e2b; color: #ffefc0; width: 140px; height: 180px; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; font-weight: bold;">Zone 2</div>
-        <div class="zone" data-zone="3" style="background: #5a3e2b; color: #ffefc0; width: 140px; height: 180px; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; font-weight: bold;">Zone 3</div>
-        <div class="zone" data-zone="4" style="background: #5a3e2b; color: #ffefc0; width: 140px; height: 180px; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; font-weight: bold;">Zone 4</div>
+    <!-- 16 zones : 4 lignes x 4 colonnes -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 800px; margin: 30px auto 0 auto; padding: 10px;">
+        <!-- Ligne 1 -->
+        <div class="zone" data-zone="1" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 1</div>
+        <div class="zone" data-zone="2" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 2</div>
+        <div class="zone" data-zone="3" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 3</div>
+        <div class="zone" data-zone="4" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 4</div>
+        
+        <!-- Ligne 2 -->
+        <div class="zone" data-zone="5" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 5</div>
+        <div class="zone" data-zone="6" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 6</div>
+        <div class="zone" data-zone="7" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 7</div>
+        <div class="zone" data-zone="8" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 8</div>
+        
+        <!-- Ligne 3 -->
+        <div class="zone" data-zone="9" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 9</div>
+        <div class="zone" data-zone="10" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 10</div>
+        <div class="zone" data-zone="11" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 11</div>
+        <div class="zone" data-zone="12" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 12</div>
+        
+        <!-- Ligne 4 -->
+        <div class="zone" data-zone="13" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 13</div>
+        <div class="zone" data-zone="14" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 14</div>
+        <div class="zone" data-zone="15" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 15</div>
+        <div class="zone" data-zone="16" style="background: #5a3e2b; color: #ffefc0; aspect-ratio: 1 / 1; border: 3px dashed #d4b87a; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; font-weight: bold;">Zone 16</div>
     </div>
 
     <script>
