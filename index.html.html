@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototype jeu de société - Pioche et emplacements</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Prototype jeu de cartes</h1>
+        
+        <div class="pioche-area">
+            <button id="piocheBtn">📤 Piocher une carte</button>
+            <div id="piocheCount">Cartes restantes : 20</div>
+        </div>
+
+        <div class="courante" id="carteCourante">
+            <!-- Carte piochée apparaîtra ici -->
+            <div class="card-placeholder">Carte piochée</div>
+        </div>
+
+        <div class="emplacements">
+            <div class="slot" data-slot="0">Emplacement 1</div>
+            <div class="slot" data-slot="1">Emplacement 2</div>
+            <div class="slot" data-slot="2">Emplacement 3</div>
+            <div class="slot" data-slot="3">Emplacement 4</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
