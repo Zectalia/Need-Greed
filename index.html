@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Test jeu - Hover sur cartes Descente</title>
+    <title>Test jeu - Déplacement + Compteurs</title>
     <style>
         .zone {
             transition: all 0.1s ease;
@@ -15,6 +15,7 @@
             height: 100%;
             object-fit: cover;
             border-radius: 8px;
+            pointer-events: none; /* Pour que le drag parte de la zone */
         }
         .carte-dans-zone {
             width: 100%;
@@ -24,7 +25,7 @@
             justify-content: center;
         }
 
-        /* ZONE DE SURVOL (pour les zones ET les cartes Descente) */
+        /* ZONE DE SURVOL */
         .hover-preview {
             position: fixed;
             z-index: 9999;
@@ -52,10 +53,6 @@
             cursor: pointer;
         }
         
-        .zone span {
-            display: none;
-        }
-
         /* Layout principal */
         .main-layout {
             display: flex;
@@ -79,6 +76,10 @@
 
         .right-col {
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
         }
 
         /* ZONE DESCENTE */
@@ -105,7 +106,7 @@
             min-height: 100px;
         }
 
-        /* CARTES DESCENTE - taille normale avec hover */
+        /* CARTES DESCENTE */
         .descente-card {
             width: 80px;
             height: 110px;
@@ -156,6 +157,127 @@
             margin: 5px 0 0 0;
             font-size: 0.8rem;
         }
+
+        /* STYLE COMPTEURS pour chaque zone */
+        .groupe-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 12px;
+            transition: 0.1s;
+        }
+        
+        .zone-compteurs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .compteur {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 5px 8px;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .compteur-dore {
+            background: linear-gradient(135deg, #d4af37, #ffd700, #b8860b);
+            border: 1px solid #ffea80;
+        }
+        
+        .compteur-dore .compteur-label {
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+        
+        .compteur-label {
+            font-size: 0.7rem;
+            margin-bottom: 3px;
+            color: #ddd;
+        }
+        
+        .compteur-valeur {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 2px 0;
+        }
+        
+        .compteur-boutons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .compteur-btn {
+            background: #3a3a3a;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.05s;
+        }
+        
+        .compteur-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .compteur-btn.moins:hover {
+            background: #8b3a3a;
+        }
+        
+        .compteur-btn.plus:hover {
+            background: #3a8b3a;
+        }
+        
+        .compteur-dore .compteur-btn {
+            background: #5a4a1a;
+            color: #ffea80;
+        }
+        
+        .compteur-dore .compteur-btn:hover {
+            background: #8b6a2a;
+        }
+
+        /* Petit compteur pour Descente */
+        .petit-compteur {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 8px 15px;
+            text-align: center;
+            width: 140px;
+        }
+        
+        .petit-compteur h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+        
+        .petit-compteur .compteur-valeur {
+            font-size: 1.8rem;
+            margin: 5px 0;
+        }
+        
+        .petit-compteur .compteur-boutons {
+            gap: 10px;
+        }
+        
+        .petit-compteur .compteur-btn {
+            width: 32px;
+            height: 32px;
+            font-size: 1.2rem;
+        }
+
+        /* Zone en cours de drag */
+        .zone.drag-over {
+            transform: scale(1.02);
+            border: 3px solid gold !important;
+        }
     </style>
 </head>
 <body style="font-family: Arial, sans-serif; text-align: center; background: #1a2a1a; margin: 0; padding: 20px;">
@@ -163,13 +285,11 @@
     <div class="main-layout">
         <!-- COLONNE GAUCHE : Deux pioches -->
         <div class="pioche-col">
-            <!-- Pioche Butin -->
             <div id="pioche-butin" style="background: #8b5a2b; color: white; width: 120px; height: 170px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.2rem;">
                 🃏<br>
                 Butin
             </div>
             
-            <!-- Pioche Descente -->
             <div id="pioche-descente" style="background: #5a3a7a; color: white; width: 120px; height: 170px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 3px 3px 10px rgba(0,0,0,0.3); font-weight: bold; font-size: 1.2rem;">
                 ⬇️<br>
                 Descente
@@ -178,7 +298,6 @@
 
         <!-- COLONNE CENTRALE : Jeu -->
         <div class="game-col">
-            <!-- Carte Butin piochée -->
             <div id="courante-butin" style="background: #fdf5e6; width: 120px; height: 170px; margin: 0 auto 20px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border: 2px solid #ffaa44; overflow: hidden;">
                 <div style="text-align: center; font-size: 0.9rem;">⬅️ Butin</div>
             </div>
@@ -186,60 +305,142 @@
             <!-- ZONE DESCENTE -->
             <div class="descente-container">
                 <h4>📦 Cartes Descente (clique pour les utiliser)</h4>
-                <div id="descente-cartes" class="descente-cartes">
-                    <!-- Les cartes Descente apparaîtront ici -->
+                <div id="descente-cartes" class="descente-cartes"></div>
+            </div>
+
+            <!-- Carte Descente courante + Petit compteur à droite -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin: 10px auto;">
+                <div id="courante-descente" style="background: #2a2a4a; width: 100px; height: 140px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid #aa88ff; overflow: hidden;">
+                    <div style="text-align: center; font-size: 0.8rem; color: white;">Choisis<br>une carte<br>⬇️</div>
+                </div>
+                
+                <!-- Petit compteur pour Descente -->
+                <div id="compteur-descente" class="petit-compteur">
+                    <h4>⚡ Compteur Descente</h4>
+                    <div class="compteur-valeur" id="valeur-descente">0</div>
+                    <div class="compteur-boutons">
+                        <button class="compteur-btn moins" data-target="descente">-</button>
+                        <button class="compteur-btn plus" data-target="descente">+</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Carte Descente courante -->
-            <div id="courante-descente" style="background: #2a2a4a; width: 100px; height: 140px; margin: 10px auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid #aa88ff; overflow: hidden;">
-                <div style="text-align: center; font-size: 0.8rem; color: white;">Choisis<br>une carte<br>⬇️</div>
-            </div>
-
-            <!-- 4 GROUPES -->
+            <!-- 4 GROUPES avec leurs compteurs -->
             <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
                 
-                <!-- GROUPE 1 - ROUGE -->
-                <div style="background: #4a1a1a; border-radius: 15px; padding: 12px; border: 2px solid #ff6666;">
+                <!-- GROUPE 1 - FEU -->
+                <div class="groupe-container" style="background: #4a1a1a; border-radius: 15px; padding: 12px; border: 2px solid #ff6666;">
                     <h3 style="color: #ff8888; margin: 0 0 10px 0; font-size: 1.1rem;">🔥 Feu</h3>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 180px;">
-                        <div class="zone" data-zone="1" data-groupe="feu" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="2" data-groupe="feu" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="3" data-groupe="feu" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="4" data-groupe="feu" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="1" data-groupe="feu" draggable="true" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="2" data-groupe="feu" draggable="true" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="3" data-groupe="feu" draggable="true" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="4" data-groupe="feu" draggable="true" style="background: #8b3a3a; aspect-ratio: 3 / 4; border: 2px solid #ff8888; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                    </div>
+                    <div class="zone-compteurs">
+                        <div class="compteur compteur-dore" data-groupe="feu" data-type="principal">
+                            <div class="compteur-label">🌟 Principal</div>
+                            <div class="compteur-valeur" id="feu-principal">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="feu" data-type="principal">-</button>
+                                <button class="compteur-btn plus" data-groupe="feu" data-type="principal">+</button>
+                            </div>
+                        </div>
+                        <div class="compteur" data-groupe="feu" data-type="secondaire">
+                            <div class="compteur-label">📊 Secondaire</div>
+                            <div class="compteur-valeur" id="feu-secondaire">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="feu" data-type="secondaire">-</button>
+                                <button class="compteur-btn plus" data-groupe="feu" data-type="secondaire">+</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- GROUPE 2 - BLEU -->
-                <div style="background: #1a1a4a; border-radius: 15px; padding: 12px; border: 2px solid #6666ff;">
+                <!-- GROUPE 2 - EAU -->
+                <div class="groupe-container" style="background: #1a1a4a; border-radius: 15px; padding: 12px; border: 2px solid #6666ff;">
                     <h3 style="color: #8888ff; margin: 0 0 10px 0; font-size: 1.1rem;">💧 Eau</h3>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 180px;">
-                        <div class="zone" data-zone="5" data-groupe="eau" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="6" data-groupe="eau" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="7" data-groupe="eau" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="8" data-groupe="eau" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="5" data-groupe="eau" draggable="true" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="6" data-groupe="eau" draggable="true" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="7" data-groupe="eau" draggable="true" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="8" data-groupe="eau" draggable="true" style="background: #3a3a8b; aspect-ratio: 3 / 4; border: 2px solid #8888ff; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                    </div>
+                    <div class="zone-compteurs">
+                        <div class="compteur compteur-dore" data-groupe="eau" data-type="principal">
+                            <div class="compteur-label">🌟 Principal</div>
+                            <div class="compteur-valeur" id="eau-principal">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="eau" data-type="principal">-</button>
+                                <button class="compteur-btn plus" data-groupe="eau" data-type="principal">+</button>
+                            </div>
+                        </div>
+                        <div class="compteur" data-groupe="eau" data-type="secondaire">
+                            <div class="compteur-label">📊 Secondaire</div>
+                            <div class="compteur-valeur" id="eau-secondaire">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="eau" data-type="secondaire">-</button>
+                                <button class="compteur-btn plus" data-groupe="eau" data-type="secondaire">+</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- GROUPE 3 - VERT -->
-                <div style="background: #1a4a1a; border-radius: 15px; padding: 12px; border: 2px solid #66ff66;">
+                <!-- GROUPE 3 - TERRE -->
+                <div class="groupe-container" style="background: #1a4a1a; border-radius: 15px; padding: 12px; border: 2px solid #66ff66;">
                     <h3 style="color: #88ff88; margin: 0 0 10px 0; font-size: 1.1rem;">🌿 Terre</h3>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 180px;">
-                        <div class="zone" data-zone="9" data-groupe="terre" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="10" data-groupe="terre" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="11" data-groupe="terre" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="12" data-groupe="terre" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="9" data-groupe="terre" draggable="true" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="10" data-groupe="terre" draggable="true" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="11" data-groupe="terre" draggable="true" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="12" data-groupe="terre" draggable="true" style="background: #3a8b3a; aspect-ratio: 3 / 4; border: 2px solid #88ff88; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                    </div>
+                    <div class="zone-compteurs">
+                        <div class="compteur compteur-dore" data-groupe="terre" data-type="principal">
+                            <div class="compteur-label">🌟 Principal</div>
+                            <div class="compteur-valeur" id="terre-principal">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="terre" data-type="principal">-</button>
+                                <button class="compteur-btn plus" data-groupe="terre" data-type="principal">+</button>
+                            </div>
+                        </div>
+                        <div class="compteur" data-groupe="terre" data-type="secondaire">
+                            <div class="compteur-label">📊 Secondaire</div>
+                            <div class="compteur-valeur" id="terre-secondaire">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="terre" data-type="secondaire">-</button>
+                                <button class="compteur-btn plus" data-groupe="terre" data-type="secondaire">+</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- GROUPE 4 - JAUNE -->
-                <div style="background: #4a3a1a; border-radius: 15px; padding: 12px; border: 2px solid #ffcc66;">
+                <!-- GROUPE 4 - FOUDRE -->
+                <div class="groupe-container" style="background: #4a3a1a; border-radius: 15px; padding: 12px; border: 2px solid #ffcc66;">
                     <h3 style="color: #ffcc66; margin: 0 0 10px 0; font-size: 1.1rem;">⚡ Foudre</h3>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 180px;">
-                        <div class="zone" data-zone="13" data-groupe="foudre" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="14" data-groupe="foudre" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="15" data-groupe="foudre" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
-                        <div class="zone" data-zone="16" data-groupe="foudre" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="13" data-groupe="foudre" draggable="true" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="14" data-groupe="foudre" draggable="true" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="15" data-groupe="foudre" draggable="true" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                        <div class="zone" data-zone="16" data-groupe="foudre" draggable="true" style="background: #8b7a3a; aspect-ratio: 3 / 4; border: 2px solid #ffcc66; border-radius: 8px; cursor: pointer; overflow: hidden;"><div class="carte-dans-zone"></div></div>
+                    </div>
+                    <div class="zone-compteurs">
+                        <div class="compteur compteur-dore" data-groupe="foudre" data-type="principal">
+                            <div class="compteur-label">🌟 Principal</div>
+                            <div class="compteur-valeur" id="foudre-principal">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="foudre" data-type="principal">-</button>
+                                <button class="compteur-btn plus" data-groupe="foudre" data-type="principal">+</button>
+                            </div>
+                        </div>
+                        <div class="compteur" data-groupe="foudre" data-type="secondaire">
+                            <div class="compteur-label">📊 Secondaire</div>
+                            <div class="compteur-valeur" id="foudre-secondaire">0</div>
+                            <div class="compteur-boutons">
+                                <button class="compteur-btn moins" data-groupe="foudre" data-type="secondaire">-</button>
+                                <button class="compteur-btn plus" data-groupe="foudre" data-type="secondaire">+</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -262,6 +463,17 @@
         let carteDescenteCourante = null;
         let cartesDescentePiochees = [];
         let hoverPreview = null;
+        let draggedZone = null;
+        let draggedCarteData = null;
+        
+        // Valeurs des compteurs
+        let compteursZones = {
+            feu: { principal: 0, secondaire: 0 },
+            eau: { principal: 0, secondaire: 0 },
+            terre: { principal: 0, secondaire: 0 },
+            foudre: { principal: 0, secondaire: 0 }
+        };
+        let compteurDescenteValue = 0;
 
         function getButinPath(carteId) {
             return `images/Butin_card${carteId}.png`;
@@ -318,7 +530,6 @@
                     afficherCarteDescenteCourante();
                 });
                 
-                // AJOUT DU HOVER pour les cartes Descente
                 cardDiv.addEventListener("mouseenter", (e) => {
                     showHoverPreview(carte.image, e);
                 });
@@ -378,7 +589,71 @@
             mettreAJourAffichageDescente();
         }
 
-        function viderCarte() {
+        // Récupérer la carte d'une zone
+        function getCarteFromZone(zoneElement) {
+            const container = zoneElement.querySelector('.carte-dans-zone');
+            const img = container.querySelector('img');
+            if (!img) return null;
+            
+            // On retourne un objet carte à partir de l'image
+            return {
+                image: img.src,
+                nom: img.alt,
+                type: 'zone'
+            };
+        }
+
+        // Vider une zone
+        function viderZone(zoneElement) {
+            const container = zoneElement.querySelector('.carte-dans-zone');
+            container.innerHTML = '';
+            zoneElement.style.border = zoneElement.style.border.replace('3px solid gold', '');
+            if (zoneElement.style.border === '') {
+                // Remettre la bordure d'origine en fonction du groupe
+                const groupe = zoneElement.getAttribute('data-groupe');
+                if (groupe === 'feu') zoneElement.style.border = '2px solid #ff8888';
+                else if (groupe === 'eau') zoneElement.style.border = '2px solid #8888ff';
+                else if (groupe === 'terre') zoneElement.style.border = '2px solid #88ff88';
+                else if (groupe === 'foudre') zoneElement.style.border = '2px solid #ffcc66';
+            }
+        }
+
+        // Déposer une carte dans une zone (remplace l'existante)
+        function deposerDansZone(zoneElement, carte, sourceZone = null) {
+            if (!carte) return false;
+            
+            // Si la zone cible a déjà une carte, on la jette (remplacement)
+            const existingImg = zoneElement.querySelector('.carte-dans-zone img');
+            if (existingImg && sourceZone !== zoneElement) {
+                // On supprime l'ancienne carte
+                viderZone(zoneElement);
+            }
+            
+            const carteContainer = zoneElement.querySelector(".carte-dans-zone");
+            if (carteContainer) {
+                carteContainer.innerHTML = `<img src="${carte.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;" alt="${carte.nom}">`;
+            }
+            
+            zoneElement.style.border = "3px solid gold";
+            
+            console.log(`Carte ${carte.nom} déposée dans zone ${zoneElement.getAttribute("data-zone")}`);
+            
+            return true;
+        }
+
+        // Supprimer une carte (poubelle)
+        function supprimerCarte(zoneElement) {
+            if (!zoneElement) return false;
+            const hasCarte = zoneElement.querySelector('.carte-dans-zone img');
+            if (hasCarte) {
+                viderZone(zoneElement);
+                console.log("Carte supprimée de la zone");
+                return true;
+            }
+            return false;
+        }
+
+        function viderCarteCourante() {
             if (carteButinCourante) {
                 carteButinCourante = null;
                 afficherCarteButinCourante();
@@ -402,49 +677,51 @@
             }
         }
 
-        function deposerDansZone(zoneElement, carte) {
-            if (!carte) {
-                alert("Sélectionne d'abord une carte ! (pioche Butin ou clique sur une carte Descente)");
-                return false;
-            }
-            
-            const zoneId = zoneElement.getAttribute("data-zone");
-            const groupe = zoneElement.getAttribute("data-groupe");
-            
-            const carteContainer = zoneElement.querySelector(".carte-dans-zone");
-            if (carteContainer) {
-                carteContainer.innerHTML = `<img src="${carte.image}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;" alt="${carte.nom}">`;
-            }
-            
-            zoneElement.style.border = "2px solid gold";
-            
-            console.log(`Carte ${carte.nom} (${carte.type}) → Groupe ${groupe} - Zone ${zoneId}`);
-            
-            return true;
-        }
-
-        function handleZoneClick(zoneElement) {
-            if (carteDescenteCourante) {
-                deposerDansZone(zoneElement, carteDescenteCourante);
-                const index = cartesDescentePiochees.findIndex(c => c.id === carteDescenteCourante.id);
-                if (index !== -1) {
-                    cartesDescentePiochees.splice(index, 1);
-                }
-                carteDescenteCourante = null;
-                afficherCarteDescenteCourante();
-                mettreAJourAffichageDescente();
-            }
-            else if (carteButinCourante) {
-                deposerDansZone(zoneElement, carteButinCourante);
-                carteButinCourante = null;
-                afficherCarteButinCourante();
-            }
-            else {
-                alert("Pioche une carte Butin ou sélectionne une carte Descente !");
+        // Gestion des compteurs
+        function updateCompteurZone(groupe, type, value) {
+            compteursZones[groupe][type] = Math.max(0, value);
+            const id = `${groupe}-${type}`;
+            const element = document.getElementById(id);
+            if (element) {
+                element.innerText = compteursZones[groupe][type];
             }
         }
 
-        // HOVER PREVIEW (générique pour zones et cartes Descente)
+        function updateCompteurDescente(value) {
+            compteurDescenteValue = Math.max(0, value);
+            const element = document.getElementById("valeur-descente");
+            if (element) element.innerText = compteurDescenteValue;
+        }
+
+        function initCompteurs() {
+            const groupes = ['feu', 'eau', 'terre', 'foudre'];
+            groupes.forEach(groupe => {
+                updateCompteurZone(groupe, 'principal', 0);
+                updateCompteurZone(groupe, 'secondaire', 0);
+            });
+            updateCompteurDescente(0);
+            
+            document.querySelectorAll('.compteur-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const groupe = btn.getAttribute('data-groupe');
+                    const type = btn.getAttribute('data-type');
+                    const target = btn.getAttribute('data-target');
+                    
+                    if (target === 'descente') {
+                        const isPlus = btn.classList.contains('plus');
+                        const delta = isPlus ? 1 : -1;
+                        updateCompteurDescente(compteurDescenteValue + delta);
+                    } else if (groupe && type) {
+                        const isPlus = btn.classList.contains('plus');
+                        const delta = isPlus ? 1 : -1;
+                        const currentValue = compteursZones[groupe][type];
+                        updateCompteurZone(groupe, type, currentValue + delta);
+                    }
+                });
+            });
+        }
+
+        // HOVER PREVIEW
         function createHoverPreview() {
             const preview = document.createElement('div');
             preview.className = 'hover-preview';
@@ -504,11 +781,99 @@
             }
         }
 
+        // Drag & Drop pour les zones (déplacement de cartes)
+        function handleDragStart(e) {
+            const zone = e.target.closest('.zone');
+            if (!zone) return;
+            
+            const hasCarte = zone.querySelector('.carte-dans-zone img');
+            if (!hasCarte) {
+                e.preventDefault();
+                return false;
+            }
+            
+            draggedZone = zone;
+            const carte = getCarteFromZone(zone);
+            if (carte) {
+                e.dataTransfer.setData("text/plain", JSON.stringify({ type: 'zone-carte', image: carte.image, nom: carte.nom }));
+                e.dataTransfer.effectAllowed = "move";
+                
+                // Image fantôme
+                const dragIcon = new Image();
+                dragIcon.src = carte.image;
+                e.dataTransfer.setDragImage(dragIcon, 40, 60);
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            const zone = e.target.closest('.zone');
+            if (zone) {
+                zone.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const zone = e.target.closest('.zone');
+            if (zone) {
+                zone.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetZone = e.target.closest('.zone');
+            if (!targetZone) return;
+            
+            targetZone.classList.remove('drag-over');
+            
+            // Vérifier si c'est un déplacement de carte depuis une zone
+            const rawData = e.dataTransfer.getData("text/plain");
+            if (rawData) {
+                try {
+                    const data = JSON.parse(rawData);
+                    if (data.type === 'zone-carte' && draggedZone) {
+                        // Déplacer la carte
+                        const carte = { image: data.image, nom: data.nom };
+                        deposerDansZone(targetZone, carte, draggedZone);
+                        viderZone(draggedZone);
+                        draggedZone = null;
+                        return;
+                    }
+                } catch(e) {}
+            }
+            
+            // Sinon, c'est une carte depuis la main courante
+            if (carteDescenteCourante) {
+                deposerDansZone(targetZone, carteDescenteCourante);
+                const index = cartesDescentePiochees.findIndex(c => c.id === carteDescenteCourante.id);
+                if (index !== -1) {
+                    cartesDescentePiochees.splice(index, 1);
+                }
+                carteDescenteCourante = null;
+                afficherCarteDescenteCourante();
+                mettreAJourAffichageDescente();
+            }
+            else if (carteButinCourante) {
+                deposerDansZone(targetZone, carteButinCourante);
+                carteButinCourante = null;
+                afficherCarteButinCourante();
+            }
+        }
+
         document.getElementById("pioche-butin").addEventListener("click", piocherButin);
         document.getElementById("pioche-descente").addEventListener("click", piocherDescente);
 
+        // Poubelle
         const poubelle = document.getElementById("poubelle");
-        poubelle.addEventListener("click", viderCarte);
+        poubelle.addEventListener("click", () => {
+            if (carteButinCourante || carteDescenteCourante) {
+                viderCarteCourante();
+            } else {
+                alert("Aucune carte en main à jeter !");
+            }
+        });
         
         poubelle.addEventListener("dragover", (e) => {
             e.preventDefault();
@@ -522,29 +887,23 @@
         poubelle.addEventListener("drop", (e) => {
             e.preventDefault();
             poubelle.classList.remove("drag-over");
-            viderCarte();
+            
+            // Vérifier si on jette une carte depuis une zone
+            if (draggedZone) {
+                supprimerCarte(draggedZone);
+                draggedZone = null;
+            } else {
+                viderCarteCourante();
+            }
         });
 
+        // Zones
         const zones = document.querySelectorAll(".zone");
         zones.forEach(zone => {
-            zone.addEventListener("click", () => {
-                handleZoneClick(zone);
-            });
-            
-            zone.addEventListener("dragover", (e) => {
-                e.preventDefault();
-                zone.style.transform = "scale(1.02)";
-            });
-            
-            zone.addEventListener("dragleave", () => {
-                zone.style.transform = "scale(1)";
-            });
-            
-            zone.addEventListener("drop", (e) => {
-                e.preventDefault();
-                zone.style.transform = "scale(1)";
-                handleZoneClick(zone);
-            });
+            zone.addEventListener("dragstart", handleDragStart);
+            zone.addEventListener("dragover", handleDragOver);
+            zone.addEventListener("dragleave", handleDragLeave);
+            zone.addEventListener("drop", handleDrop);
             
             zone.addEventListener("mouseenter", (e) => {
                 const imgElement = zone.querySelector('.carte-dans-zone img');
@@ -562,6 +921,7 @@
             });
         });
 
+        // Drag depuis les cartes courantes
         const butinElem = document.getElementById("courante-butin");
         butinElem.setAttribute("draggable", "true");
         butinElem.addEventListener("dragstart", (e) => {
@@ -569,7 +929,7 @@
                 e.preventDefault();
                 return false;
             }
-            e.dataTransfer.setData("text/plain", "butin");
+            e.dataTransfer.setData("text/plain", JSON.stringify({ type: 'butin', image: carteButinCourante.image, nom: carteButinCourante.nom }));
             if (carteButinCourante.image) {
                 const dragIcon = new Image();
                 dragIcon.src = carteButinCourante.image;
@@ -584,7 +944,7 @@
                 e.preventDefault();
                 return false;
             }
-            e.dataTransfer.setData("text/plain", "descente");
+            e.dataTransfer.setData("text/plain", JSON.stringify({ type: 'descente', image: carteDescenteCourante.image, nom: carteDescenteCourante.nom }));
             if (carteDescenteCourante.image) {
                 const dragIcon = new Image();
                 dragIcon.src = carteDescenteCourante.image;
@@ -593,6 +953,7 @@
         });
 
         initDecks();
+        initCompteurs();
     </script>
 </body>
 </html>
