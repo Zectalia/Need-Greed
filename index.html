@@ -7,14 +7,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: linear-gradient(135deg, #1a472a 0%, #0e2a1a 100%);
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -45,324 +41,50 @@
             font-weight: bold;
             gap: 15px;
         }
-        .players-online {
-            background: #00000066;
-            padding: 5px 16px;
-            border-radius: 40px;
-            font-size: 0.9rem;
-        }
-        .reset-btn {
-            background: #c47b3e;
-            border: none;
-            color: white;
-            font-weight: bold;
-            padding: 6px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .reset-btn:hover {
-            background: #a85f2c;
-            transform: scale(0.97);
-        }
-        .pioches-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
-        .pioche {
-            flex: 1;
-            min-width: 320px;
-            background: #2c2b28;
-            border-radius: 32px;
-            padding: 25px 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .pioche-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 50px;
-            background: #3f2a1f;
-            color: #fef0cf;
-        }
-        .pioche-title.donjon {
-            background: #5a2d2d;
-            box-shadow: 0 0 10px rgba(255,0,0,0.3);
-        }
-        .pioche-title.butins {
-            background: #2d5a3b;
-            box-shadow: 0 0 10px rgba(255,215,0,0.3);
-        }
-        .card-area {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 30px 20px;
-            min-height: 380px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .card {
-            background: transparent;
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            max-width: 320px;
-            width: 100%;
-            cursor: grab;
-        }
-        .card:active {
-            cursor: grabbing;
-        }
-        .card.dragging {
-            opacity: 0.5;
-        }
-        .card:hover {
-            transform: scale(1.08);
-            filter: drop-shadow(0 0 15px rgba(255,215,0,0.5));
-        }
-        .card img {
-            max-width: 100%;
-            width: auto;
-            height: auto;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            display: block;
-            margin: 0 auto;
-            pointer-events: none;
-        }
-        .empty-card {
-            color: #ecd9b4;
-            font-size: 1.2rem;
-            text-align: center;
-            padding: 40px;
-            background: #3f2a1f66;
-            border-radius: 24px;
-        }
-        .finish-message {
-            color: #ffaa44;
-            font-size: 1.4rem;
-            text-align: center;
-            padding: 40px;
-            background: #2d1f12cc;
-            border-radius: 24px;
-            font-weight: bold;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.02); }
-        }
-        .draw-btn {
-            background: #ffaa44;
-            border: none;
-            color: #2d1f12;
-            font-size: 1.3rem;
-            font-weight: bold;
-            padding: 12px 25px;
-            border-radius: 60px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            margin: 15px 0 10px;
-            width: 90%;
-        }
-        .draw-btn.disabled {
-            background: #888;
-            cursor: not-allowed;
-            opacity: 0.6;
-            transform: none;
-        }
-        .draw-btn.disabled:hover {
-            background: #888;
-            transform: none;
-        }
-        .draw-btn:hover {
-            background: #ffcc66;
-            transform: scale(1.02);
-        }
-        .draw-btn:active {
-            transform: scale(0.98);
-        }
-        .deck-info {
-            background: #3f2a1f;
-            color: #fef0cf;
-            padding: 8px;
-            border-radius: 30px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-        }
-        .reset-pioche-btn {
-            background: #c47b3e88;
-            border: 1px solid #c47b3e;
-            color: white;
-            font-size: 0.8rem;
-            padding: 5px 12px;
-            border-radius: 30px;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: all 0.2s;
-        }
-        .reset-pioche-btn:hover {
-            background: #c47b3e;
-        }
-        .generate-pioche-btn {
-            background: #6b3e8f88;
-            border: 1px solid #8b5eb3;
-            color: white;
-            font-size: 0.8rem;
-            padding: 5px 12px;
-            border-radius: 30px;
-            cursor: pointer;
-            margin-top: 8px;
-            margin-left: 8px;
-            transition: all 0.2s;
-        }
-        .generate-pioche-btn:hover {
-            background: #8b5eb3;
-        }
-        .button-group {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-        .badge {
-            background: #00000099;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            margin-left: 8px;
-        }
-        .finished-badge {
-            background: #ffaa44;
-            color: #2d1f12;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            margin-left: 8px;
-            font-weight: bold;
-        }
+        .players-online { background: #00000066; padding: 5px 16px; border-radius: 40px; font-size: 0.9rem; }
+        .reset-btn { background: #c47b3e; border: none; color: white; font-weight: bold; padding: 6px 18px; border-radius: 30px; cursor: pointer; transition: all 0.2s; }
+        .reset-btn:hover { background: #a85f2c; }
+        .pioches-container { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; margin-bottom: 40px; }
+        .pioche { flex: 1; min-width: 320px; background: #2c2b28; border-radius: 32px; padding: 25px 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .pioche-title { font-size: 1.8rem; font-weight: bold; margin-bottom: 20px; padding: 10px; border-radius: 50px; background: #3f2a1f; color: #fef0cf; }
+        .pioche-title.donjon { background: #5a2d2d; }
+        .pioche-title.butins { background: #2d5a3b; }
+        .card-area { background: #1a1a1a; border-radius: 20px; padding: 30px 20px; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px; }
+        .card { background: transparent; text-align: center; transition: transform 0.3s; max-width: 320px; width: 100%; cursor: grab; }
+        .card:active { cursor: grabbing; }
+        .card:hover { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255,215,0,0.5)); }
+        .card img { max-width: 100%; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: block; margin: 0 auto; pointer-events: none; }
+        .empty-card { color: #ecd9b4; font-size: 1.2rem; text-align: center; padding: 40px; background: #3f2a1f66; border-radius: 24px; }
+        .finish-message { color: #ffaa44; font-size: 1.4rem; text-align: center; padding: 40px; background: #2d1f12cc; border-radius: 24px; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .draw-btn { background: #ffaa44; border: none; color: #2d1f12; font-size: 1.3rem; font-weight: bold; padding: 12px 25px; border-radius: 60px; cursor: pointer; margin: 15px 0 10px; width: 90%; }
+        .draw-btn.disabled { background: #888; cursor: not-allowed; opacity: 0.6; }
+        .draw-btn:hover { background: #ffcc66; transform: scale(1.02); }
+        .deck-info { background: #3f2a1f; color: #fef0cf; padding: 8px; border-radius: 30px; margin-top: 10px; font-size: 0.85rem; }
+        .reset-pioche-btn { background: #c47b3e88; border: 1px solid #c47b3e; color: white; font-size: 0.8rem; padding: 5px 12px; border-radius: 30px; cursor: pointer; margin-top: 8px; }
+        .reset-pioche-btn:hover { background: #c47b3e; }
+        .generate-pioche-btn { background: #6b3e8f88; border: 1px solid #8b5eb3; color: white; font-size: 0.8rem; padding: 5px 12px; border-radius: 30px; cursor: pointer; margin-top: 8px; margin-left: 8px; }
+        .generate-pioche-btn:hover { background: #8b5eb3; }
+        .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+        .badge { background: #00000099; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; }
+        .finished-badge { background: #ffaa44; color: #2d1f12; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; font-weight: bold; }
         
-        /* INVENTAIRES - Version simple et qui marche */
-        .inventories-container {
-            margin-top: 20px;
-        }
-        .inventories-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 50px;
-            background: #3f2a1f;
-            color: #fef0cf;
-            display: inline-block;
-            width: auto;
-            padding: 10px 30px;
-        }
-        .inventories-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .inventory-box {
-            flex: 1;
-            min-width: 280px;
-            background: #2c2b28;
-            border-radius: 24px;
-            padding: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .inventory-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #ffaa44;
-            margin-bottom: 15px;
-            padding: 8px;
-            background: #1a1a1a;
-            border-radius: 20px;
-        }
-        .slots-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-        .slot {
-            background: #1a1a1a;
-            border-radius: 16px;
-            padding: 15px;
-            min-height: 170px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 2px dashed #c47b3e;
-            transition: all 0.2s;
-        }
-        .slot.drag-over {
-            background: #4a3a2a;
-            border-color: #ffaa44;
-        }
-        .slot-card {
-            width: 100%;
-            max-width: 110px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .slot-card img {
-            width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .slot-card.flipped {
-            transform: rotate(180deg);
-        }
-        .slot-card:hover {
-            transform: scale(1.05);
-        }
-        .empty-slot {
-            color: #ecd9b4;
-            font-size: 0.8rem;
-            text-align: center;
-            padding: 20px 5px;
-        }
-        .clear-inv {
-            background: #c47b3e88;
-            border: 1px solid #c47b3e;
-            color: white;
-            font-size: 0.7rem;
-            padding: 5px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
-        }
-        .clear-inv:hover {
-            background: #c47b3e;
-        }
-        
-        footer {
-            font-size: 0.7rem;
-            text-align: center;
-            margin-top: 25px;
-            color: #5e4a31;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .card, .slot-card {
-            animation: fadeIn 0.25s ease;
-        }
+        .inventories-container { margin-top: 20px; }
+        .inventories-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; padding: 10px 30px; border-radius: 50px; background: #3f2a1f; color: #fef0cf; display: inline-block; }
+        .inventories-grid { display: flex; flex-wrap: wrap; gap: 25px; justify-content: center; margin-top: 20px; }
+        .inventory-box { flex: 1; min-width: 280px; background: #2c2b28; border-radius: 24px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .inventory-title { font-size: 1.3rem; font-weight: bold; color: #ffaa44; margin-bottom: 15px; padding: 8px; background: #1a1a1a; border-radius: 20px; }
+        .slots-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px; }
+        .slot { background: #1a1a1a; border-radius: 16px; padding: 15px; min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #c47b3e; transition: all 0.2s; }
+        .slot.drag-over { background: #4a3a2a; border-color: #ffaa44; }
+        .slot-card { width: 100%; max-width: 110px; cursor: pointer; transition: transform 0.2s; }
+        .slot-card img { width: 100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .slot-card.flipped { transform: rotate(180deg); }
+        .slot-card:hover { transform: scale(1.05); }
+        .empty-slot { color: #ecd9b4; font-size: 0.8rem; text-align: center; padding: 20px 5px; }
+        .clear-inv { background: #c47b3e88; border: 1px solid #c47b3e; color: white; font-size: 0.7rem; padding: 5px 12px; border-radius: 20px; cursor: pointer; margin-top: 10px; width: 100%; }
+        .clear-inv:hover { background: #c47b3e; }
+        footer { font-size: 0.7rem; text-align: center; margin-top: 25px; color: #5e4a31; }
     </style>
 </head>
 <body>
@@ -377,342 +99,169 @@
     <div class="pioches-container">
         <div class="pioche">
             <div class="pioche-title donjon">🏰 DONJON 🏰</div>
-            <div class="card-area" id="donjonCardArea">
-                <div class="empty-card">⚔️ Cliquez sur PIOCHEZ !</div>
-            </div>
+            <div class="card-area" id="donjonCardArea"><div class="empty-card">⚔️ Cliquez sur PIOCHEZ !</div></div>
             <button class="draw-btn" id="donjonDrawBtn">⚔️ PIOCHEZ UNE CARTE</button>
-            <div class="deck-info">
-                📚 Cartes restantes : <span id="donjonCardsLeft">0</span>
-                <span class="badge" id="donjonComposition"></span>
-                <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span>
-            </div>
-            <div class="button-group">
-                <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE</button>
-            </div>
+            <div class="deck-info">📚 Cartes restantes : <span id="donjonCardsLeft">0</span> <span class="badge" id="donjonComposition"></span> <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span></div>
+            <div class="button-group"><button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE</button></div>
         </div>
-
         <div class="pioche">
             <div class="pioche-title butins">💰 BUTINS 💰</div>
-            <div class="card-area" id="butinsCardArea">
-                <div class="empty-card">💎 Cliquez sur PIOCHEZ !</div>
-            </div>
+            <div class="card-area" id="butinsCardArea"><div class="empty-card">💎 Cliquez sur PIOCHEZ !</div></div>
             <button class="draw-btn" id="butinsDrawBtn">💰 PIOCHEZ UNE CARTE</button>
-            <div class="deck-info">
-                📚 Cartes restantes : <span id="butinsCardsLeft">0</span>
-            </div>
-            <div>
-                <button class="reset-pioche-btn" id="resetButinsBtn">🔄 Remettre toutes les cartes</button>
-            </div>
+            <div class="deck-info">📚 Cartes restantes : <span id="butinsCardsLeft">0</span></div>
+            <div><button class="reset-pioche-btn" id="resetButinsBtn">🔄 Remettre toutes les cartes</button></div>
         </div>
     </div>
 
-    <!-- 4 INVENTAIRES × 4 ZONES = 16 ZONES -->
     <div class="inventories-container">
         <div class="inventories-title">📦 INVENTAIRES (16 zones - 4 par inventaire) 📦</div>
         <div class="inventories-grid" id="inventoriesGrid"></div>
     </div>
 
-    <footer>
-        ⚡ Synchronisation temps réel • Glissez une carte BUTIN vers n'importe quelle zone vide<br>
-        🔄 Glissez une carte d'une zone à une autre (même inventaire ou autre inventaire)<br>
-        🖱️ Cliquez sur une carte pour la retourner
-    </footer>
+    <footer>⚡ Synchronisation temps réel<br>💰 Glissez une carte BUTIN vers n'importe quelle zone<br>🖱️ Cliquez sur une carte pour la retourner</footer>
 </div>
 
 <script>
-    // ========== CONFIGURATION FIREBASE ==========
-    const firebaseConfig = {
-        databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/"
-    };
-    
+    const firebaseConfig = { databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/" };
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // Références
-    const donjonRef = database.ref('/donjon_final_16');
-    const butinsRef = database.ref('/butins_final_16');
+    const donjonRef = database.ref('/donjon_16_work');
+    const butinsRef = database.ref('/butins_16_work');
     
-    // ========== CONFIGURATION DES CARTES ==========
-    function formatCardNumber(num) {
-        return num.toString().padStart(2, '0');
-    }
-    
-    const NB_MONSTRE = 26;
-    const NB_EVENEMENTS = 29;
+    function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
     const ALL_MONSTRES = [];
-    for (let i = 0; i < NB_MONSTRE; i++) {
-        ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
-    }
-    
+    for (let i = 0; i < 26; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
     const ALL_EVENEMENTS = [];
-    for (let i = 0; i < NB_EVENEMENTS; i++) {
-        ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
-    }
-    
-    const NB_BUTINS_CARDS = 37;
+    for (let i = 0; i < 29; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
     const BUTINS_CARDS = [];
-    for (let i = 0; i < NB_BUTINS_CARDS; i++) {
-        BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
-    }
+    for (let i = 0; i < 37; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
     
-    // ========== FONCTIONS ==========
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
+    function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+    function getRandomElements(arr, n) { const shuffled = shuffleArray([...arr]); return shuffled.slice(0, Math.min(n, arr.length)); }
+    function generateNewDonjonDeck() { return shuffleArray([...getRandomElements(ALL_MONSTRES, 5), ...getRandomElements(ALL_EVENEMENTS, 5)]); }
     
-    function getRandomElements(arr, n) {
-        if (n > arr.length) n = arr.length;
-        const shuffled = shuffleArray([...arr]);
-        return shuffled.slice(0, n);
-    }
+    let allSlots = [];
     
-    function generateNewDonjonDeck() {
-        const randomMonstres = getRandomElements(ALL_MONSTRES, 5);
-        const randomEvenements = getRandomElements(ALL_EVENEMENTS, 5);
-        return shuffleArray([...randomMonstres, ...randomEvenements]);
-    }
-    
-    // ========== CLASSE POUR UNE ZONE (version qui marche) ==========
-    class GameSlot {
-        constructor(inventoryId, slotId, firebasePath) {
-            this.inventoryId = inventoryId;
-            this.slotId = slotId;
-            this.firebaseRef = database.ref(firebasePath);
-            this.element = null;
+    class InventorySlot {
+        constructor(invNum, slotNum, firebaseRef, element) {
+            this.invNum = invNum;
+            this.slotNum = slotNum;
+            this.firebaseRef = firebaseRef;
+            this.element = element;
             this.currentCard = null;
             this.flipped = false;
-            
             this.init();
-        }
-        
-        setElement(element) {
-            this.element = element;
-            this.render();
-            this.setupDragEvents();
+            this.setupDragAndDrop();
         }
         
         init() {
             this.firebaseRef.on('value', (snap) => {
                 const data = snap.val();
-                if (data) {
-                    this.currentCard = data.card;
-                    this.flipped = data.flipped || false;
-                } else {
-                    this.currentCard = null;
-                    this.flipped = false;
-                }
+                if (data) { this.currentCard = data.card; this.flipped = data.flipped || false; }
+                else { this.currentCard = null; this.flipped = false; }
                 this.render();
             });
         }
         
         render() {
             if (!this.element) return;
-            
             if (this.currentCard) {
-                const flippedClass = this.flipped ? 'flipped' : '';
-                this.element.innerHTML = `
-                    <div class="slot-card ${flippedClass}" draggable="true" data-inv="${this.inventoryId}" data-slot="${this.slotId}">
-                        <img src="${this.currentCard.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'">
-                    </div>
-                `;
-                const cardDiv = this.element.querySelector('.slot-card');
-                cardDiv.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.flipped = !this.flipped;
-                    this.save();
-                });
-                cardDiv.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', JSON.stringify({
-                        action: 'move',
-                        fromInv: this.inventoryId,
-                        fromSlot: this.slotId,
-                        card: this.currentCard
-                    }));
-                    e.dataTransfer.effectAllowed = 'move';
-                });
+                this.element.innerHTML = `<div class="slot-card ${this.flipped ? 'flipped' : ''}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}"><img src="${this.currentCard.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'"></div>`;
+                const cardEl = this.element.querySelector('.slot-card');
+                cardEl.addEventListener('click', () => { this.flipped = !this.flipped; this.save(); });
+                cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'move', fromInv: this.invNum, fromSlot: this.slotNum, card: this.currentCard })); });
             } else {
                 this.element.innerHTML = `<div class="empty-slot">✨ Vide ✨<br><small>Glissez une carte</small></div>`;
             }
         }
         
-        save() {
-            if (this.currentCard) {
-                this.firebaseRef.set({
-                    card: this.currentCard,
-                    flipped: this.flipped
-                });
-            } else {
-                this.firebaseRef.set(null);
-            }
-        }
+        save() { this.firebaseRef.set(this.currentCard ? { card: this.currentCard, flipped: this.flipped } : null); }
         
-        setupDragEvents() {
-            this.element.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-                this.element.classList.add('drag-over');
-            });
-            
-            this.element.addEventListener('dragleave', () => {
-                this.element.classList.remove('drag-over');
-            });
-            
+        setupDragAndDrop() {
+            this.element.addEventListener('dragover', (e) => { e.preventDefault(); this.element.classList.add('drag-over'); });
+            this.element.addEventListener('dragleave', () => { this.element.classList.remove('drag-over'); });
             this.element.addEventListener('drop', (e) => {
                 e.preventDefault();
                 this.element.classList.remove('drag-over');
-                
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    
-                    if (data.action === 'move') {
-                        // Déplacement depuis une autre zone
+                    if (data.type === 'move') {
+                        const source = allSlots.find(s => s.invNum === data.fromInv && s.slotNum === data.fromSlot);
+                        if (!source) return;
                         if (this.currentCard) {
-                            alert("Cette zone est déjà occupée !");
-                            return;
+                            const tempCard = this.currentCard, tempFlip = this.flipped;
+                            this.currentCard = source.currentCard; this.flipped = source.flipped;
+                            source.currentCard = tempCard; source.flipped = tempFlip;
+                            this.save(); source.save();
+                        } else {
+                            this.currentCard = source.currentCard; this.flipped = source.flipped;
+                            source.currentCard = null; source.flipped = false;
+                            this.save(); source.save();
                         }
-                        
-                        const sourceSlot = allSlots.find(s => s.inventoryId === data.fromInv && s.slotId === data.fromSlot);
-                        if (sourceSlot && sourceSlot.currentCard) {
-                            this.currentCard = sourceSlot.currentCard;
-                            this.flipped = sourceSlot.flipped;
-                            sourceSlot.currentCard = null;
-                            sourceSlot.flipped = false;
-                            this.save();
-                            sourceSlot.save();
-                        }
-                        
                     } else if (data.type === 'butin') {
-                        // Nouvelle carte depuis la pioche
-                        if (this.currentCard) {
-                            alert("Cette zone est déjà occupée !");
-                            return;
-                        }
-                        
+                        if (this.currentCard) { alert("Zone occupée !"); return; }
                         this.currentCard = { id: data.id, image: data.image, type: 'butin' };
                         this.flipped = false;
                         this.save();
                         butinsPioche.removeCurrentCard();
                     }
-                } catch (err) {
-                    console.log("Erreur drop:", err);
-                }
+                } catch(err) { console.log(err); }
             });
         }
         
-        clear() {
-            this.currentCard = null;
-            this.flipped = false;
-            this.save();
-        }
+        clear() { this.currentCard = null; this.flipped = false; this.save(); }
     }
     
-    // Stockage de toutes les zones
-    let allSlots = [];
-    
-    // ========== CRÉATION DES 16 ZONES ==========
-    function buildInventoryGrid() {
+    function buildInventories() {
         const grid = document.getElementById('inventoriesGrid');
         grid.innerHTML = '';
         allSlots = [];
         
         for (let inv = 1; inv <= 4; inv++) {
-            const inventoryDiv = document.createElement('div');
-            inventoryDiv.className = 'inventory-box';
+            const box = document.createElement('div'); box.className = 'inventory-box';
+            const title = document.createElement('div'); title.className = 'inventory-title'; title.innerText = `📦 Inventaire ${inv}`;
+            const slotsGrid = document.createElement('div'); slotsGrid.className = 'slots-container';
             
-            const title = document.createElement('div');
-            title.className = 'inventory-title';
-            title.innerText = `📦 Inventaire ${inv}`;
-            
-            const slotsContainer = document.createElement('div');
-            slotsContainer.className = 'slots-container';
-            
-            // Créer les 4 zones
             for (let slot = 1; slot <= 4; slot++) {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'slot';
-                slotsContainer.appendChild(slotDiv);
-                
-                const firebasePath = `/slot_inv${inv}_slot${slot}`;
-                const gameSlot = new GameSlot(inv, slot, firebasePath);
-                gameSlot.setElement(slotDiv);
-                allSlots.push(gameSlot);
+                const slotDiv = document.createElement('div'); slotDiv.className = 'slot';
+                slotsGrid.appendChild(slotDiv);
+                const slotRef = database.ref(`/slots_16_work/inv${inv}_slot${slot}`);
+                allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
             }
             
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'clear-inv';
-            clearBtn.innerText = `🗑️ Vider inventaire ${inv}`;
-            clearBtn.addEventListener('click', () => {
-                if (confirm(`Vider tout l'inventaire ${inv} ?`)) {
-                    const slotsToClear = allSlots.filter(s => s.inventoryId === inv);
-                    for (const slot of slotsToClear) {
-                        slot.clear();
-                    }
-                }
-            });
+            const clearBtn = document.createElement('button'); clearBtn.className = 'clear-inv'; clearBtn.innerText = `🗑️ Vider inventaire ${inv}`;
+            clearBtn.addEventListener('click', () => { if(confirm(`Vider l'inventaire ${inv} ?`)) allSlots.filter(s => s.invNum === inv).forEach(s => s.clear()); });
             
-            inventoryDiv.appendChild(title);
-            inventoryDiv.appendChild(slotsContainer);
-            inventoryDiv.appendChild(clearBtn);
-            grid.appendChild(inventoryDiv);
+            box.appendChild(title); box.appendChild(slotsGrid); box.appendChild(clearBtn);
+            grid.appendChild(box);
         }
     }
     
-    // ========== CLASSE PIOCHES ==========
     class Pioche {
         constructor(name, cardList, firebaseRef, uiIds, isDonjon = false, isButins = false) {
-            this.name = name;
-            this.cardList = cardList;
-            this.firebaseRef = firebaseRef;
-            this.isDonjon = isDonjon;
-            this.isButins = isButins;
-            this.currentDeck = [];
-            this.currentCard = null;
-            this.isUpdating = false;
-            this.isFinished = false;
+            this.name = name; this.cardList = cardList; this.firebaseRef = firebaseRef; this.isDonjon = isDonjon; this.isButins = isButins;
+            this.currentDeck = []; this.currentCard = null; this.isUpdating = false; this.isFinished = false;
             this.ui = {
-                cardArea: document.getElementById(uiIds.cardArea),
-                cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
-                drawBtn: document.getElementById(uiIds.drawBtn),
-                resetBtn: document.getElementById(uiIds.resetBtn),
+                cardArea: document.getElementById(uiIds.cardArea), cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
+                drawBtn: document.getElementById(uiIds.drawBtn), resetBtn: document.getElementById(uiIds.resetBtn),
                 generateBtn: uiIds.generateBtn ? document.getElementById(uiIds.generateBtn) : null,
                 compositionSpan: uiIds.composition ? document.getElementById(uiIds.composition) : null,
                 finishedBadge: uiIds.finishedBadge ? document.getElementById(uiIds.finishedBadge) : null
             };
-            this.init();
-            this.setupListeners();
+            this.init(); this.setupListeners();
         }
         
-        removeCurrentCard() {
-            if (this.isButins && this.currentCard) {
-                this.currentCard = null;
-                this.saveCurrentCard(null);
-                this.displayCard(null);
-            }
-        }
-        
-        saveDeck() {
-            if (this.isUpdating) return;
-            const deckData = this.currentDeck.map(card => ({ id: card.id, image: card.image, type: card.type }));
-            this.firebaseRef.child('deck').set(deckData);
-            if (this.isDonjon) this.firebaseRef.child('isFinished').set(this.isFinished);
-        }
-        
-        saveCurrentCard(card) {
-            if (this.isUpdating) return;
-            this.firebaseRef.child('currentCard').set(card ? { id: card.id, image: card.image, type: card.type } : null);
-        }
+        removeCurrentCard() { if (this.isButins && this.currentCard) { this.currentCard = null; this.saveCurrentCard(null); this.displayCard(null); } }
+        saveDeck() { if (this.isUpdating) return; this.firebaseRef.child('deck').set(this.currentDeck.map(c => ({ id: c.id, image: c.image, type: c.type }))); if (this.isDonjon) this.firebaseRef.child('isFinished').set(this.isFinished); }
+        saveCurrentCard(card) { if (this.isUpdating) return; this.firebaseRef.child('currentCard').set(card ? { id: card.id, image: card.image, type: card.type } : null); }
         
         loadDeckFromData(data) {
             if (!data || !Array.isArray(data) || data.length === 0) {
                 if (this.isDonjon) { this.currentDeck = []; this.isFinished = true; }
                 else { this.currentDeck = shuffleArray([...this.cardList]); this.isFinished = false; }
-                this.updateFinishedState();
-                return;
+                this.updateFinishedState(); return;
             }
             this.currentDeck = data.filter(c => c && c.image);
             if (this.currentDeck.length === 0) {
@@ -725,13 +274,11 @@
         updateFinishedState() {
             if (!this.isDonjon) return;
             if (this.isFinished) {
-                this.ui.drawBtn.classList.add('disabled');
-                this.ui.drawBtn.disabled = true;
+                this.ui.drawBtn.classList.add('disabled'); this.ui.drawBtn.disabled = true;
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
                 if (!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>';
             } else {
-                this.ui.drawBtn.classList.remove('disabled');
-                this.ui.drawBtn.disabled = false;
+                this.ui.drawBtn.classList.remove('disabled'); this.ui.drawBtn.disabled = false;
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'none';
             }
         }
@@ -739,34 +286,15 @@
         updateCompositionDisplay() {
             if (!this.ui.compositionSpan || !this.isDonjon) return;
             if (!this.currentDeck || this.currentDeck.length === 0) { this.ui.compositionSpan.innerText = `🏁 Terminé`; return; }
-            const nbMonstres = this.currentDeck.filter(c => c.type === 'monstre').length;
-            const nbEvenements = this.currentDeck.filter(c => c.type === 'evenement').length;
-            this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements}`;
+            this.ui.compositionSpan.innerText = `🐉${this.currentDeck.filter(c => c.type === 'monstre').length} ⚡${this.currentDeck.filter(c => c.type === 'evenement').length}`;
         }
         
-        displayCard(card, isDraggable = true) {
-            if (this.isFinished && !card) {
-                this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>';
-                return;
-            }
+        displayCard(card) {
+            if (this.isFinished && !card) { this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>'; return; }
             if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Cliquez sur PIOCHEZ !</div>'; return; }
-            
-            const draggableAttr = (this.isButins && isDraggable) ? 'draggable="true"' : '';
-            this.ui.cardArea.innerHTML = `<div class="card" ${draggableAttr}><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
-            
-            if (this.isButins && isDraggable) {
-                const cardElement = this.ui.cardArea.querySelector('.card');
-                if (cardElement) {
-                    cardElement.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.setData('text/plain', JSON.stringify({
-                            type: 'butin',
-                            id: card.id,
-                            image: card.image
-                        }));
-                        e.dataTransfer.effectAllowed = 'copy';
-                    });
-                }
-            }
+            this.ui.cardArea.innerHTML = `<div class="card" draggable="true"><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
+            const cardEl = this.ui.cardArea.querySelector('.card');
+            cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'butin', id: card.id, image: card.image })); });
         }
         
         updateCardsLeftDisplay() { this.ui.cardsLeftSpan.innerText = this.currentDeck.length; if (this.isDonjon) this.updateCompositionDisplay(); }
@@ -788,22 +316,8 @@
             if (this.isDonjon && this.currentDeck.length === 0) { this.isFinished = true; this.saveDeck(); this.updateFinishedState(); }
         }
         
-        resetDeck() {
-            if (this.isUpdating) return;
-            if (this.isButins) { this.currentDeck = shuffleArray([...this.cardList]); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); }
-        }
-        
-        generateNewDescente() {
-            if (!this.isDonjon) return;
-            this.currentDeck = generateNewDonjonDeck();
-            this.currentCard = null;
-            this.isFinished = false;
-            this.saveCurrentCard(null);
-            this.saveDeck();
-            this.displayCard(null);
-            this.updateCardsLeftDisplay();
-            this.updateFinishedState();
-        }
+        resetDeck() { if (this.isUpdating) return; if (this.isButins) { this.currentDeck = shuffleArray([...this.cardList]); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); } }
+        generateNewDescente() { if (!this.isDonjon) return; this.currentDeck = generateNewDonjonDeck(); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); }
         
         init() {
             this.firebaseRef.child('deck').once('value', (snap) => {
@@ -815,11 +329,7 @@
                 } else { this.loadDeckFromData(data); this.updateCardsLeftDisplay(); }
             });
             if (this.isDonjon) this.firebaseRef.child('isFinished').once('value', (snap) => { if (snap.val() !== null) { this.isFinished = snap.val(); this.updateFinishedState(); } });
-            this.firebaseRef.child('currentCard').once('value', (snap) => {
-                const cardData = snap.val();
-                if (cardData && cardData.image && !this.isFinished) { this.currentCard = cardData; this.displayCard(this.currentCard); }
-                else this.displayCard(null);
-            });
+            this.firebaseRef.child('currentCard').once('value', (snap) => { const cardData = snap.val(); if (cardData && cardData.image && !this.isFinished) { this.currentCard = cardData; this.displayCard(this.currentCard); } else this.displayCard(null); });
         }
         
         setupListeners() {
@@ -832,45 +342,20 @@
         }
     }
     
-    // ========== INITIALISATION ==========
-    const donjonPioche = new Pioche('Donjon', [], donjonRef, {
-        cardArea: 'donjonCardArea', cardsLeft: 'donjonCardsLeft', drawBtn: 'donjonDrawBtn', resetBtn: null, generateBtn: 'generateDonjonBtn',
-        composition: 'donjonComposition', finishedBadge: 'donjonFinishedBadge'
-    }, true, false);
+    const donjonPioche = new Pioche('Donjon', [], donjonRef, { cardArea: 'donjonCardArea', cardsLeft: 'donjonCardsLeft', drawBtn: 'donjonDrawBtn', resetBtn: null, generateBtn: 'generateDonjonBtn', composition: 'donjonComposition', finishedBadge: 'donjonFinishedBadge' }, true, false);
+    const butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, { cardArea: 'butinsCardArea', cardsLeft: 'butinsCardsLeft', drawBtn: 'butinsDrawBtn', resetBtn: 'resetButinsBtn', generateBtn: null, composition: null, finishedBadge: null }, false, true);
     
-    const butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, {
-        cardArea: 'butinsCardArea', cardsLeft: 'butinsCardsLeft', drawBtn: 'butinsDrawBtn', resetBtn: 'resetButinsBtn',
-        generateBtn: null, composition: null, finishedBadge: null
-    }, false, true);
+    buildInventories();
     
-    // Construction de l'interface
-    buildInventoryGrid();
+    document.getElementById('resetAllBtn').addEventListener('click', () => { if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) { butinsPioche.resetDeck(); donjonPioche.generateNewDescente(); allSlots.forEach(s => s.clear()); } });
     
-    // Reset global
-    document.getElementById('resetAllBtn').addEventListener('click', () => {
-        if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) {
-            butinsPioche.resetDeck();
-            donjonPioche.generateNewDescente();
-            for (const slot of allSlots) {
-                slot.clear();
-            }
-        }
-    });
-    
-    // Présence
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_16_final');
-    presenceRef.on('value', (snap) => {
-        if (snap.val() === true && !myPresenceKey) {
-            myPresenceKey = connectedPlayersRef.push().key;
-            connectedPlayersRef.child(myPresenceKey).set({ online: true });
-            connectedPlayersRef.child(myPresenceKey).onDisconnect().remove();
-        }
-    });
+    const connectedPlayersRef = database.ref('/presence_16_work');
+    presenceRef.on('value', (snap) => { if (snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 16 zones créées ! Chaque zone a sa propre référence Firebase");
+    console.log("✅ 16 zones opérationnelles !");
 </script>
 </body>
 </html>
