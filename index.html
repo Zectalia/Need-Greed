@@ -250,7 +250,7 @@
             font-weight: bold;
         }
         
-        /* INVENTAIRES */
+        /* INVENTAIRES - Version simplifiée comme la zone qui marchait */
         .inventories-container {
             margin-top: 20px;
         }
@@ -275,7 +275,7 @@
         }
         .inventory-slot {
             flex: 1;
-            min-width: 180px;
+            min-width: 200px;
             background: #2c2b28;
             border-radius: 24px;
             padding: 15px;
@@ -300,7 +300,7 @@
             background: #1a1a1a;
             border-radius: 16px;
             padding: 20px;
-            min-height: 200px;
+            min-height: 220px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -309,10 +309,9 @@
         }
         .inventory-card {
             width: 100%;
-            max-width: 140px;
+            max-width: 150px;
             cursor: pointer;
             transition: transform 0.2s, filter 0.2s;
-            position: relative;
         }
         .inventory-card img {
             width: 100%;
@@ -435,9 +434,9 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v8');
-    const butinsRef = database.ref('/needandgreed_butins_v6');
-    const inventoriesRef = database.ref('/needandgreed_inventories_v2');
+    const donjonRef = database.ref('/needandgreed_donjon_v9');
+    const butinsRef = database.ref('/needandgreed_butins_v7');
+    const inventoriesRef = database.ref('/needandgreed_inventories_v3');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -502,8 +501,9 @@
         return shuffleArray(newDeck);
     }
     
-    // ========== GESTION DES INVENTAIRES (4 SLOTS) ==========
-    let inventories = [null, null, null, null];
+    // ========== GESTION DES INVENTAIRES (COMME LA ZONE QUI MARCHAIT) ==========
+    // Structure simple : un tableau de 4 éléments, chacun peut être null ou un objet { card, flipped }
+    let inventoryCards = [null, null, null, null];
     
     function renderInventories() {
         const grid = document.getElementById('inventoriesGrid');
@@ -523,7 +523,7 @@
             cardArea.className = 'inventory-card-area';
             cardArea.setAttribute('data-slot-index', i);
             
-            const slotData = inventories[i];
+            const slotData = inventoryCards[i];
             if (slotData && slotData.card) {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'inventory-card';
@@ -550,7 +550,7 @@
             clearBtn.innerText = '🗑️ Vider';
             clearBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                inventories[i] = null;
+                inventoryCards[i] = null;
                 saveInventoriesToFirebase();
                 renderInventories();
             });
@@ -573,12 +573,12 @@
                 try {
                     const cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
                     if (cardData.type === 'butin') {
-                        if (inventories[i] !== null && inventories[i].card !== null) {
+                        if (inventoryCards[i] !== null && inventoryCards[i].card !== null) {
                             alert(`L'inventaire ${i + 1} est déjà occupé !`);
                             return;
                         }
-                        // AJOUTER LA CARTE À L'INVENTAIRE (clone)
-                        inventories[i] = {
+                        // Ajouter la carte à l'inventaire
+                        inventoryCards[i] = {
                             card: {
                                 id: cardData.id,
                                 image: cardData.image,
@@ -589,10 +589,9 @@
                         saveInventoriesToFirebase();
                         renderInventories();
                         
-                        // SUPPRIMER LA CARTE DE LA PIOCHE BUTINS
+                        // Supprimer la carte de la pioche Butins
                         butinsPioche.removeCurrentCard();
                     } else {
-                        console.log("Seules les cartes Butin peuvent être déposées");
                         alert("Seules les cartes Butin peuvent être déposées dans l'inventaire !");
                     }
                 } catch (err) {
@@ -608,7 +607,7 @@
     }
     
     function saveInventoriesToFirebase() {
-        const dataToSave = inventories.map(slot => {
+        const dataToSave = inventoryCards.map(slot => {
             if (slot && slot.card) {
                 return {
                     card: {
@@ -626,9 +625,9 @@
     
     function loadInventoriesFromData(data) {
         if (data && Array.isArray(data) && data.length === 4) {
-            inventories = data.map(slot => slot);
+            inventoryCards = data.map(slot => slot);
         } else {
-            inventories = [null, null, null, null];
+            inventoryCards = [null, null, null, null];
         }
         renderInventories();
     }
@@ -660,7 +659,6 @@
         }
         
         removeCurrentCard() {
-            // Supprime la carte actuelle de la pioche (quand on la drop dans un inventaire)
             if (this.isButins && this.currentCard) {
                 this.currentCard = null;
                 this.saveCurrentCard(null);
@@ -1003,7 +1001,7 @@
         if (confirm("⚠️ RÉINITIALISATION TOTALE : Les pioches et les inventaires seront vidés.")) {
             butinsPioche.resetDeck();
             donjonPioche.generateNewDescente();
-            inventories = [null, null, null, null];
+            inventoryCards = [null, null, null, null];
             saveInventoriesToFirebase();
             renderInventories();
         }
@@ -1012,7 +1010,7 @@
     // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v8');
+    const connectedPlayersRef = database.ref('/presence_pioches_v9');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
