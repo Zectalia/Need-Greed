@@ -16,12 +16,14 @@
             background: linear-gradient(135deg, #1a472a 0%, #0e2a1a 100%);
             font-family: 'Segoe UI', 'Roboto', sans-serif;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
         .game-container {
             max-width: 1400px;
             width: 100%;
-            margin: 0 auto;
             background: #ecd9b4;
             border-radius: 48px;
             box-shadow: 0 20px 35px rgba(0,0,0,0.5);
@@ -231,95 +233,6 @@
             margin-top: 8px;
             flex-wrap: wrap;
         }
-        .inventories-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .inventory {
-            flex: 1;
-            min-width: 200px;
-            background: #2c2b28;
-            border-radius: 24px;
-            padding: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
-        .inventory-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding: 8px;
-            border-radius: 30px;
-            background: #3f2a1f;
-            color: #fef0cf;
-        }
-        .inventory-dropzone {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 15px;
-            min-height: 280px;
-            border: 3px dashed #c47b3e;
-            transition: all 0.2s;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            align-items: flex-start;
-            align-content: flex-start;
-        }
-        .inventory-dropzone.drag-over {
-            background: #3f2a1f;
-            border-color: #ffaa44;
-        }
-        .inventory-card {
-            width: 80px;
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
-        }
-        .inventory-card img {
-            width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            display: block;
-        }
-        .inventory-card.flipped {
-            transform: rotate(180deg);
-        }
-        .inventory-card:hover {
-            transform: scale(1.05);
-        }
-        .inventory-card.flipped:hover {
-            transform: rotate(180deg) scale(1.05);
-        }
-        .inventory-empty {
-            color: #ecd9b4;
-            font-size: 0.9rem;
-            text-align: center;
-            padding: 30px;
-            width: 100%;
-        }
-        .clear-inventory-btn {
-            background: #c47b3e88;
-            border: 1px solid #c47b3e;
-            color: white;
-            font-size: 0.7rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
-        }
-        .clear-inventory-btn:hover {
-            background: #c47b3e;
-        }
-        footer {
-            font-size: 0.7rem;
-            text-align: center;
-            margin-top: 30px;
-            color: #5e4a31;
-        }
         .badge {
             background: #00000099;
             padding: 2px 8px;
@@ -336,11 +249,118 @@
             margin-left: 8px;
             font-weight: bold;
         }
+        
+        /* INVENTAIRES */
+        .inventories-container {
+            margin-top: 20px;
+        }
+        .inventories-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 50px;
+            background: #3f2a1f;
+            color: #fef0cf;
+            display: inline-block;
+            width: auto;
+            padding: 10px 30px;
+        }
+        .inventories-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .inventory-slot {
+            flex: 1;
+            min-width: 180px;
+            background: #2c2b28;
+            border-radius: 24px;
+            padding: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .inventory-slot.drag-over {
+            background: #4a3a2a;
+            border: 2px solid #ffaa44;
+            transform: scale(1.02);
+        }
+        .inventory-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffaa44;
+            margin-bottom: 15px;
+            padding: 5px;
+            background: #1a1a1a;
+            border-radius: 20px;
+        }
+        .inventory-card-area {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #c47b3e;
+        }
+        .inventory-card {
+            width: 100%;
+            max-width: 140px;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            position: relative;
+        }
+        .inventory-card img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: block;
+        }
+        .inventory-card.flipped {
+            transform: rotate(180deg);
+        }
+        .inventory-card:hover {
+            transform: scale(1.05);
+        }
+        .inventory-card.flipped:hover {
+            transform: rotate(180deg) scale(1.05);
+        }
+        .empty-inventory {
+            color: #ecd9b4;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 30px 10px;
+        }
+        .clear-inventory-btn {
+            background: #c47b3e88;
+            border: 1px solid #c47b3e;
+            color: white;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .clear-inventory-btn:hover {
+            background: #c47b3e;
+        }
+        
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 25px;
+            color: #5e4a31;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
-        .card {
+        .card, .inventory-card {
             animation: fadeIn 0.25s ease;
         }
     </style>
@@ -388,56 +408,43 @@
         </div>
     </div>
 
-    <!-- 4 ZONES D'INVENTAIRE -->
+    <!-- 4 INVENTAIRES -->
     <div class="inventories-container">
-        <div class="inventory">
-            <div class="inventory-title">📦 INVENTAIRE 1</div>
-            <div class="inventory-dropzone" id="inventory0"></div>
-            <button class="clear-inventory-btn" data-clear="0">🗑️ Vider</button>
-        </div>
-        <div class="inventory">
-            <div class="inventory-title">📦 INVENTAIRE 2</div>
-            <div class="inventory-dropzone" id="inventory1"></div>
-            <button class="clear-inventory-btn" data-clear="1">🗑️ Vider</button>
-        </div>
-        <div class="inventory">
-            <div class="inventory-title">📦 INVENTAIRE 3</div>
-            <div class="inventory-dropzone" id="inventory2"></div>
-            <button class="clear-inventory-btn" data-clear="2">🗑️ Vider</button>
-        </div>
-        <div class="inventory">
-            <div class="inventory-title">📦 INVENTAIRE 4</div>
-            <div class="inventory-dropzone" id="inventory3"></div>
-            <button class="clear-inventory-btn" data-clear="3">🗑️ Vider</button>
+        <div class="inventories-title">📦 INVENTAIRES (4 emplacements maximum) 📦</div>
+        <div class="inventories-grid" id="inventoriesGrid">
+            <!-- 4 slots seront générés par JavaScript -->
         </div>
     </div>
 
     <footer>
         ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
-        💰 Glissez une carte BUTIN vers un inventaire → la carte est copiée (reste dans la pioche pour test)<br>
-        🖱️ Cliquez sur une carte dans un inventaire pour la retourner à 180°
+        💰 Glissez une carte BUTIN vers un inventaire → la carte est retirée de la pioche<br>
+        🖱️ Cliquez sur une carte dans l'inventaire pour la retourner à 180°<br>
+        📦 Chaque inventaire ne peut contenir qu'UNE SEULE carte (4 max au total)
     </footer>
 </div>
 
 <script>
-    // ========== CONFIGURATION FIREBASE ==========
+    // ========== CONFIGURATION FIREBASE - VOTRE BASE ==========
     const firebaseConfig = {
         databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/"
     };
     
+    // Initialisation Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v11');
-    const butinsRef = database.ref('/needandgreed_butins_v9');
-    const inventoriesRef = database.ref('/needandgreed_inventories_v5');
+    const donjonRef = database.ref('/needandgreed_donjon_v7');
+    const butinsRef = database.ref('/needandgreed_butins_v5');
+    const inventoriesRef = database.ref('/needandgreed_inventories');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
         return num.toString().padStart(2, '0');
     }
     
+    // === DONJON : monstres (26) et événements (29) ===
     const NB_MONSTRE = 26;
     const NB_EVENEMENTS = 29;
     
@@ -461,6 +468,7 @@
         });
     }
     
+    // === BUTINS (37) ===
     const NB_BUTINS_CARDS = 37;
     const BUTINS_CARDS = [];
     for (let i = 0; i < NB_BUTINS_CARDS; i++) {
@@ -494,85 +502,139 @@
         return shuffleArray(newDeck);
     }
     
-    // ========== GESTION DES INVENTAIRES ==========
-    let inventories = [[], [], [], []];
+    // ========== GESTION DES INVENTAIRES (4 SLOTS) ==========
+    // Chaque slot: { card: { id, image, type, flipped } } ou null
+    let inventories = [null, null, null, null];
     
-    function renderInventory(inventoryIndex) {
-        const container = document.getElementById(`inventory${inventoryIndex}`);
-        if (!container) return;
+    function renderInventories() {
+        const grid = document.getElementById('inventoriesGrid');
+        grid.innerHTML = '';
         
-        const cards = inventories[inventoryIndex];
-        
-        if (!cards || cards.length === 0) {
-            container.innerHTML = '<div class="inventory-empty">✨ Déposez vos butins ici ✨<br><small>(Drag & Drop)</small><br><br>🖱️ Cliquez pour retourner</div>';
-            return;
-        }
-        
-        container.innerHTML = '';
-        cards.forEach((card, idx) => {
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'inventory-card';
-            if (card.flipped) cardDiv.classList.add('flipped');
-            cardDiv.setAttribute('data-inventory', inventoryIndex);
-            cardDiv.setAttribute('data-card-idx', idx);
-            cardDiv.innerHTML = `<img src="${card.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'112\\' viewBox=\\'0 0 80 112\\'%3E%3Crect width=\\'80\\' height=\\'112\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'40\\' y=\\'56\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'10\\'%3E?%3C/text%3E%3C/svg%3E'">`;
+        for (let i = 0; i < 4; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'inventory-slot';
+            slot.setAttribute('data-slot-index', i);
             
-            cardDiv.addEventListener('click', (e) => {
+            const header = document.createElement('div');
+            header.className = 'inventory-header';
+            header.innerText = `📦 Inventaire ${i + 1}`;
+            
+            const cardArea = document.createElement('div');
+            cardArea.className = 'inventory-card-area';
+            cardArea.setAttribute('data-slot-index', i);
+            
+            const cardData = inventories[i];
+            if (cardData && cardData.card) {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'inventory-card';
+                if (cardData.flipped) cardDiv.classList.add('flipped');
+                cardDiv.innerHTML = `<img src="${cardData.card.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E">`;
+                
+                // Clic pour retourner la carte
+                cardDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    cardData.flipped = !cardData.flipped;
+                    saveInventoriesToFirebase();
+                    renderInventories();
+                });
+                
+                cardArea.appendChild(cardDiv);
+            } else {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-inventory';
+                emptyDiv.innerHTML = '✨ Emplacement vide ✨<br><small>Glissez une carte Butin ici</small>';
+                cardArea.appendChild(emptyDiv);
+            }
+            
+            // Bouton pour vider l'emplacement
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'clear-inventory-btn';
+            clearBtn.innerText = '🗑️ Vider';
+            clearBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                inventories[inventoryIndex][idx].flipped = !inventories[inventoryIndex][idx].flipped;
-                saveInventoriesToFirebase();
-                renderInventory(inventoryIndex);
+                if (inventories[i] && inventories[i].card) {
+                    inventories[i] = null;
+                    saveInventoriesToFirebase();
+                    renderInventories();
+                }
             });
             
-            container.appendChild(cardDiv);
-        });
-    }
-    
-    function renderAllInventories() {
-        for (let i = 0; i < 4; i++) {
-            renderInventory(i);
+            // Événements de drag & drop
+            cardArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                slot.classList.add('drag-over');
+            });
+            
+            cardArea.addEventListener('dragleave', () => {
+                slot.classList.remove('drag-over');
+            });
+            
+            cardArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                slot.classList.remove('drag-over');
+                
+                try {
+                    const cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    if (cardData.type === 'butin') {
+                        // Vérifier si l'emplacement est vide
+                        if (inventories[i] !== null && inventories[i].card !== null) {
+                            alert(`L'inventaire ${i + 1} est déjà occupé !`);
+                            return;
+                        }
+                        // Ajouter la carte à l'inventaire
+                        inventories[i] = {
+                            card: {
+                                id: cardData.id,
+                                image: cardData.image,
+                                type: cardData.type
+                            },
+                            flipped: false
+                        };
+                        saveInventoriesToFirebase();
+                        renderInventories();
+                        
+                        // Retirer la carte de la pioche Butins
+                        butinsPioche.removeCurrentCard();
+                    } else {
+                        console.log("Seules les cartes Butin peuvent être déposées");
+                    }
+                } catch (err) {
+                    console.log("Erreur lors du drop", err);
+                }
+            });
+            
+            slot.appendChild(header);
+            slot.appendChild(cardArea);
+            slot.appendChild(clearBtn);
+            grid.appendChild(slot);
         }
     }
     
     function saveInventoriesToFirebase() {
-        inventoriesRef.set(inventories);
+        const dataToSave = inventories.map(slot => {
+            if (slot && slot.card) {
+                return {
+                    card: {
+                        id: slot.card.id,
+                        image: slot.card.image,
+                        type: slot.card.type
+                    },
+                    flipped: slot.flipped
+                };
+            }
+            return null;
+        });
+        inventoriesRef.set(dataToSave);
     }
     
     function loadInventoriesFromData(data) {
         if (data && Array.isArray(data) && data.length === 4) {
-            inventories = data;
+            inventories = data.map(slot => slot);
         } else {
-            inventories = [[], [], [], []];
+            inventories = [null, null, null, null];
         }
-        renderAllInventories();
-    }
-    
-    function addCardToInventory(card, inventoryIndex) {
-        if (card.type !== 'butin') {
-            alert("Seules les cartes Butin peuvent être déposées");
-            return false;
-        }
-        inventories[inventoryIndex].push({
-            id: card.id,
-            image: card.image,
-            flipped: false
-        });
-        saveInventoriesToFirebase();
-        renderInventory(inventoryIndex);
-        console.log(`✅ Carte ajoutée à l'inventaire ${inventoryIndex + 1}`, card);
-        return true;
-    }
-    
-    function clearInventory(inventoryIndex) {
-        inventories[inventoryIndex] = [];
-        saveInventoriesToFirebase();
-        renderInventory(inventoryIndex);
-    }
-    
-    function clearAllInventories() {
-        inventories = [[], [], [], []];
-        saveInventoriesToFirebase();
-        renderAllInventories();
+        renderInventories();
     }
     
     // ========== CLASSE POUR GÉRER UNE PIOCHE ==========
@@ -599,6 +661,15 @@
             
             this.init();
             this.setupListeners();
+        }
+        
+        removeCurrentCard() {
+            // Supprime la carte actuelle de la pioche (quand on la drop dans un inventaire)
+            if (this.isButins && this.currentCard) {
+                this.currentCard = null;
+                this.saveCurrentCard(null);
+                this.displayCard(null);
+            }
         }
         
         updateFinishedState() {
@@ -710,24 +781,20 @@
             `;
             this.ui.cardArea.innerHTML = imgHtml;
             
-            if (this.isButins && isDraggable && card) {
+            if (this.isButins && isDraggable) {
                 const cardElement = this.ui.cardArea.querySelector('.card');
                 if (cardElement) {
-                    // Supprimer l'ancien listener et en recréer un
-                    const newCardElement = cardElement.cloneNode(true);
-                    cardElement.parentNode.replaceChild(newCardElement, cardElement);
-                    
-                    newCardElement.addEventListener('dragstart', (e) => {
+                    cardElement.addEventListener('dragstart', (e) => {
                         e.dataTransfer.setData('text/plain', JSON.stringify({
                             id: card.id,
                             image: card.image,
                             type: card.type
                         }));
                         e.dataTransfer.effectAllowed = 'copy';
-                        newCardElement.classList.add('dragging');
+                        cardElement.classList.add('dragging');
                     });
-                    newCardElement.addEventListener('dragend', (e) => {
-                        newCardElement.classList.remove('dragging');
+                    cardElement.addEventListener('dragend', (e) => {
+                        cardElement.classList.remove('dragging');
                     });
                 }
             }
@@ -753,10 +820,7 @@
                 } else if (this.isButins) {
                     this.currentDeck = shuffleArray([...this.cardList]);
                     this.saveDeck();
-                    const newCard = this.currentDeck.shift();
-                    this.currentCard = newCard;
-                    this.saveCurrentCard(newCard);
-                    this.displayCard(newCard);
+                    this.displayCard(this.currentDeck.shift());
                     this.updateCardsLeftDisplay();
                 }
                 return;
@@ -930,52 +994,9 @@
         finishedBadge: null
     }, false, true);
     
-    // ========== GESTION DES INVENTAIRES (Drag & Drop) ==========
-    // Attendre que le DOM soit chargé pour attacher les événements
-    document.addEventListener('DOMContentLoaded', () => {
-        for (let i = 0; i < 4; i++) {
-            const dropzone = document.getElementById(`inventory${i}`);
-            if (!dropzone) continue;
-            
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-                dropzone.classList.add('drag-over');
-            });
-            
-            dropzone.addEventListener('dragleave', (e) => {
-                dropzone.classList.remove('drag-over');
-            });
-            
-            dropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('drag-over');
-                
-                try {
-                    const cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    console.log("📦 Carte déposée dans l'inventaire", i + 1, cardData);
-                    if (cardData.type === 'butin') {
-                        addCardToInventory(cardData, i);
-                    } else {
-                        alert("Seules les cartes Butin peuvent être déposées !");
-                    }
-                } catch (err) {
-                    console.log("Erreur lors du drop", err);
-                }
-            });
-        }
-        
-        // Boutons pour vider chaque inventaire
-        for (let i = 0; i < 4; i++) {
-            const clearBtn = document.querySelector(`[data-clear="${i}"]`);
-            if (clearBtn) {
-                clearBtn.addEventListener('click', () => {
-                    if (confirm(`Vider l'inventaire ${i+1} ?`)) {
-                        clearInventory(i);
-                    }
-                });
-            }
-        }
+    // ========== CHARGEMENT DES INVENTAIRES ==========
+    inventoriesRef.on('value', (snap) => {
+        loadInventoriesFromData(snap.val());
     });
     
     // ========== RESET GLOBAL ==========
@@ -983,19 +1004,16 @@
         if (confirm("⚠️ RÉINITIALISATION TOTALE : Les pioches et les inventaires seront vidés.")) {
             butinsPioche.resetDeck();
             donjonPioche.generateNewDescente();
-            clearAllInventories();
+            inventories = [null, null, null, null];
+            saveInventoriesToFirebase();
+            renderInventories();
         }
     });
     
-    // ========== SYNC INVENTAIRES FIREBASE ==========
-    inventoriesRef.on('value', (snap) => {
-        loadInventoriesFromData(snap.val());
-    });
-    
-    // ========== PRÉSENCE ==========
+    // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v11');
+    const connectedPlayersRef = database.ref('/presence_pioches_v7');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -1012,9 +1030,10 @@
         document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${count}`;
     });
     
-    console.log("✅ Version CORRIGÉE - Le Drag & Drop devrait fonctionner du premier coup !");
-    console.log("💡 Glissez une carte BUTIN vers un inventaire → elle doit apparaître immédiatement");
-    console.log("🖱️ Cliquez sur une carte dans un inventaire pour la retourner");
+    console.log("✅ Tout est prêt !");
+    console.log("💰 Glissez une carte BUTIN vers un inventaire → la carte est retirée de la pioche");
+    console.log("📦 4 inventaires, chacun ne peut contenir qu'UNE SEULE carte");
+    console.log("🖱️ Cliquez sur une carte dans l'inventaire pour la retourner");
 </script>
 </body>
 </html>
