@@ -250,7 +250,7 @@
             font-weight: bold;
         }
         
-        /* INVENTAIRES - Copie exacte de ce qui marchait, répété 4 fois */
+        /* INVENTAIRES - Version simple et qui marche */
         .inventories-container {
             margin-top: 20px;
         }
@@ -273,7 +273,7 @@
             justify-content: center;
             margin-top: 20px;
         }
-        .inventory-container {
+        .inventory-box {
             flex: 1;
             min-width: 280px;
             background: #2c2b28;
@@ -281,7 +281,7 @@
             padding: 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .inventory-header {
+        .inventory-title {
             font-size: 1.3rem;
             font-weight: bold;
             color: #ffaa44;
@@ -290,17 +290,17 @@
             background: #1a1a1a;
             border-radius: 20px;
         }
-        .slots-grid {
+        .slots-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             margin-bottom: 15px;
         }
-        .inventory-slot {
+        .slot {
             background: #1a1a1a;
             border-radius: 16px;
             padding: 15px;
-            min-height: 160px;
+            min-height: 170px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -308,7 +308,7 @@
             border: 2px dashed #c47b3e;
             transition: all 0.2s;
         }
-        .inventory-slot.drag-over {
+        .slot.drag-over {
             background: #4a3a2a;
             border-color: #ffaa44;
         }
@@ -329,16 +329,13 @@
         .slot-card:hover {
             transform: scale(1.05);
         }
-        .slot-card.flipped:hover {
-            transform: rotate(180deg) scale(1.05);
-        }
         .empty-slot {
             color: #ecd9b4;
             font-size: 0.8rem;
             text-align: center;
             padding: 20px 5px;
         }
-        .clear-inv-btn {
+        .clear-inv {
             background: #c47b3e88;
             border: 1px solid #c47b3e;
             color: white;
@@ -349,7 +346,7 @@
             margin-top: 10px;
             width: 100%;
         }
-        .clear-inv-btn:hover {
+        .clear-inv:hover {
             background: #c47b3e;
         }
         
@@ -432,16 +429,8 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/donjon_16zones_final');
-    const butinsRef = database.ref('/butins_16zones_final');
-    
-    // Chaque zone a sa propre référence Firebase (comme quand ça marchait)
-    const slotRefs = [];
-    for (let inv = 1; inv <= 4; inv++) {
-        for (let slot = 1; slot <= 4; slot++) {
-            slotRefs.push(database.ref(`/slot_inv${inv}_slot${slot}`));
-        }
-    }
+    const donjonRef = database.ref('/donjon_final_16');
+    const butinsRef = database.ref('/butins_final_16');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -488,18 +477,23 @@
         return shuffleArray([...randomMonstres, ...randomEvenements]);
     }
     
-    // ========== GESTION D'UNE ZONE (copie exacte de ce qui marchait) ==========
-    class Slot {
-        constructor(invNum, slotNum, firebaseRef, elementId) {
-            this.invNum = invNum;
-            this.slotNum = slotNum;
-            this.firebaseRef = firebaseRef;
-            this.element = document.getElementById(elementId);
+    // ========== CLASSE POUR UNE ZONE (version qui marche) ==========
+    class GameSlot {
+        constructor(inventoryId, slotId, firebasePath) {
+            this.inventoryId = inventoryId;
+            this.slotId = slotId;
+            this.firebaseRef = database.ref(firebasePath);
+            this.element = null;
             this.currentCard = null;
             this.flipped = false;
             
             this.init();
-            this.setupDragAndDrop();
+        }
+        
+        setElement(element) {
+            this.element = element;
+            this.render();
+            this.setupDragEvents();
         }
         
         init() {
@@ -522,21 +516,21 @@
             if (this.currentCard) {
                 const flippedClass = this.flipped ? 'flipped' : '';
                 this.element.innerHTML = `
-                    <div class="slot-card ${flippedClass}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}">
+                    <div class="slot-card ${flippedClass}" draggable="true" data-inv="${this.inventoryId}" data-slot="${this.slotId}">
                         <img src="${this.currentCard.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'">
                     </div>
                 `;
-                const cardElement = this.element.querySelector('.slot-card');
-                cardElement.addEventListener('click', () => {
+                const cardDiv = this.element.querySelector('.slot-card');
+                cardDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     this.flipped = !this.flipped;
                     this.save();
-                    this.render();
                 });
-                cardElement.addEventListener('dragstart', (e) => {
+                cardDiv.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', JSON.stringify({
-                        type: 'move',
-                        fromInv: this.invNum,
-                        fromSlot: this.slotNum,
+                        action: 'move',
+                        fromInv: this.inventoryId,
+                        fromSlot: this.slotId,
                         card: this.currentCard
                     }));
                     e.dataTransfer.effectAllowed = 'move';
@@ -557,7 +551,7 @@
             }
         }
         
-        setupDragAndDrop() {
+        setupDragEvents() {
             this.element.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'copy';
@@ -575,15 +569,14 @@
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                     
-                    if (data.type === 'move') {
+                    if (data.action === 'move') {
                         // Déplacement depuis une autre zone
                         if (this.currentCard) {
                             alert("Cette zone est déjà occupée !");
                             return;
                         }
                         
-                        // Récupérer la zone source
-                        const sourceSlot = getSlotByInvAndSlot(data.fromInv, data.fromSlot);
+                        const sourceSlot = allSlots.find(s => s.inventoryId === data.fromInv && s.slotId === data.fromSlot);
                         if (sourceSlot && sourceSlot.currentCard) {
                             this.currentCard = sourceSlot.currentCard;
                             this.flipped = sourceSlot.flipped;
@@ -591,8 +584,6 @@
                             sourceSlot.flipped = false;
                             this.save();
                             sourceSlot.save();
-                            this.render();
-                            sourceSlot.render();
                         }
                         
                     } else if (data.type === 'butin') {
@@ -602,10 +593,9 @@
                             return;
                         }
                         
-                        this.currentCard = { id: data.id, image: data.image, type: data.type };
+                        this.currentCard = { id: data.id, image: data.image, type: 'butin' };
                         this.flipped = false;
                         this.save();
-                        this.render();
                         butinsPioche.removeCurrentCard();
                     }
                 } catch (err) {
@@ -618,67 +608,61 @@
             this.currentCard = null;
             this.flipped = false;
             this.save();
-            this.render();
         }
     }
     
-    // Stocker toutes les zones
+    // Stockage de toutes les zones
     let allSlots = [];
     
-    function getSlotByInvAndSlot(inv, slot) {
-        return allSlots.find(s => s.invNum === inv && s.slotNum === slot);
-    }
-    
     // ========== CRÉATION DES 16 ZONES ==========
-    function createInventories() {
+    function buildInventoryGrid() {
         const grid = document.getElementById('inventoriesGrid');
         grid.innerHTML = '';
+        allSlots = [];
         
         for (let inv = 1; inv <= 4; inv++) {
-            const container = document.createElement('div');
-            container.className = 'inventory-container';
+            const inventoryDiv = document.createElement('div');
+            inventoryDiv.className = 'inventory-box';
             
-            const header = document.createElement('div');
-            header.className = 'inventory-header';
-            header.innerText = `📦 Inventaire ${inv}`;
+            const title = document.createElement('div');
+            title.className = 'inventory-title';
+            title.innerText = `📦 Inventaire ${inv}`;
             
-            const slotsGrid = document.createElement('div');
-            slotsGrid.className = 'slots-grid';
+            const slotsContainer = document.createElement('div');
+            slotsContainer.className = 'slots-container';
             
-            // Créer les 4 zones pour cet inventaire
+            // Créer les 4 zones
             for (let slot = 1; slot <= 4; slot++) {
                 const slotDiv = document.createElement('div');
-                const slotId = `slot_inv${inv}_${slot}`;
-                slotDiv.id = slotId;
-                slotDiv.className = 'inventory-slot';
-                slotsGrid.appendChild(slotDiv);
+                slotDiv.className = 'slot';
+                slotsContainer.appendChild(slotDiv);
                 
-                // Créer l'objet Slot
-                const slotRef = database.ref(`/slot_inv${inv}_slot${slot}`);
-                const newSlot = new Slot(inv, slot, slotRef, slotId);
-                allSlots.push(newSlot);
+                const firebasePath = `/slot_inv${inv}_slot${slot}`;
+                const gameSlot = new GameSlot(inv, slot, firebasePath);
+                gameSlot.setElement(slotDiv);
+                allSlots.push(gameSlot);
             }
             
             const clearBtn = document.createElement('button');
-            clearBtn.className = 'clear-inv-btn';
+            clearBtn.className = 'clear-inv';
             clearBtn.innerText = `🗑️ Vider inventaire ${inv}`;
             clearBtn.addEventListener('click', () => {
                 if (confirm(`Vider tout l'inventaire ${inv} ?`)) {
-                    for (let slot = 1; slot <= 4; slot++) {
-                        const s = getSlotByInvAndSlot(inv, slot);
-                        if (s) s.clear();
+                    const slotsToClear = allSlots.filter(s => s.inventoryId === inv);
+                    for (const slot of slotsToClear) {
+                        slot.clear();
                     }
                 }
             });
             
-            container.appendChild(header);
-            container.appendChild(slotsGrid);
-            container.appendChild(clearBtn);
-            grid.appendChild(container);
+            inventoryDiv.appendChild(title);
+            inventoryDiv.appendChild(slotsContainer);
+            inventoryDiv.appendChild(clearBtn);
+            grid.appendChild(inventoryDiv);
         }
     }
     
-    // ========== CLASSE PIOCHES (inchangée, fonctionne) ==========
+    // ========== CLASSE PIOCHES ==========
     class Pioche {
         constructor(name, cardList, firebaseRef, uiIds, isDonjon = false, isButins = false) {
             this.name = name;
@@ -744,7 +728,7 @@
                 this.ui.drawBtn.classList.add('disabled');
                 this.ui.drawBtn.disabled = true;
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
-                if (!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE"</span></div>';
+                if (!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>';
             } else {
                 this.ui.drawBtn.classList.remove('disabled');
                 this.ui.drawBtn.disabled = false;
@@ -859,8 +843,8 @@
         generateBtn: null, composition: null, finishedBadge: null
     }, false, true);
     
-    // Création des 16 zones
-    createInventories();
+    // Construction de l'interface
+    buildInventoryGrid();
     
     // Reset global
     document.getElementById('resetAllBtn').addEventListener('click', () => {
@@ -876,7 +860,7 @@
     // Présence
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_final_16');
+    const connectedPlayersRef = database.ref('/presence_16_final');
     presenceRef.on('value', (snap) => {
         if (snap.val() === true && !myPresenceKey) {
             myPresenceKey = connectedPlayersRef.push().key;
@@ -886,7 +870,7 @@
     });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 16 zones prêtes ! Chaque zone a sa propre référence Firebase comme dans la version qui marchait");
+    console.log("✅ 16 zones créées ! Chaque zone a sa propre référence Firebase");
 </script>
 </body>
 </html>
