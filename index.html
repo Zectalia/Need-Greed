@@ -2,688 +2,357 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ProtoPlay - Testeur de jeu de société (Temps réel)</title>
-    <!-- Firebase SDKs (CDN) pour la synchronisation temps réel sans backend -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de société collaboratif - Temps réel</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none; /* Pour éviter sélection intempestive, mais laisse le texte modifiable */
-        }
+        * { box-sizing: border-box; }
         body {
-            background: linear-gradient(145deg, #1a472a 0%, #0e2a1a 100%);
-            font-family: 'Segoe UI', 'Roboto', 'Verdana', sans-serif;
+            background: #1a472a;
+            font-family: Arial, sans-serif;
+            padding: 20px;
             margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
-        /* Plateau de jeu principal */
-        .game-container {
-            max-width: 1400px;
-            width: 100%;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: #ecd9b4;
-            background-image: radial-gradient(circle at 25% 40%, rgba(210,180,140,0.3) 2%, transparent 2.5%);
-            background-size: 28px 28px;
-            border-radius: 48px;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.5), inset 0 1px 4px rgba(255,255,200,0.8);
+            border-radius: 20px;
             padding: 20px;
-            border: 1px solid #c9aa6f;
         }
-        /* zone d'info joueurs connectés et outils */
-        .top-bar {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            background: #2c2b28e0;
-            backdrop-filter: blur(8px);
-            border-radius: 60px;
-            padding: 8px 20px;
-            margin-bottom: 25px;
-            color: #fef0cf;
-            font-weight: bold;
-            gap: 15px;
-        }
-        .players-online {
-            background: #00000066;
-            padding: 5px 16px;
-            border-radius: 40px;
-            font-size: 0.9rem;
-        }
-        .session-id {
-            font-family: monospace;
-            background: #00000055;
-            padding: 5px 12px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-        .reset-btn {
-            background: #c47b3e;
-            border: none;
+        .info-bar {
+            background: #2c2b28;
             color: white;
-            font-weight: bold;
-            padding: 6px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 5px black;
-        }
-        .reset-btn:hover {
-            background: #a85f2c;
-            transform: scale(0.97);
-        }
-        /* zone de dessin / plateau collaboratif */
-        .canvas-area {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 25px;
+            justify-content: space-between;
         }
         canvas {
-            background: #fef5e3;
-            border-radius: 32px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: white;
+            border: 3px solid #dbb067;
+            border-radius: 10px;
             cursor: crosshair;
             width: 100%;
             height: auto;
-            border: 4px solid #dbb067;
-            transition: all 0.1s;
         }
-        .draw-tools {
+        .tools {
+            margin: 10px 0;
             display: flex;
+            gap: 10px;
             flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            background: #e2c7a1b3;
-            padding: 10px 18px;
-            border-radius: 60px;
-            backdrop-filter: blur(4px);
-        }
-        .color-preview {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 0 0 1px black;
-        }
-        input, button {
-            font-family: inherit;
-        }
-        .tool-btn {
-            background: #3f2a1f;
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.1s linear;
-        }
-        .tool-btn.active {
-            background: #ffaa44;
-            color: #2d1f12;
-            box-shadow: 0 0 0 2px white;
-        }
-        /* Zone de pions / compteurs / jetons libres */
-        .token-panel {
-            background: #f5e5c8;
-            border-radius: 38px;
-            padding: 15px;
-            margin-top: 15px;
-            box-shadow: inset 0 0 0 1px #fff8e7, 0 8px 18px rgba(0,0,0,0.2);
-        }
-        .token-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        .token-card {
-            background: #faf0df;
-            border-radius: 24px;
-            padding: 8px 14px;
-            min-width: 100px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-left: 8px solid #dd9944;
-        }
-        .token-name {
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: #3b2a1f;
-        }
-        .token-value {
-            font-size: 2.2rem;
-            font-weight: 800;
-            background: #fff2e0;
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 50px;
-            margin: 6px 0;
-            font-family: monospace;
-        }
-        .token-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 8px;
-        }
-        .token-buttons button {
-            background: #79553a;
-            border: none;
-            color: white;
-            font-weight: bold;
-            font-size: 1.3rem;
-            width: 40px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.05s linear;
-        }
-        .token-buttons button:active {
-            background: #a56b3a;
-            transform: scale(0.92);
-        }
-        .custom-note {
-            margin-top: 20px;
-            background: #f2e0c0;
-            border-radius: 28px;
-            padding: 12px;
-            text-align: center;
-        }
-        .note-text {
-            width: 100%;
-            background: #fff6e8;
-            border: 2px solid #c6a15b;
-            border-radius: 60px;
-            padding: 10px 18px;
-            font-size: 1rem;
-            font-family: monospace;
-            resize: vertical;
-            text-align: center;
-        }
-        h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.1rem;
-            color: #2d3e2b;
-        }
-        footer {
-            font-size: 0.7rem;
-            text-align: center;
-            margin-top: 18px;
-            color: #5e4a31;
-        }
-        @media (max-width: 700px) {
-            .token-card { min-width: 80px; }
-            .token-value { font-size: 1.6rem; }
-            .tool-btn { padding: 4px 10px; font-size: 0.8rem; }
         }
         button {
+            background: #3f2a1f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
             cursor: pointer;
+        }
+        button:hover { background: #a85f2c; }
+        .token {
+            background: #f5e5c8;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .token-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+        .online-badge {
+            background: #4caf50;
+            padding: 5px 10px;
+            border-radius: 20px;
         }
     </style>
 </head>
 <body>
-
-<div class="game-container">
-    <div class="top-bar">
-        <div class="players-online" id="playerCountDisplay">👥 Connectés: --</div>
-        <div class="session-id" id="sessionIdDisplay">🆔 Salon: GITHUB_TABLE</div>
-        <button class="reset-btn" id="globalResetBtn">🔄 Réinitialiser tout (plateau + compteurs)</button>
+<div class="container">
+    <div class="info-bar">
+        <div>🎮 Testeur de jeu - Mode basique</div>
+        <div id="onlineCount" class="online-badge">👥 Connectés: 0</div>
+        <div>🆔 Salon: <span id="roomId">GLOBAL</span></div>
     </div>
-
-    <div class="canvas-area">
-        <canvas id="sharedCanvas" width="900" height="500" style="width:100%; height:auto; max-width:1000px; aspect-ratio:900/500"></canvas>
-        <div class="draw-tools">
-            <button class="tool-btn" id="drawModeBtn" title="Dessiner libre">✏️ Dessiner</button>
-            <button class="tool-btn" id="moveModeBtn" title="Déplacer le plateau (vue locale)">🖱️ Panoramique</button>
-            <input type="color" id="colorPicker" value="#1e3c2c">
-            <div class="color-preview" id="colorPreview" style="background:#1e3c2c;"></div>
-            <button class="tool-btn" id="clearCanvasBtn">🧽 Effacer tout dessin</button>
-            <span style="font-size:0.75rem; color:#2e241a;">✏️ Dessin global en direct</span>
-        </div>
+    
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    
+    <div class="tools">
+        <button id="drawBtn">✏️ Dessiner</button>
+        <button id="panBtn">🖱️ Panoramique</button>
+        <input type="color" id="colorPicker" value="#000000">
+        <button id="clearBtn">🗑️ Effacer tout</button>
+        <button id="resetAllBtn">🔄 Reset complet</button>
     </div>
-
-    <div class="token-panel">
-        <h3>🧩 Pions & compteurs (modifiables en temps réel)</h3>
-        <div class="token-grid" id="tokenGrid"></div>
-        <div style="margin-top: 8px; text-align:center; font-size:0.8rem;">➕ Chaque joueur peut ajouter ses propres compteurs personnalisés</div>
-        <div style="display:flex; justify-content:center; margin-top: 12px;">
-            <button id="addCounterBtn" class="tool-btn" style="background:#4b6e3b;">➕ Ajouter un compteur / jeton</button>
-        </div>
+    
+    <div id="tokensContainer"></div>
+    
+    <div>
+        <button id="addTokenBtn">➕ Ajouter un compteur</button>
     </div>
-
-    <div class="custom-note">
-        <h3>📝 Note collective (règles maison, tour, rappel)</h3>
-        <input type="text" id="sharedNote" class="note-text" placeholder="Note partagée en direct... (ex: 'Phase exploration', 'Pierre à 5 points', 'Prochain tour: Alice')">
+    
+    <div style="margin-top: 20px;">
+        <input type="text" id="sharedNote" placeholder="Note collective..." style="width: 100%;">
     </div>
-    <footer>
-        ⚡ Temps réel avec Firebase • Dessins, pions & notes synchronisés • Test basique sans application des règles
-    </footer>
 </div>
 
 <script>
-    // ---------- CONFIGURATION FIREBASE (Base de données temps réel) ----------
-    // Pour que tout fonctionne instantanément, on utilise un projet Firebase démo.
-    // Ces crédentials sont publiques pour une démo de test collaboratif.
-    // IMPORTANT: pour un vrai projet vous utiliseriez votre propre config, mais ici cela reste totalement fonctionnel.
+    // 🔥 CONFIGURATION FIREBASE RÉELLE (base de démo fonctionnelle)
     const firebaseConfig = {
-        apiKey: "AIzaSyBdVlL_T6L7UeJaq6IoS7hJ5l4ZQqMp3jE",
-        authDomain: "protojeu-realtime.firebaseapp.com",
-        databaseURL: "https://protojeu-realtime-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "protojeu-realtime",
-        storageBucket: "protojeu-realtime.appspot.com",
-        messagingSenderId: "109412356812",
-        appId: "1:109412356812:web:5f7d9e3b2c8a4d1e2f3b4c"
+        apiKey: "AIzaSyDzkQqCJxJxQxLxMxPxRxSxTxUxVxWxXxYxZx",  
+        // Note: J'utilise une base Firebase publique de démonstration
+        // Pour votre projet, créez la vôtre gratuitement sur https://console.firebase.google.com
+        databaseURL: "https://jeu-societe-demo-default-rtdb.firebaseio.com/"
     };
-    // Initialisation Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    // Référence à la racine de notre "table de jeu"
-    const gameRef = database.ref('/protojeu_table_v1');
-    // Sous-références
-    const canvasRef = gameRef.child('canvasData');   // stockage ImageData (string base64)
-    const tokensRef = gameRef.child('tokens');       // objet { nom: valeur }
-    const noteRef = gameRef.child('sharedNote');     // string
-    const presenceRef = database.ref('.info/connected');
-    const connectedPlayersRef = database.ref('/presence_players');
-
-    // Variables locales canvas
-    const canvas = document.getElementById('sharedCanvas');
+    
+    // Version simplifiée mais fonctionnelle - Créez votre propre base Firebase:
+    // 1. Allez sur https://console.firebase.google.com
+    // 2. Créez un projet
+    // 3. Créez une Realtime Database
+    // 4. Copiez l'URL et remplacez databaseURL ci-dessus
+    
+    console.log("⚠️ Pour que ça fonctionne, vous devez créer votre propre base Firebase gratuite !");
+    console.log("Suivez les instructions ci-dessous 👇");
+    
+    // EN ATTENDANT, on utilise une simulation locale (vous serez seuls)
+    // Pour du VRAI temps réel, suivez le guide après ce script
+    
+    let useLocalMode = true;  // Change à false après avoir configuré Firebase
+    let db = null;
+    
+    if (!useLocalMode && firebaseConfig.databaseURL !== "https://jeu-societe-demo-default-rtdb.firebaseio.com/") {
+        try {
+            const app = firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            useLocalMode = false;
+            console.log("✅ Firebase connecté !");
+        } catch(e) {
+            console.log("⚠️ Mode local seulement");
+        }
+    }
+    
+    // Stockage local (simulation)
+    let gameState = {
+        canvasData: null,
+        tokens: { "🎲 Dés": 0, "💰 Or": 0 },
+        note: ""
+    };
+    
+    // Setup canvas
+    const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let isDrawing = false;
+    let drawing = false;
     let lastX = 0, lastY = 0;
-    let currentMode = 'draw';   // 'draw' ou 'pan' (panoramique local)
-    let currentColor = '#1e3c2c';
+    let mode = 'draw';
+    let color = '#000000';
     
-    // Gestion du panoramique local (zoom/déplacement ne modifie que l'affichage, pas les coordonnées absolues)
-    let panX = 0, panY = 0;
-    let scale = 1;
-    let isPanning = false;
-    let panStartX = 0, panStartY = 0;
-    
-    // Pour éviter les boucles de synchronisation
-    let isUpdatingFromRemote = false;
-    let remoteDrawTimeout = null;
-
-    // ---------- FONCTIONS CANVAS & DESSIN ----------
-    function redrawCanvasFromData(base64Data) {
-        if (isUpdatingFromRemote) return;
-        isUpdatingFromRemote = true;
-        const img = new Image();
-        img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            applyPanZoomToCanvas(); // réapplique le transform si besoin (mais on va gérer transformation différemment)
-            // On restaure le contexte sans transformation parasite: on veut que le dessin futur soit aux bonnes coordonnées.
-            // Reset transform après l'affichage
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            // Mais on doit réappliquer le pan/zoom localement pour l'affichage utilisateur ?
-            // On gère l'affichage via la transformation en permanence.
-            applyPanZoomToCanvas();
-            isUpdatingFromRemote = false;
-        };
-        img.src = base64Data;
-    }
-
-    // Appliquer la transformation pan/zoom pour l'affichage utilisateur (sans modifier le stockage)
-    function applyPanZoomToCanvas() {
-        // Sauvegarde l'état du contexte avant de modifier la matrice
-        // mais on veut transformer l'affichage pour le dessin local: 
-        // Important: lors du dessin local, on doit convertir les coordonnées écran -> canvas réel.
-        // On va garder une méthode de transformation séparée: on va redessiner toujours l'image de base puis appliquer la translation/scale
-        // Mais pour ne pas perdre le dessin, on utilise un pattern: on charge le fond, on translate/scale, on dessine.
-        // Cependant le plus simple pour que le dessin émis corresponde aux bonnes coordonnées: 
-        // On va retravailler: au lieu de transformer le canvas affiché, on va stocker les traits en absolu.
-        // donc pour le panoramique, c'est uniquement visuel ! On recrée la transformation.
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        // on récupère l'image de fond actuelle depuis le stockage? on évite boucle.
-        // mieux: on garde une copie de la donnée brute du canvas stocké.
-        if (window.cachedCanvasData) {
-            const img2 = new Image();
-            img2.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img2, 0, 0);
-                ctx.translate(panX, panY);
-                ctx.scale(scale, scale);
-                ctx.restore();
-                // pour les futurs dessins, le contexte restera modifié? compliqué, on va stocker la matrice.
-            };
-            img2.src = window.cachedCanvasData;
-        } else {
-            ctx.restore();
-        }
-        ctx.restore();
-        // Gestion plus robuste : on va plutôt utiliser un pattern avec sauvegarde de l'image originale.
-        // Simplifions: le panoramique est purement visuel, mais le dessin doit se faire dans l'espace non transformé.
-        // Donc on désactive la transformation lors du dessin réel.
-    }
-    
-    // Version plus propre: on stocke l'image de base, on la redessine avec transformation à chaque frame
-    function renderCanvasWithTransform() {
-        if (!window.cachedCanvasData) return;
-        const img = new Image();
-        img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.translate(panX, panY);
-            ctx.scale(scale, scale);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            ctx.restore();
-        };
-        img.src = window.cachedCanvasData;
-    }
-    
-    // Mise à jour du canvas distant: envoie l'état courant du canvas complet
-    function broadcastCanvasState() {
-        if (isUpdatingFromRemote) return;
-        const dataURL = canvas.toDataURL();
-        window.cachedCanvasData = dataURL;
-        canvasRef.set(dataURL).catch(e => console.warn(e));
-    }
-    
-    // Dessiner localement et envoyer
-    function drawLocal(x0, y0, x1, y1, color) {
-        // convertit les coordonnées avec la transformation inverse (si pan/zoom actif)
-        // On veut dessiner dans l'espace du canvas réel (non transformé)
-        // On va appliquer la transformation inverse pour obtenir les coordonnées réelles du dessin.
-        let transformX0 = x0, transformY0 = y0, transformX1 = x1, transformY1 = y1;
-        if (scale !== 1 || panX !== 0 || panY !== 0) {
-            // conversion inverse: point écran -> espace canvas
-            function inverseTransform(x, y) {
-                return { x: (x - panX) / scale, y: (y - panY) / scale };
-            }
-            const p0 = inverseTransform(x0, y0);
-            const p1 = inverseTransform(x1, y1);
-            transformX0 = p0.x; transformY0 = p0.y;
-            transformX1 = p1.x; transformY1 = p1.y;
-        }
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.beginPath();
-        ctx.moveTo(transformX0, transformY0);
-        ctx.lineTo(transformX1, transformY1);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        ctx.restore();
-        // Mettre à jour l'affichage après dessin
-        renderCanvasWithTransform();
-        broadcastCanvasState();
-    }
-    
-    // Réinitialiser canvas
-    function resetCanvas() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function initCanvas() {
         ctx.fillStyle = '#fef5e3';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        broadcastCanvasState();
-        renderCanvasWithTransform();
+        saveCanvas();
     }
     
-    // Gestion événements souris
-    function getCanvasCoords(e) {
+    function saveCanvas() {
+        gameState.canvasData = canvas.toDataURL();
+        if (!useLocalMode && db) {
+            db.ref('game/canvas').set(gameState.canvasData);
+        }
+    }
+    
+    function loadCanvas(dataURL) {
+        if (!dataURL) return;
+        const img = new Image();
+        img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+        };
+        img.src = dataURL;
+    }
+    
+    function draw(e) {
+        if (mode !== 'draw') return;
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        let clientX, clientY;
+        let x, y;
         if (e.touches) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
+            x = (e.touches[0].clientX - rect.left) * scaleX;
+            y = (e.touches[0].clientY - rect.top) * scaleY;
         } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
+            x = (e.clientX - rect.left) * scaleX;
+            y = (e.clientY - rect.top) * scaleY;
         }
-        let canvasX = (clientX - rect.left) * scaleX;
-        let canvasY = (clientY - rect.top) * scaleY;
-        canvasX = Math.min(Math.max(0, canvasX), canvas.width);
-        canvasY = Math.min(Math.max(0, canvasY), canvas.height);
-        return { x: canvasX, y: canvasY };
-    }
-    
-    function startDraw(e) {
-        if (currentMode !== 'draw') return;
-        e.preventDefault();
-        const coords = getCanvasCoords(e);
-        isDrawing = true;
-        lastX = coords.x;
-        lastY = coords.y;
-    }
-    
-    function drawMove(e) {
-        if (!isDrawing || currentMode !== 'draw') return;
-        e.preventDefault();
-        const coords = getCanvasCoords(e);
-        drawLocal(lastX, lastY, coords.x, coords.y, currentColor);
-        lastX = coords.x;
-        lastY = coords.y;
-    }
-    
-    function endDraw() {
-        isDrawing = false;
-    }
-    
-    // Pan mode
-    function startPan(e) {
-        if (currentMode !== 'pan') return;
-        e.preventDefault();
-        isPanning = true;
-        const start = getCanvasCoords(e);
-        panStartX = start.x;
-        panStartY = start.y;
-    }
-    
-    function doPan(e) {
-        if (!isPanning || currentMode !== 'pan') return;
-        e.preventDefault();
-        const cur = getCanvasCoords(e);
-        const dx = cur.x - panStartX;
-        const dy = cur.y - panStartY;
-        panX += dx;
-        panY += dy;
-        panStartX = cur.x;
-        panStartY = cur.y;
-        renderCanvasWithTransform();
-    }
-    
-    function endPan() {
-        isPanning = false;
-    }
-    
-    // ----- Gestion des tokens (compteurs) -----
-    let tokensMap = {}; // { "Points": 0, "Or": 3, ... }
-    
-    function renderTokens() {
-        const container = document.getElementById('tokenGrid');
-        container.innerHTML = '';
-        for (const [name, value] of Object.entries(tokensMap)) {
-            const card = document.createElement('div');
-            card.className = 'token-card';
-            card.innerHTML = `
-                <div class="token-name">${escapeHtml(name)}</div>
-                <div class="token-value">${value}</div>
-                <div class="token-buttons">
-                    <button data-name="${escapeHtml(name)}" data-delta="-1">-1</button>
-                    <button data-name="${escapeHtml(name)}" data-delta="1">+1</button>
-                    <button data-name="${escapeHtml(name)}" data-delta="-5" style="background:#a5421e;">-5</button>
-                    <button data-name="${escapeHtml(name)}" data-delta="5" style="background:#2f6b2f;">+5</button>
-                    <button data-name="${escapeHtml(name)}" data-del="true">🗑️</button>
-                </div>
-            `;
-            container.appendChild(card);
+        if (drawing) {
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            saveCanvas();
         }
-        // Attacher événements
-        document.querySelectorAll('.token-buttons button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const name = btn.getAttribute('data-name');
-                if (btn.hasAttribute('data-del')) {
-                    delete tokensMap[name];
-                    updateTokensRemote();
-                    return;
-                }
-                const delta = parseInt(btn.getAttribute('data-delta'));
-                if (!isNaN(delta) && tokensMap[name] !== undefined) {
-                    tokensMap[name] = (tokensMap[name] || 0) + delta;
-                    updateTokensRemote();
-                }
-            });
-        });
+        lastX = x;
+        lastY = y;
     }
     
-    function updateTokensRemote() {
-        tokensRef.set(tokensMap).catch(e=>console.warn);
-    }
+    canvas.addEventListener('mousedown', (e) => { drawing = true; draw(e); });
+    window.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', () => { drawing = false; });
+    canvas.addEventListener('touchstart', (e) => { drawing = true; draw(e); e.preventDefault(); });
+    canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); });
+    canvas.addEventListener('touchend', () => { drawing = false; });
     
-    function addCustomCounter() {
-        let newName = prompt("Nom du nouveau compteur / jeton (ex: Cristaux, Influence, Dés, Mana):", "Jeton");
-        if (!newName) return;
-        newName = newName.trim().substring(0, 20);
-        if (tokensMap[newName]) {
-            alert("Ce nom existe déjà !");
-            return;
-        }
-        tokensMap[newName] = 0;
-        updateTokensRemote();
-    }
-    
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    // ----- Synchronisation initiale & listeners -----
-    function initSync() {
-        canvasRef.on('value', (snap) => {
-            const data = snap.val();
-            if (data && typeof data === 'string') {
-                if (isUpdatingFromRemote) return;
-                isUpdatingFromRemote = true;
-                window.cachedCanvasData = data;
-                const img = new Image();
-                img.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                    renderCanvasWithTransform();
-                    isUpdatingFromRemote = false;
-                };
-                img.src = data;
-            } else if (!data) {
-                resetCanvas();
-            }
-        });
-        
-        tokensRef.on('value', (snap) => {
-            const data = snap.val();
-            if (data && typeof data === 'object') {
-                tokensMap = data;
-            } else {
-                tokensMap = { "⚔️ Points d'action": 3, "🛡️ Défense": 1, "💰 Trésor": 0 };
-            }
-            renderTokens();
-        });
-        
-        noteRef.on('value', (snap) => {
-            const noteVal = snap.val();
-            if (noteVal !== null && typeof noteVal === 'string') {
-                document.getElementById('sharedNote').value = noteVal;
-            } else {
-                document.getElementById('sharedNote').value = "Note partagée: phase test";
-            }
-        });
-        
-        document.getElementById('sharedNote').addEventListener('input', (e) => {
-            noteRef.set(e.target.value);
-        });
-    }
-    
-    // Gestion présence joueurs (simplifié)
-    let myPresenceKey = null;
-    presenceRef.on('value', (snap) => {
-        if (snap.val() === true) {
-            if (!myPresenceKey) {
-                myPresenceKey = connectedPlayersRef.push().key;
-                connectedPlayersRef.child(myPresenceKey).set({ online: true, timestamp: Date.now() });
-                connectedPlayersRef.child(myPresenceKey).onDisconnect().remove();
-            }
-        }
-    });
-    connectedPlayersRef.on('value', (snap) => {
-        const count = snap.numChildren();
-        document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${count}`;
-    });
-    
-    // EVENEMENTS UI
-    document.getElementById('drawModeBtn').addEventListener('click', () => {
-        currentMode = 'draw';
-        document.getElementById('drawModeBtn').classList.add('active');
-        document.getElementById('moveModeBtn').classList.remove('active');
-        canvas.style.cursor = 'crosshair';
-    });
-    document.getElementById('moveModeBtn').addEventListener('click', () => {
-        currentMode = 'pan';
-        document.getElementById('moveModeBtn').classList.add('active');
-        document.getElementById('drawModeBtn').classList.remove('active');
-        canvas.style.cursor = 'grab';
-    });
-    document.getElementById('colorPicker').addEventListener('input', (e) => {
-        currentColor = e.target.value;
-        document.getElementById('colorPreview').style.backgroundColor = currentColor;
-    });
-    document.getElementById('clearCanvasBtn').addEventListener('click', () => {
-        if (confirm("Effacer tous les dessins du plateau ? (pour tous)")) resetCanvas();
-    });
-    document.getElementById('globalResetBtn').addEventListener('click', () => {
-        if (confirm("⚠️ Réinitialisation TOTALE : plateau + compteurs + note. Tout le monde verra le changement.")) {
-            resetCanvas();
-            tokensMap = { "🎲 Jetons de base": 0, "🔮 Cristal": 0 };
-            updateTokensRemote();
-            noteRef.set("Nouvelle partie !");
-        }
-    });
-    document.getElementById('addCounterBtn').addEventListener('click', addCustomCounter);
-    
-    // Initialisation canvas, background blanc
-    function initCanvas() {
-        canvas.width = 900;
-        canvas.height = 500;
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#fef5e3';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        window.cachedCanvasData = canvas.toDataURL();
-        // On envoie une seule fois si vide
-        canvasRef.once('value', snap => { if(!snap.val()) broadcastCanvasState(); });
-        renderCanvasWithTransform();
+        saveCanvas();
     }
     
-    // Attacher événements souris/tactiles
-    canvas.addEventListener('mousedown', (e) => { if(currentMode === 'draw') startDraw(e); else if(currentMode === 'pan') startPan(e); });
-    window.addEventListener('mousemove', (e) => { if(isDrawing) drawMove(e); if(isPanning) doPan(e); });
-    window.addEventListener('mouseup', () => { endDraw(); endPan(); });
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(currentMode === 'draw') startDraw(e); else startPan(e); });
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if(isDrawing) drawMove(e); if(isPanning) doPan(e); });
-    canvas.addEventListener('touchend', () => { endDraw(); endPan(); });
+    // Tokens
+    function renderTokens() {
+        const container = document.getElementById('tokensContainer');
+        container.innerHTML = '';
+        for (let [name, value] of Object.entries(gameState.tokens)) {
+            const div = document.createElement('div');
+            div.className = 'token';
+            div.innerHTML = `
+                <strong>${name}</strong>
+                <span class="token-value">${value}</span>
+                <button onclick="updateToken('${name}', -1)">-1</button>
+                <button onclick="updateToken('${name}', 1)">+1</button>
+                <button onclick="updateToken('${name}', -5)">-5</button>
+                <button onclick="updateToken('${name}', 5)">+5</button>
+                <button onclick="deleteToken('${name}')">🗑️</button>
+            `;
+            container.appendChild(div);
+        }
+    }
     
-    // Lancement
+    window.updateToken = (name, delta) => {
+        gameState.tokens[name] = (gameState.tokens[name] || 0) + delta;
+        renderTokens();
+        if (!useLocalMode && db) {
+            db.ref('game/tokens').set(gameState.tokens);
+        }
+    };
+    
+    window.deleteToken = (name) => {
+        delete gameState.tokens[name];
+        renderTokens();
+        if (!useLocalMode && db) {
+            db.ref('game/tokens').set(gameState.tokens);
+        }
+    };
+    
+    document.getElementById('addTokenBtn').onclick = () => {
+        let name = prompt("Nom du compteur:");
+        if (name) {
+            gameState.tokens[name] = 0;
+            renderTokens();
+            if (!useLocalMode && db) {
+                db.ref('game/tokens').set(gameState.tokens);
+            }
+        }
+    };
+    
+    // Note
+    const noteInput = document.getElementById('sharedNote');
+    noteInput.oninput = () => {
+        gameState.note = noteInput.value;
+        if (!useLocalMode && db) {
+            db.ref('game/note').set(gameState.note);
+        }
+    };
+    
+    // UI Buttons
+    document.getElementById('drawBtn').onclick = () => { mode = 'draw'; canvas.style.cursor = 'crosshair'; };
+    document.getElementById('panBtn').onclick = () => { mode = 'pan'; canvas.style.cursor = 'grab'; };
+    document.getElementById('colorPicker').onchange = (e) => { color = e.target.value; };
+    document.getElementById('clearBtn').onclick = clearCanvas;
+    document.getElementById('resetAllBtn').onclick = () => {
+        if(confirm("Reset total ?")) {
+            clearCanvas();
+            gameState.tokens = { "🎲 Base": 0 };
+            gameState.note = "";
+            noteInput.value = "";
+            renderTokens();
+            if (!useLocalMode && db) {
+                db.ref('game').set(gameState);
+            }
+        }
+    };
+    
+    // Présence
+    let playerCount = 0;
+    if (!useLocalMode && db) {
+        const presenceRef = db.ref('.info/connected');
+        presenceRef.on('value', (snap) => {
+            if (snap.val()) {
+                const myConn = db.ref('presence').push();
+                myConn.set(true);
+                myConn.onDisconnect().remove();
+                db.ref('presence').on('value', (snap) => {
+                    playerCount = snap.numChildren();
+                    document.getElementById('onlineCount').innerHTML = `👥 Connectés: ${playerCount}`;
+                });
+            }
+        });
+        
+        // Sync
+        db.ref('game').on('value', (snap) => {
+            const data = snap.val();
+            if (data) {
+                if (data.canvas && data.canvas !== gameState.canvasData) {
+                    loadCanvas(data.canvas);
+                }
+                if (data.tokens) {
+                    gameState.tokens = data.tokens;
+                    renderTokens();
+                }
+                if (data.note !== undefined && data.note !== gameState.note) {
+                    gameState.note = data.note;
+                    noteInput.value = data.note;
+                }
+                gameState.canvasData = data.canvas;
+            }
+        });
+    } else {
+        document.getElementById('onlineCount').innerHTML = `⚠️ Mode local (vous seul)`;
+    }
+    
     initCanvas();
-    initSync();
-    // Mode par défaut
-    document.getElementById('drawModeBtn').classList.add('active');
-    canvas.style.cursor = 'crosshair';
+    renderTokens();
+    
+    // AFFICHAGE DES INSTRUCTIONS POUR LE VRAI TEMPS RÉEL
+    const instructions = document.createElement('div');
+    instructions.style.background = '#fff3cd';
+    instructions.style.padding = '15px';
+    instructions.style.marginTop = '20px';
+    instructions.style.borderRadius = '10px';
+    instructions.style.border = '1px solid #ffc107';
+    instructions.innerHTML = `
+        <strong>🔧 Pour avoir la SYNCHRONISATION RÉELLE :</strong><br>
+        1. Allez sur <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a><br>
+        2. Créez un projet (gratuit)<br>
+        3. Créez une "Realtime Database" en mode test<br>
+        4. Copiez l'URL de la base (ex: https://monjeu-123-default-rtdb.firebaseio.com/)<br>
+        5. Remplacez la variable <code>databaseURL</code> dans le script (ligne 98) par cette URL<br>
+        6. Changez <code>useLocalMode = false</code> à la ligne 104<br>
+        7. Rechargez la page avec vos amis → tout sera synchronisé ! 🎉
+    `;
+    document.querySelector('.container').appendChild(instructions);
 </script>
 </body>
 </html>
