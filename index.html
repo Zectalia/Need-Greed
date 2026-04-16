@@ -280,7 +280,6 @@
                 <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span>
             </div>
             <div class="button-group">
-                <button class="reset-pioche-btn" id="resetDonjonBtn" style="display:none;">🔄 Remettre les 10 cartes</button>
                 <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE (5 monstres + 5 événements)</button>
             </div>
         </div>
@@ -304,7 +303,8 @@
     <footer>
         ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
         🎲 Quand le Donjon n'a plus de cartes → message "Descente terminée"<br>
-        🎲 Cliquez sur "NOUVELLE DESCENTE" pour recommencer
+        🎲 Cliquez sur "NOUVELLE DESCENTE" pour recommencer<br>
+        📊 Monstres: 26 | Événements: 29 | Butins: 37
     </footer>
 </div>
 
@@ -319,17 +319,17 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v3');
-    const butinsRef = database.ref('/needandgreed_butins');
+    const donjonRef = database.ref('/needandgreed_donjon_v4');
+    const butinsRef = database.ref('/needandgreed_butins_v2');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
         return num.toString().padStart(2, '0');
     }
     
-    // === DONJON : monstres et événements ===
-    const NB_MONSTRE = 33;
-    const NB_EVENEMENTS = 33;
+    // === DONJON : monstres (26) et événements (29) ===
+    const NB_MONSTRE = 26;   // 00 à 25
+    const NB_EVENEMENTS = 29; // 00 à 28
     
     const ALL_MONSTRES = [];
     for (let i = 0; i < NB_MONSTRE; i++) {
@@ -351,8 +351,8 @@
         });
     }
     
-    // === BUTINS ===
-    const NB_BUTINS_CARDS = 33;
+    // === BUTINS (37) ===
+    const NB_BUTINS_CARDS = 37; // 00 à 36
     const BUTINS_CARDS = [];
     for (let i = 0; i < NB_BUTINS_CARDS; i++) {
         BUTINS_CARDS.push({ 
@@ -395,7 +395,7 @@
             this.currentDeck = [];
             this.currentCard = null;
             this.isUpdating = false;
-            this.isFinished = false;  // Pour le Donjon : true quand plus de cartes
+            this.isFinished = false;
             this.ui = {
                 cardArea: document.getElementById(uiIds.cardArea),
                 cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
@@ -410,34 +410,23 @@
             this.setupListeners();
         }
         
-        // Mettre à jour l'interface selon l'état "fini"
         updateFinishedState() {
             if (!this.isDonjon) return;
             
             if (this.isFinished) {
-                // Désactiver le bouton pioche
                 this.ui.drawBtn.classList.add('disabled');
                 this.ui.drawBtn.disabled = true;
-                // Afficher le badge de fin
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
-                // Cacher le bouton reset classique
-                if (this.ui.resetBtn) this.ui.resetBtn.style.display = 'none';
-                // Afficher un message dans la zone de carte
                 if (!this.currentCard) {
                     this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
                 }
             } else {
-                // Réactiver le bouton pioche
                 this.ui.drawBtn.classList.remove('disabled');
                 this.ui.drawBtn.disabled = false;
-                // Cacher le badge de fin
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'none';
-                // Afficher le bouton reset (mais on le garde caché pour le Donjon)
-                if (this.ui.resetBtn) this.ui.resetBtn.style.display = 'none';
             }
         }
         
-        // Sauvegarder le deck
         saveDeck() {
             if (this.isUpdating) return;
             const deckData = this.currentDeck.map(card => ({
@@ -446,11 +435,11 @@
                 type: card.type
             }));
             this.firebaseRef.child('deck').set(deckData);
-            // Sauvegarder aussi l'état "fini"
-            this.firebaseRef.child('isFinished').set(this.isFinished);
+            if (this.isDonjon) {
+                this.firebaseRef.child('isFinished').set(this.isFinished);
+            }
         }
         
-        // Sauvegarder la carte courante
         saveCurrentCard(card) {
             if (this.isUpdating) return;
             if (card) {
@@ -464,7 +453,6 @@
             }
         }
         
-        // Charger un deck depuis les données
         loadDeckFromData(data) {
             if (!data || !Array.isArray(data) || data.length === 0) {
                 if (this.isDonjon) {
@@ -491,12 +479,10 @@
             this.updateFinishedState();
         }
         
-        // Charger l'état "fini" depuis Firebase
         loadFinishedState(finished) {
             if (finished === true) {
                 this.isFinished = true;
                 this.updateFinishedState();
-                // Si fini et pas de carte, afficher le message
                 if (!this.currentCard) {
                     this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
                 }
@@ -506,7 +492,6 @@
             }
         }
         
-        // Afficher la composition du Donjon
         updateCompositionDisplay() {
             if (!this.ui.compositionSpan || !this.isDonjon) return;
             if (!this.currentDeck || this.currentDeck.length === 0) {
@@ -518,7 +503,6 @@
             this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements}`;
         }
         
-        // Afficher la carte
         displayCard(card) {
             if (this.isFinished && !card) {
                 this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
@@ -538,14 +522,12 @@
             this.ui.cardArea.innerHTML = imgHtml;
         }
         
-        // Mettre à jour l'affichage des cartes restantes
         updateCardsLeftDisplay() {
             this.ui.cardsLeftSpan.innerText = this.currentDeck.length;
             if (this.isDonjon) {
                 this.updateCompositionDisplay();
             }
             
-            // Vérifier si on est à court de cartes (après une pioche)
             if (this.isDonjon && this.currentDeck.length === 0 && !this.isFinished) {
                 this.isFinished = true;
                 this.saveDeck();
@@ -554,16 +536,11 @@
             }
         }
         
-        // Piocher une carte
         drawCard() {
             if (this.isUpdating) return;
-            if (this.isFinished) {
-                // Ne rien faire, la descente est finie
-                return;
-            }
+            if (this.isFinished) return;
             
             if (this.currentDeck.length === 0) {
-                // Plus de cartes -> descente terminée
                 this.isFinished = true;
                 this.saveDeck();
                 this.updateFinishedState();
@@ -580,7 +557,6 @@
             this.displayCard(newCard);
             this.updateCardsLeftDisplay();
             
-            // Après avoir pioché, vérifier si le deck est vide
             if (this.currentDeck.length === 0) {
                 this.isFinished = true;
                 this.saveDeck();
@@ -588,13 +564,10 @@
             }
         }
         
-        // Réinitialiser la pioche (pour Butins uniquement)
         resetDeck() {
             if (this.isUpdating) return;
             
             if (this.isDonjon) {
-                // Pour le Donjon, on ne réinitialise pas automatiquement
-                // On garde le comportement de fin de descente
                 return;
             } else {
                 this.currentDeck = shuffleArray([...this.cardList]);
@@ -609,7 +582,6 @@
             }
         }
         
-        // Générer une nouvelle descente (Donjon uniquement)
         generateNewDescente() {
             if (!this.isDonjon) return;
             if (this.isUpdating) return;
@@ -625,7 +597,6 @@
             this.updateFinishedState();
         }
         
-        // Initialiser depuis Firebase
         init() {
             this.firebaseRef.child('deck').once('value', (snap) => {
                 const data = snap.val();
@@ -645,13 +616,15 @@
                 }
             });
             
-            this.firebaseRef.child('isFinished').once('value', (snap) => {
-                const finished = snap.val();
-                if (finished !== null) {
-                    this.isFinished = finished;
-                    this.updateFinishedState();
-                }
-            });
+            if (this.isDonjon) {
+                this.firebaseRef.child('isFinished').once('value', (snap) => {
+                    const finished = snap.val();
+                    if (finished !== null) {
+                        this.isFinished = finished;
+                        this.updateFinishedState();
+                    }
+                });
+            }
             
             this.firebaseRef.child('currentCard').once('value', (snap) => {
                 const cardData = snap.val();
@@ -666,7 +639,6 @@
             });
         }
         
-        // Écouter les changements Firebase
         setupListeners() {
             this.firebaseRef.child('deck').on('value', (snap) => {
                 if (this.isUpdating) return;
@@ -676,12 +648,14 @@
                 setTimeout(() => { this.isUpdating = false; }, 100);
             });
             
-            this.firebaseRef.child('isFinished').on('value', (snap) => {
-                if (this.isUpdating) return;
-                this.isUpdating = true;
-                this.loadFinishedState(snap.val());
-                setTimeout(() => { this.isUpdating = false; }, 100);
-            });
+            if (this.isDonjon) {
+                this.firebaseRef.child('isFinished').on('value', (snap) => {
+                    if (this.isUpdating) return;
+                    this.isUpdating = true;
+                    this.loadFinishedState(snap.val());
+                    setTimeout(() => { this.isUpdating = false; }, 100);
+                });
+            }
             
             this.firebaseRef.child('currentCard').on('value', (snap) => {
                 if (this.isUpdating) return;
@@ -701,7 +675,7 @@
             
             this.ui.drawBtn.addEventListener('click', () => this.drawCard());
             
-            if (this.ui.resetBtn) {
+            if (this.ui.resetBtn && !this.isDonjon) {
                 this.ui.resetBtn.addEventListener('click', () => {
                     if (confirm(`Remettre toutes les cartes ${this.name} dans la pioche ?`)) {
                         this.resetDeck();
@@ -724,7 +698,7 @@
         cardArea: 'donjonCardArea',
         cardsLeft: 'donjonCardsLeft',
         drawBtn: 'donjonDrawBtn',
-        resetBtn: 'resetDonjonBtn',
+        resetBtn: null,
         generateBtn: 'generateDonjonBtn',
         composition: 'donjonComposition',
         finishedBadge: 'donjonFinishedBadge'
@@ -751,7 +725,7 @@
     // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v3');
+    const connectedPlayersRef = database.ref('/presence_pioches_v4');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -769,8 +743,11 @@
     });
     
     console.log("✅ Deux pioches prêtes !");
-    console.log("📌 Format des images : 00.png, 01.png, 02.png ...");
-    console.log("🏁 Quand le Donjon n'a plus de cartes → message 'Descente terminée'");
+    console.log("📊 Nombres de cartes :");
+    console.log("   - Monstres : 26 (00 à 25)");
+    console.log("   - Événements : 29 (00 à 28)");
+    console.log("   - Butins : 37 (00 à 36)");
+    console.log("📁 Dossiers nécessaires : Monstre/, Evenements/, Butins/");
     console.log("🎲 Bouton 'NOUVELLE DESCENTE' pour recommencer");
 </script>
 </body>
