@@ -414,7 +414,7 @@
 
     <footer>
         ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
-        💰 Glissez une carte BUTIN vers un inventaire (la carte reste dans la pioche pour le test)<br>
+        💰 Glissez une carte BUTIN vers un inventaire → la carte est copiée (reste dans la pioche pour test)<br>
         🖱️ Cliquez sur une carte dans un inventaire pour la retourner à 180°
     </footer>
 </div>
@@ -429,9 +429,9 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v10');
-    const butinsRef = database.ref('/needandgreed_butins_v8');
-    const inventoriesRef = database.ref('/needandgreed_inventories_v4');
+    const donjonRef = database.ref('/needandgreed_donjon_v11');
+    const butinsRef = database.ref('/needandgreed_butins_v9');
+    const inventoriesRef = database.ref('/needandgreed_inventories_v5');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -559,7 +559,7 @@
         });
         saveInventoriesToFirebase();
         renderInventory(inventoryIndex);
-        console.log(`Carte ajoutée à l'inventaire ${inventoryIndex + 1}`, card);
+        console.log(`✅ Carte ajoutée à l'inventaire ${inventoryIndex + 1}`, card);
         return true;
     }
     
@@ -713,17 +713,21 @@
             if (this.isButins && isDraggable && card) {
                 const cardElement = this.ui.cardArea.querySelector('.card');
                 if (cardElement) {
-                    cardElement.addEventListener('dragstart', (e) => {
+                    // Supprimer l'ancien listener et en recréer un
+                    const newCardElement = cardElement.cloneNode(true);
+                    cardElement.parentNode.replaceChild(newCardElement, cardElement);
+                    
+                    newCardElement.addEventListener('dragstart', (e) => {
                         e.dataTransfer.setData('text/plain', JSON.stringify({
                             id: card.id,
                             image: card.image,
                             type: card.type
                         }));
                         e.dataTransfer.effectAllowed = 'copy';
-                        cardElement.classList.add('dragging');
+                        newCardElement.classList.add('dragging');
                     });
-                    cardElement.addEventListener('dragend', (e) => {
-                        cardElement.classList.remove('dragging');
+                    newCardElement.addEventListener('dragend', (e) => {
+                        newCardElement.classList.remove('dragging');
                     });
                 }
             }
@@ -927,7 +931,8 @@
     }, false, true);
     
     // ========== GESTION DES INVENTAIRES (Drag & Drop) ==========
-    function setupInventoryDropZones() {
+    // Attendre que le DOM soit chargé pour attacher les événements
+    document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 4; i++) {
             const dropzone = document.getElementById(`inventory${i}`);
             if (!dropzone) continue;
@@ -948,7 +953,7 @@
                 
                 try {
                     const cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    console.log("Carte déposée dans l'inventaire", i + 1, cardData);
+                    console.log("📦 Carte déposée dans l'inventaire", i + 1, cardData);
                     if (cardData.type === 'butin') {
                         addCardToInventory(cardData, i);
                     } else {
@@ -959,19 +964,19 @@
                 }
             });
         }
-    }
-    
-    // Boutons pour vider chaque inventaire
-    for (let i = 0; i < 4; i++) {
-        const clearBtn = document.querySelector(`[data-clear="${i}"]`);
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                if (confirm(`Vider l'inventaire ${i+1} ?`)) {
-                    clearInventory(i);
-                }
-            });
+        
+        // Boutons pour vider chaque inventaire
+        for (let i = 0; i < 4; i++) {
+            const clearBtn = document.querySelector(`[data-clear="${i}"]`);
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (confirm(`Vider l'inventaire ${i+1} ?`)) {
+                        clearInventory(i);
+                    }
+                });
+            }
         }
-    }
+    });
     
     // ========== RESET GLOBAL ==========
     document.getElementById('resetAllBtn').addEventListener('click', () => {
@@ -990,7 +995,7 @@
     // ========== PRÉSENCE ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v10');
+    const connectedPlayersRef = database.ref('/presence_pioches_v11');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -1007,11 +1012,8 @@
         document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${count}`;
     });
     
-    // Initialisation
-    setupInventoryDropZones();
-    
-    console.log("✅ Version TEST - La carte reste dans la pioche");
-    console.log("💡 Glissez une carte BUTIN vers un inventaire → elle doit apparaître dans l'inventaire");
+    console.log("✅ Version CORRIGÉE - Le Drag & Drop devrait fonctionner du premier coup !");
+    console.log("💡 Glissez une carte BUTIN vers un inventaire → elle doit apparaître immédiatement");
     console.log("🖱️ Cliquez sur une carte dans un inventaire pour la retourner");
 </script>
 </body>
