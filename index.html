@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Need & Greed - Donjon & Butins (avec corbeille)</title>
+    <title>Need & Greed - Donjon & Butins (3 types de descente)</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
@@ -65,9 +65,14 @@
         .deck-info { background: #3f2a1f; color: #fef0cf; padding: 8px; border-radius: 30px; margin-top: 10px; font-size: 0.85rem; }
         .reset-pioche-btn { background: #c47b3e88; border: 1px solid #c47b3e; color: white; font-size: 0.8rem; padding: 5px 12px; border-radius: 30px; cursor: pointer; margin-top: 8px; }
         .reset-pioche-btn:hover { background: #c47b3e; }
-        .generate-pioche-btn { background: #6b3e8f88; border: 1px solid #8b5eb3; color: white; font-size: 0.8rem; padding: 5px 12px; border-radius: 30px; cursor: pointer; margin-top: 8px; margin-left: 8px; }
-        .generate-pioche-btn:hover { background: #8b5eb3; }
+        
         .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+        .descente-btn { background: #6b3e8f; border: none; color: white; font-weight: bold; padding: 8px 16px; border-radius: 30px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+        .descente-btn:hover { background: #8b5eb3; transform: scale(1.02); }
+        .descente-btn.descente1 { background: #2d5a3b; }
+        .descente-btn.descente2 { background: #5a2d2d; }
+        .descente-btn.descente3 { background: #8b5eb3; }
+        
         .badge { background: #00000099; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; }
         .finished-badge { background: #ffaa44; color: #2d1f12; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; font-weight: bold; }
         
@@ -86,45 +91,15 @@
         .clear-inv { background: #c47b3e88; border: 1px solid #c47b3e; color: white; font-size: 0.7rem; padding: 5px 12px; border-radius: 20px; cursor: pointer; margin-top: 10px; width: 100%; }
         .clear-inv:hover { background: #c47b3e; }
         
-        /* ZONE CORBEILLE */
-        .trash-container {
-            margin-top: 30px;
-            display: flex;
-            justify-content: center;
-        }
-        .trash-zone {
-            background: #2c2b28;
-            border-radius: 30px;
-            padding: 15px 30px;
-            display: inline-flex;
-            align-items: center;
-            gap: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-            border: 2px solid #c47b3e;
-        }
-        .trash-zone.drag-over {
-            background: #4a2a2a;
-            border-color: #ff4444;
-            transform: scale(1.02);
-        }
-        .trash-icon {
-            font-size: 3rem;
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-        }
-        .trash-text {
-            color: #fef0cf;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        .trash-sub {
-            color: #ecd9b4;
-            font-size: 0.8rem;
-        }
+        .trash-container { margin-top: 30px; display: flex; justify-content: center; }
+        .trash-zone { background: #2c2b28; border-radius: 30px; padding: 15px 30px; display: inline-flex; align-items: center; gap: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: all 0.2s; border: 2px solid #c47b3e; }
+        .trash-zone.drag-over { background: #4a2a2a; border-color: #ff4444; transform: scale(1.02); }
+        .trash-icon { font-size: 3rem; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
+        .trash-text { color: #fef0cf; font-size: 1.2rem; font-weight: bold; }
+        .trash-sub { color: #ecd9b4; font-size: 0.8rem; }
         
         footer { font-size: 0.7rem; text-align: center; margin-top: 25px; color: #5e4a31; }
 
-        /* ZOOM HEARTHSTONE */
         .hover-zoom-card {
             position: fixed;
             z-index: 10000;
@@ -134,23 +109,9 @@
             transform: scale(0.8);
             filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
         }
-        .hover-zoom-card.visible {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .hover-zoom-card img {
-            width: auto;
-            height: auto;
-            max-width: 450px;
-            width: 450px;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            border: 3px solid #ffaa44;
-        }
-        @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.7); }
-            to { opacity: 1; transform: scale(1); }
-        }
+        .hover-zoom-card.visible { opacity: 1; transform: scale(1); }
+        .hover-zoom-card img { width: 450px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 3px solid #ffaa44; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
         .hover-zoom-card.visible { animation: zoomIn 0.15s ease-out; }
     </style>
 </head>
@@ -159,17 +120,21 @@
 <div class="game-container">
     <div class="top-bar">
         <div class="players-online" id="playerCountDisplay">👥 Connectés: --</div>
-        <div>🎲 Need & Greed - Donjon & Butins (16 zones)</div>
+        <div>🎲 Need & Greed - Donjon & Butins (3 types de descente)</div>
         <button class="reset-btn" id="resetAllBtn">🔄 Reset complet</button>
     </div>
 
     <div class="pioches-container">
         <div class="pioche">
             <div class="pioche-title donjon">🏰 DONJON 🏰</div>
-            <div class="card-area" id="donjonCardArea"><div class="empty-card">⚔️ Cliquez sur PIOCHEZ !</div></div>
+            <div class="card-area" id="donjonCardArea"><div class="empty-card">⚔️ Choisissez une descente !</div></div>
             <button class="draw-btn" id="donjonDrawBtn">⚔️ PIOCHEZ UNE CARTE</button>
             <div class="deck-info">📚 Cartes restantes : <span id="donjonCardsLeft">0</span> <span class="badge" id="donjonComposition"></span> <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span></div>
-            <div class="button-group"><button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE</button></div>
+            <div class="button-group">
+                <button class="descente-btn descente1" id="descente1Btn">🎲 DESCENTE 1<br><small>8 monstres + 12 événements</small></button>
+                <button class="descente-btn descente2" id="descente2Btn">🎲 DESCENTE 2<br><small>12 monstres + 16 événements</small></button>
+                <button class="descente-btn descente3" id="descente3Btn">🎲 DESCENTE 3<br><small>Descente 1 + Descente 2 + 2 Boss</small></button>
+            </div>
         </div>
         <div class="pioche">
             <div class="pioche-title butins">💰 BUTINS 💰</div>
@@ -185,7 +150,6 @@
         <div class="inventories-grid" id="inventoriesGrid"></div>
     </div>
 
-    <!-- ZONE CORBEILLE POUR SUPPRIMER LES CARTES -->
     <div class="trash-container">
         <div id="trashZone" class="trash-zone" draggable="false">
             <div class="trash-icon">🗑️</div>
@@ -196,16 +160,13 @@
         </div>
     </div>
 
-    <footer>⚡ Synchronisation temps réel<br>💰 Glissez une carte BUTIN vers n'importe quelle zone<br>🖱️ Cliquez sur une carte pour la retourner<br>🔍 Passez la souris sur une carte pour la voir en TRÈS GRAND<br>🗑️ Glissez une carte sur la POUBELLE pour la supprimer définitivement</footer>
+    <footer>⚡ Synchronisation temps réel<br>💰 Glissez une carte BUTIN vers n'importe quelle zone<br>🖱️ Cliquez sur une carte pour la retourner<br>🔍 Passez la souris sur une carte pour zoomer<br>🗑️ Glissez une carte sur la POUBELLE pour la supprimer<br>🎲 DESCENTE 3 = Descente 1 + Descente 2 + 2 Boss</footer>
 </div>
 
-<!-- Élément pour l'affichage en grand de la carte survolée -->
-<div id="hoverZoomCard" class="hover-zoom-card">
-    <img id="hoverZoomImg" src="" alt="Zoom carte">
-</div>
+<div id="hoverZoomCard" class="hover-zoom-card"><img id="hoverZoomImg" src="" alt="Zoom carte"></div>
 
 <script>
-    // ========== GESTION DU ZOOM HEARTHSTONE ==========
+    // ========== ZOOM HEARTHSTONE ==========
     const hoverZoomDiv = document.getElementById('hoverZoomCard');
     const hoverZoomImg = document.getElementById('hoverZoomImg');
     
@@ -217,12 +178,10 @@
         let top = mouseY - 320;
         const maxLeft = window.innerWidth - 470;
         const maxTop = window.innerHeight - 680;
-        const minLeft = 10;
-        const minTop = 10;
         if (left > maxLeft) left = maxLeft;
-        if (left < minLeft) left = minLeft;
+        if (left < 10) left = 10;
         if (top > maxTop) top = maxTop;
-        if (top < minTop) top = minTop;
+        if (top < 10) top = 10;
         hoverZoomDiv.style.left = left + 'px';
         hoverZoomDiv.style.top = top + 'px';
     }
@@ -234,21 +193,61 @@
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const donjonRef = database.ref('/donjon_16_trash');
-    const butinsRef = database.ref('/butins_16_trash');
+    const donjonRef = database.ref('/donjon_3desc_v2');
+    const butinsRef = database.ref('/butins_3desc_v2');
     
     function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
+    // ========== CARTES DISPONIBLES ==========
     const ALL_MONSTRES = [];
     for (let i = 0; i < 26; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
+    
     const ALL_EVENEMENTS = [];
     for (let i = 0; i < 29; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
+    
+    const ALL_BOSS = [];
+    for (let i = 0; i < 10; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
+    
     const BUTINS_CARDS = [];
     for (let i = 0; i < 37; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
     
     function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-    function getRandomElements(arr, n) { const shuffled = shuffleArray([...arr]); return shuffled.slice(0, Math.min(n, arr.length)); }
-    function generateNewDonjonDeck() { return shuffleArray([...getRandomElements(ALL_MONSTRES, 5), ...getRandomElements(ALL_EVENEMENTS, 5)]); }
+    function getRandomElements(arr, n, excludeIds = []) {
+        let available = arr.filter(c => !excludeIds.includes(c.id));
+        const shuffled = shuffleArray([...available]);
+        return shuffled.slice(0, Math.min(n, available.length));
+    }
+    
+    // Stockage des cartes des descentes 1 et 2 pour la descente 3
+    let lastDescente1Cards = { monstres: [], evenements: [] };
+    let lastDescente2Cards = { monstres: [], evenements: [] };
+    
+    // DESCENTE 1 : 8 monstres + 12 événements
+    function generateDescente1() {
+        const monstres = getRandomElements(ALL_MONSTRES, 8);
+        const evenements = getRandomElements(ALL_EVENEMENTS, 12);
+        lastDescente1Cards = { monstres: [...monstres], evenements: [...evenements] };
+        return shuffleArray([...monstres, ...evenements]);
+    }
+    
+    // DESCENTE 2 : 12 monstres + 16 événements (différents de la descente 1)
+    function generateDescente2() {
+        const usedMonstreIds = lastDescente1Cards.monstres.map(c => c.id);
+        const usedEvenementIds = lastDescente1Cards.evenements.map(c => c.id);
+        const monstres = getRandomElements(ALL_MONSTRES, 12, usedMonstreIds);
+        const evenements = getRandomElements(ALL_EVENEMENTS, 16, usedEvenementIds);
+        lastDescente2Cards = { monstres: [...monstres], evenements: [...evenements] };
+        return shuffleArray([...monstres, ...evenements]);
+    }
+    
+    // DESCENTE 3 : Descente 1 + Descente 2 + 2 bosses
+    function generateDescente3() {
+        const descente1Cards = [...lastDescente1Cards.monstres, ...lastDescente1Cards.evenements];
+        const descente2Cards = [...lastDescente2Cards.monstres, ...lastDescente2Cards.evenements];
+        const bosses = getRandomElements(ALL_BOSS, 2);
+        const allCards = [...descente1Cards, ...descente2Cards, ...bosses];
+        return shuffleArray(allCards);
+    }
     
     let allSlots = [];
     
@@ -276,10 +275,10 @@
         render() {
             if (!this.element) return;
             if (this.currentCard) {
-                this.element.innerHTML = `<div class="slot-card ${this.flipped ? 'flipped' : ''}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}" data-image="${this.currentCard.image}"><img src="${this.currentCard.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'"></div>`;
+                this.element.innerHTML = `<div class="slot-card ${this.flipped ? 'flipped' : ''}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}" data-image="${this.currentCard.image}"><img src="${this.currentCard.image}" alt="Carte" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'"></div>`;
                 const cardEl = this.element.querySelector('.slot-card');
-                cardEl.addEventListener('mouseenter', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
-                cardEl.addEventListener('mousemove', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
+                cardEl.addEventListener('mouseenter', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
+                cardEl.addEventListener('mousemove', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
                 cardEl.addEventListener('mouseleave', () => hideHoverZoom());
                 cardEl.addEventListener('click', () => { this.flipped = !this.flipped; this.save(); });
                 cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'move', fromInv: this.invNum, fromSlot: this.slotNum, card: this.currentCard })); });
@@ -338,7 +337,7 @@
             for (let slot = 1; slot <= 4; slot++) {
                 const slotDiv = document.createElement('div'); slotDiv.className = 'slot';
                 slotsGrid.appendChild(slotDiv);
-                const slotRef = database.ref(`/slots_16_trash/inv${inv}_slot${slot}`);
+                const slotRef = database.ref(`/slots_3desc_v2/inv${inv}_slot${slot}`);
                 allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
             }
             
@@ -350,37 +349,20 @@
         }
     }
     
-    // ========== GESTION DE LA CORBEILLE ==========
+    // ========== CORBEILLE ==========
     const trashZone = document.getElementById('trashZone');
-    
-    trashZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        trashZone.classList.add('drag-over');
-    });
-    
-    trashZone.addEventListener('dragleave', () => {
-        trashZone.classList.remove('drag-over');
-    });
-    
+    trashZone.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; trashZone.classList.add('drag-over'); });
+    trashZone.addEventListener('dragleave', () => { trashZone.classList.remove('drag-over'); });
     trashZone.addEventListener('drop', (e) => {
         e.preventDefault();
         trashZone.classList.remove('drag-over');
-        
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            
             if (data.type === 'move') {
-                // Supprimer la carte d'une zone
                 const sourceSlot = allSlots.find(s => s.invNum === data.fromInv && s.slotNum === data.fromSlot);
-                if (sourceSlot && sourceSlot.currentCard) {
-                    sourceSlot.clear();
-                }
-            } else if (data.type === 'butin') {
-                // Supprimer la carte de la pioche (juste la carte courante)
-                butinsPioche.removeCurrentCard();
-            }
-        } catch(err) { console.log("Erreur drop corbeille:", err); }
+                if (sourceSlot && sourceSlot.currentCard) sourceSlot.clear();
+            } else if (data.type === 'butin') { butinsPioche.removeCurrentCard(); }
+        } catch(err) { console.log(err); }
     });
     
     class Pioche {
@@ -390,7 +372,6 @@
             this.ui = {
                 cardArea: document.getElementById(uiIds.cardArea), cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
                 drawBtn: document.getElementById(uiIds.drawBtn), resetBtn: document.getElementById(uiIds.resetBtn),
-                generateBtn: uiIds.generateBtn ? document.getElementById(uiIds.generateBtn) : null,
                 compositionSpan: uiIds.composition ? document.getElementById(uiIds.composition) : null,
                 finishedBadge: uiIds.finishedBadge ? document.getElementById(uiIds.finishedBadge) : null
             };
@@ -430,16 +411,20 @@
         updateCompositionDisplay() {
             if (!this.ui.compositionSpan || !this.isDonjon) return;
             if (!this.currentDeck || this.currentDeck.length === 0) { this.ui.compositionSpan.innerText = `🏁 Terminé`; return; }
-            this.ui.compositionSpan.innerText = `🐉${this.currentDeck.filter(c => c.type === 'monstre').length} ⚡${this.currentDeck.filter(c => c.type === 'evenement').length}`;
+            const nbMonstres = this.currentDeck.filter(c => c.type === 'monstre').length;
+            const nbEvenements = this.currentDeck.filter(c => c.type === 'evenement').length;
+            const nbBoss = this.currentDeck.filter(c => c.type === 'boss').length;
+            if (nbBoss > 0) this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements} 👑${nbBoss}`;
+            else this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements}`;
         }
         
         displayCard(card) {
             if (this.isFinished && !card) { this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>'; return; }
-            if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Cliquez sur PIOCHEZ !</div>'; return; }
+            if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Choisissez une descente !</div>'; return; }
             this.ui.cardArea.innerHTML = `<div class="card" draggable="true" data-image="${card.image}"><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
             const cardEl = this.ui.cardArea.querySelector('.card');
-            cardEl.addEventListener('mouseenter', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
-            cardEl.addEventListener('mousemove', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
+            cardEl.addEventListener('mouseenter', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
+            cardEl.addEventListener('mousemove', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
             cardEl.addEventListener('mouseleave', () => hideHoverZoom());
             cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'butin', id: card.id, image: card.image })); });
         }
@@ -464,7 +449,18 @@
         }
         
         resetDeck() { if (this.isUpdating) return; if (this.isButins) { this.currentDeck = shuffleArray([...this.cardList]); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); } }
-        generateNewDescente() { if (!this.isDonjon) return; this.currentDeck = generateNewDonjonDeck(); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); }
+        
+        setNewDeck(newDeck) {
+            if (this.isUpdating) return;
+            this.currentDeck = [...newDeck];
+            this.currentCard = null;
+            this.isFinished = false;
+            this.saveCurrentCard(null);
+            this.saveDeck();
+            this.displayCard(null);
+            this.updateCardsLeftDisplay();
+            this.updateFinishedState();
+        }
         
         init() {
             this.firebaseRef.child('deck').once('value', (snap) => {
@@ -484,26 +480,57 @@
             if (this.isDonjon) this.firebaseRef.child('isFinished').on('value', (snap) => { if (this.isUpdating) return; this.isUpdating = true; this.isFinished = snap.val() === true; this.updateFinishedState(); setTimeout(() => this.isUpdating = false, 100); });
             this.firebaseRef.child('currentCard').on('value', (snap) => { if (this.isUpdating) return; this.isUpdating = true; const cardData = snap.val(); if (cardData && cardData.image && !this.isFinished) { this.currentCard = cardData; this.displayCard(this.currentCard); } else if (!this.isFinished) this.displayCard(null); setTimeout(() => this.isUpdating = false, 100); });
             this.ui.drawBtn.addEventListener('click', () => this.drawCard());
-            if (this.ui.resetBtn && this.isButins) this.ui.resetBtn.addEventListener('click', () => { if (confirm("Remettre toutes les cartes ?")) this.resetDeck(); });
-            if (this.ui.generateBtn) this.ui.generateBtn.addEventListener('click', () => { if (confirm("NOUVELLE DESCENTE ?")) this.generateNewDescente(); });
+            if (this.ui.resetBtn && this.isButins) this.ui.resetBtn.addEventListener('click', () => { if (confirm("Remettre toutes les cartes Butins ?")) this.resetDeck(); });
         }
     }
     
-    const donjonPioche = new Pioche('Donjon', [], donjonRef, { cardArea: 'donjonCardArea', cardsLeft: 'donjonCardsLeft', drawBtn: 'donjonDrawBtn', resetBtn: null, generateBtn: 'generateDonjonBtn', composition: 'donjonComposition', finishedBadge: 'donjonFinishedBadge' }, true, false);
-    const butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, { cardArea: 'butinsCardArea', cardsLeft: 'butinsCardsLeft', drawBtn: 'butinsDrawBtn', resetBtn: 'resetButinsBtn', generateBtn: null, composition: null, finishedBadge: null }, false, true);
+    const donjonPioche = new Pioche('Donjon', [], donjonRef, { cardArea: 'donjonCardArea', cardsLeft: 'donjonCardsLeft', drawBtn: 'donjonDrawBtn', resetBtn: null, composition: 'donjonComposition', finishedBadge: 'donjonFinishedBadge' }, true, false);
+    const butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, { cardArea: 'butinsCardArea', cardsLeft: 'butinsCardsLeft', drawBtn: 'butinsDrawBtn', resetBtn: 'resetButinsBtn', composition: null, finishedBadge: null }, false, true);
     
     buildInventories();
     
-    document.getElementById('resetAllBtn').addEventListener('click', () => { if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) { butinsPioche.resetDeck(); donjonPioche.generateNewDescente(); allSlots.forEach(s => s.clear()); } });
+    // ========== BOUTONS DESCENTE ==========
+    document.getElementById('descente1Btn').addEventListener('click', () => {
+        if (confirm("Lancer la DESCENTE 1 ?\n8 monstres + 12 événements")) {
+            const newDeck = generateDescente1();
+            donjonPioche.setNewDeck(newDeck);
+        }
+    });
+    
+    document.getElementById('descente2Btn').addEventListener('click', () => {
+        if (lastDescente1Cards.monstres.length === 0) {
+            alert("Veuillez d'abord lancer la DESCENTE 1 !");
+            return;
+        }
+        if (confirm("Lancer la DESCENTE 2 ?\n12 monstres + 16 événements (différents de la descente 1)")) {
+            const newDeck = generateDescente2();
+            donjonPioche.setNewDeck(newDeck);
+        }
+    });
+    
+    document.getElementById('descente3Btn').addEventListener('click', () => {
+        if (lastDescente1Cards.monstres.length === 0 || lastDescente2Cards.monstres.length === 0) {
+            alert("Veuillez d'abord lancer la DESCENTE 1 et la DESCENTE 2 !");
+            return;
+        }
+        if (confirm("Lancer la DESCENTE 3 ?\nDescente 1 + Descente 2 + 2 Boss")) {
+            const newDeck = generateDescente3();
+            donjonPioche.setNewDeck(newDeck);
+        }
+    });
+    
+    document.getElementById('resetAllBtn').addEventListener('click', () => { if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) { butinsPioche.resetDeck(); donjonPioche.setNewDeck([]); allSlots.forEach(s => s.clear()); lastDescente1Cards = { monstres: [], evenements: [] }; lastDescente2Cards = { monstres: [], evenements: [] }; } });
     
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_16_trash');
+    const connectedPlayersRef = database.ref('/presence_3desc_v2');
     presenceRef.on('value', (snap) => { if (snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 16 zones avec ZOOM HEARTHSTONE et CORBEILLE !");
-    console.log("🗑️ Glissez une carte sur la corbeille pour la supprimer définitivement.");
+    console.log("✅ 3 types de descente disponibles !");
+    console.log("Descente 1: 8 monstres + 12 événements");
+    console.log("Descente 2: 12 monstres + 16 événements (différents)");
+    console.log("Descente 3: Descente 1 + Descente 2 + 2 bosses");
 </script>
 </body>
 </html>
