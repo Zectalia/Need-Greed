@@ -418,7 +418,7 @@
 
     <footer>
         ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
-        💰 Glissez une carte BUTIN vers un inventaire → la carte est retirée de la pioche<br>
+        💰 Glissez une carte BUTIN vers un inventaire → la carte est retirée de la pioche et apparaît dans l'inventaire<br>
         🖱️ Cliquez sur une carte dans l'inventaire pour la retourner à 180°<br>
         📦 Chaque inventaire ne peut contenir qu'UNE SEULE carte (4 max au total)
     </footer>
@@ -435,9 +435,9 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v7');
-    const butinsRef = database.ref('/needandgreed_butins_v5');
-    const inventoriesRef = database.ref('/needandgreed_inventories');
+    const donjonRef = database.ref('/needandgreed_donjon_v8');
+    const butinsRef = database.ref('/needandgreed_butins_v6');
+    const inventoriesRef = database.ref('/needandgreed_inventories_v2');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -503,11 +503,11 @@
     }
     
     // ========== GESTION DES INVENTAIRES (4 SLOTS) ==========
-    // Chaque slot: { card: { id, image, type, flipped } } ou null
     let inventories = [null, null, null, null];
     
     function renderInventories() {
         const grid = document.getElementById('inventoriesGrid');
+        if (!grid) return;
         grid.innerHTML = '';
         
         for (let i = 0; i < 4; i++) {
@@ -523,17 +523,16 @@
             cardArea.className = 'inventory-card-area';
             cardArea.setAttribute('data-slot-index', i);
             
-            const cardData = inventories[i];
-            if (cardData && cardData.card) {
+            const slotData = inventories[i];
+            if (slotData && slotData.card) {
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'inventory-card';
-                if (cardData.flipped) cardDiv.classList.add('flipped');
-                cardDiv.innerHTML = `<img src="${cardData.card.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E">`;
+                if (slotData.flipped) cardDiv.classList.add('flipped');
+                cardDiv.innerHTML = `<img src="${slotData.card.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E">`;
                 
-                // Clic pour retourner la carte
                 cardDiv.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    cardData.flipped = !cardData.flipped;
+                    slotData.flipped = !slotData.flipped;
                     saveInventoriesToFirebase();
                     renderInventories();
                 });
@@ -546,17 +545,14 @@
                 cardArea.appendChild(emptyDiv);
             }
             
-            // Bouton pour vider l'emplacement
             const clearBtn = document.createElement('button');
             clearBtn.className = 'clear-inventory-btn';
             clearBtn.innerText = '🗑️ Vider';
             clearBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (inventories[i] && inventories[i].card) {
-                    inventories[i] = null;
-                    saveInventoriesToFirebase();
-                    renderInventories();
-                }
+                inventories[i] = null;
+                saveInventoriesToFirebase();
+                renderInventories();
             });
             
             // Événements de drag & drop
@@ -577,12 +573,11 @@
                 try {
                     const cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
                     if (cardData.type === 'butin') {
-                        // Vérifier si l'emplacement est vide
                         if (inventories[i] !== null && inventories[i].card !== null) {
                             alert(`L'inventaire ${i + 1} est déjà occupé !`);
                             return;
                         }
-                        // Ajouter la carte à l'inventaire
+                        // AJOUTER LA CARTE À L'INVENTAIRE (clone)
                         inventories[i] = {
                             card: {
                                 id: cardData.id,
@@ -594,10 +589,11 @@
                         saveInventoriesToFirebase();
                         renderInventories();
                         
-                        // Retirer la carte de la pioche Butins
+                        // SUPPRIMER LA CARTE DE LA PIOCHE BUTINS
                         butinsPioche.removeCurrentCard();
                     } else {
                         console.log("Seules les cartes Butin peuvent être déposées");
+                        alert("Seules les cartes Butin peuvent être déposées dans l'inventaire !");
                     }
                 } catch (err) {
                     console.log("Erreur lors du drop", err);
@@ -820,7 +816,10 @@
                 } else if (this.isButins) {
                     this.currentDeck = shuffleArray([...this.cardList]);
                     this.saveDeck();
-                    this.displayCard(this.currentDeck.shift());
+                    const newCard = this.currentDeck.shift();
+                    this.currentCard = newCard;
+                    this.saveCurrentCard(newCard);
+                    this.displayCard(newCard);
                     this.updateCardsLeftDisplay();
                 }
                 return;
@@ -1013,7 +1012,7 @@
     // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v7');
+    const connectedPlayersRef = database.ref('/presence_pioches_v8');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -1031,7 +1030,7 @@
     });
     
     console.log("✅ Tout est prêt !");
-    console.log("💰 Glissez une carte BUTIN vers un inventaire → la carte est retirée de la pioche");
+    console.log("💰 Glissez une carte BUTIN vers un inventaire → la carte est retirée de la pioche et apparaît dans l'inventaire");
     console.log("📦 4 inventaires, chacun ne peut contenir qu'UNE SEULE carte");
     console.log("🖱️ Cliquez sur une carte dans l'inventaire pour la retourner");
 </script>
