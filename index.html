@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Need & Greed - Testeur collaboratif</title>
+    <title>Need & Greed - Pioche de cartes</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
         * {
             box-sizing: border-box;
-            user-select: none;
+            margin: 0;
+            padding: 0;
         }
         body {
             background: linear-gradient(135deg, #1a472a 0%, #0e2a1a 100%);
             font-family: 'Segoe UI', 'Roboto', sans-serif;
-            margin: 0;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
         .game-container {
-            max-width: 1300px;
-            margin: 0 auto;
+            max-width: 900px;
+            width: 100%;
             background: #ecd9b4;
-            background-image: radial-gradient(circle at 25% 40%, rgba(210,180,140,0.3) 2%, transparent 2.5%);
-            background-size: 28px 28px;
             border-radius: 48px;
             box-shadow: 0 20px 35px rgba(0,0,0,0.5);
-            padding: 20px;
+            padding: 30px;
             border: 1px solid #c9aa6f;
+            text-align: center;
         }
         .top-bar {
             display: flex;
@@ -38,7 +40,7 @@
             backdrop-filter: blur(8px);
             border-radius: 60px;
             padding: 8px 20px;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             color: #fef0cf;
             font-weight: bold;
             gap: 15px;
@@ -63,146 +65,87 @@
             background: #a85f2c;
             transform: scale(0.97);
         }
-        .canvas-area {
+        .card-area {
+            background: #2c2b28;
+            border-radius: 24px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            min-height: 550px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 25px;
+            justify-content: center;
         }
-        canvas {
-            background: #fef5e3;
-            border-radius: 32px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            cursor: crosshair;
+        .card {
+            background: transparent;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            max-width: 450px;
             width: 100%;
+            cursor: pointer;
+        }
+        /* EFFET HOVER : ZOOM SUR LA CARTE */
+        .card:hover {
+            transform: scale(1.08);
+            filter: drop-shadow(0 0 15px rgba(255,215,0,0.5));
+        }
+        .card img {
+            max-width: 100%;
+            width: auto;
             height: auto;
-            border: 4px solid #dbb067;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            display: block;
+            margin: 0 auto;
         }
-        .draw-tools {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            background: #e2c7a1b3;
-            padding: 10px 18px;
-            border-radius: 60px;
-            backdrop-filter: blur(4px);
-        }
-        .tool-btn {
-            background: #3f2a1f;
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-        .tool-btn.active {
-            background: #ffaa44;
-            color: #2d1f12;
-            box-shadow: 0 0 0 2px white;
-        }
-        .color-preview {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 0 0 1px black;
-        }
-        .token-panel {
-            background: #f5e5c8;
-            border-radius: 38px;
-            padding: 15px;
-            margin-top: 15px;
-            box-shadow: inset 0 0 0 1px #fff8e7, 0 8px 18px rgba(0,0,0,0.2);
-        }
-        .token-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        .token-card {
-            background: #faf0df;
+        .empty-card {
+            color: #ecd9b4;
+            font-size: 1.3rem;
+            text-align: center;
+            padding: 40px;
+            background: #3f2a1f66;
             border-radius: 24px;
-            padding: 8px 14px;
-            min-width: 110px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-left: 8px solid #dd9944;
         }
-        .token-name {
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: #3b2a1f;
-        }
-        .token-value {
-            font-size: 2rem;
-            font-weight: 800;
-            background: #fff2e0;
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 50px;
-            margin: 6px 0;
-            font-family: monospace;
-        }
-        .token-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 8px;
-        }
-        .token-buttons button {
-            background: #79553a;
+        .draw-btn {
+            background: #ffaa44;
             border: none;
-            color: white;
+            color: #2d1f12;
+            font-size: 1.5rem;
             font-weight: bold;
-            font-size: 1.2rem;
-            width: 38px;
-            border-radius: 30px;
-            cursor: pointer;
-        }
-        .token-buttons button:active {
-            background: #a56b3a;
-            transform: scale(0.92);
-        }
-        .note-area {
-            margin-top: 20px;
-            background: #f2e0c0;
-            border-radius: 28px;
-            padding: 12px;
-        }
-        .note-text {
-            width: 100%;
-            background: #fff6e8;
-            border: 2px solid #c6a15b;
+            padding: 15px 40px;
             border-radius: 60px;
-            padding: 10px 18px;
-            font-size: 1rem;
-            font-family: monospace;
-            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-top: 20px;
         }
-        h3 {
-            margin: 0 0 8px 0;
-            font-size: 1rem;
-            color: #2d3e2b;
+        .draw-btn:hover {
+            background: #ffcc66;
+            transform: scale(1.02);
+        }
+        .draw-btn:active {
+            transform: scale(0.98);
+        }
+        .deck-info {
+            background: #3f2a1f;
+            color: #fef0cf;
+            padding: 10px;
+            border-radius: 30px;
+            margin-top: 20px;
+            font-size: 0.9rem;
         }
         footer {
             font-size: 0.7rem;
             text-align: center;
-            margin-top: 18px;
+            margin-top: 25px;
             color: #5e4a31;
         }
-        button {
-            cursor: pointer;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
-        @media (max-width: 700px) {
-            .token-card { min-width: 90px; }
-            .token-value { font-size: 1.5rem; }
+        .card {
+            animation: fadeIn 0.25s ease;
         }
     </style>
 </head>
@@ -211,35 +154,25 @@
 <div class="game-container">
     <div class="top-bar">
         <div class="players-online" id="playerCountDisplay">👥 Connectés: --</div>
-        <div>🎲 Need & Greed - Proto</div>
-        <button class="reset-btn" id="globalResetBtn">🔄 Réinitialiser tout</button>
+        <div>🎴 Need & Greed - Pioche</div>
+        <button class="reset-btn" id="resetDeckBtn">🔄 Remettre toutes les cartes</button>
     </div>
 
-    <div class="canvas-area">
-        <canvas id="sharedCanvas" width="900" height="500" style="width:100%; height:auto; aspect-ratio:900/500"></canvas>
-        <div class="draw-tools">
-            <button class="tool-btn" id="drawModeBtn">✏️ Dessiner</button>
-            <button class="tool-btn" id="moveModeBtn">🖱️ Panoramique</button>
-            <input type="color" id="colorPicker" value="#1e3c2c">
-            <div class="color-preview" id="colorPreview" style="background:#1e3c2c;"></div>
-            <button class="tool-btn" id="clearCanvasBtn">🧽 Effacer dessins</button>
+    <div class="card-area">
+        <div id="currentCardDisplay">
+            <!-- La carte s'affiche ici en GRAND -->
+            <div class="empty-card">🎴 Cliquez sur PIOCHEZ !</div>
+        </div>
+        
+        <button class="draw-btn" id="drawBtn">🎴 PIOCHEZ UNE CARTE</button>
+        
+        <div class="deck-info">
+            📚 Cartes restantes dans la pioche : <span id="cardsLeft">0</span>
         </div>
     </div>
 
-    <div class="token-panel">
-        <h3>🧩 Compteurs & ressources (modifiables en temps réel)</h3>
-        <div class="token-grid" id="tokenGrid"></div>
-        <div style="display:flex; justify-content:center; margin-top: 12px;">
-            <button id="addCounterBtn" class="tool-btn" style="background:#4b6e3b;">➕ Ajouter un compteur</button>
-        </div>
-    </div>
-
-    <div class="note-area">
-        <h3>📝 Note collective</h3>
-        <input type="text" id="sharedNote" class="note-text" placeholder="Note partagée en direct... (ex: 'Phase 2', 'Pierre = 5pts', 'Tour de Alice')">
-    </div>
     <footer>
-        ⚡ Synchronisation temps réel • Tous les joueurs voient les changements instantanément
+        ⚡ Synchronisation temps réel • Survolez la carte pour l'agrandir
     </footer>
 </div>
 
@@ -254,288 +187,189 @@
     const database = firebase.database();
     
     // Références
-    const gameRef = database.ref('/needandgreed_game');
-    const canvasRef = gameRef.child('canvasData');
-    const tokensRef = gameRef.child('tokens');
-    const noteRef = gameRef.child('sharedNote');
+    const gameRef = database.ref('/needandgreed_pioche');
+    const currentCardRef = gameRef.child('currentCard');
+    const deckRef = gameRef.child('deck');
     
-    // État local
+    // ========== LISTE DES CARTES (DOSSIER IMAGES) ==========
+    // 📌 IMPORTANT : Mettez vos images dans un dossier "images" à côté de index.html
+    // Les noms des fichiers doivent correspondre exactement à ce qui est écrit ci-dessous
+    // Exemple : images/carte_epée.png, images/carte_potion.png, etc.
+    
+    const CARD_LIST = [
+        { id: 0, image: "images/carte_epee.png" },
+        { id: 1, image: "images/carte_potion.png" },
+        { id: 2, image: "images/carte_bouclier.png" },
+        { id: 3, image: "images/carte_tresor.png" },
+        { id: 4, image: "images/carte_feu.png" },
+        { id: 5, image: "images/carte_cape.png" },
+        { id: 6, image: "images/carte_dague.png" },
+        { id: 7, image: "images/carte_amulette.png" },
+        { id: 8, image: "images/carte_parchemin.png" },
+        { id: 9, image: "images/carte_rune.png" }
+    ];
+    
+    // État local du deck (liste des cartes restantes)
+    let currentDeck = [];
+    let currentCard = null;
     let isUpdatingFromRemote = false;
-    let tokensMap = {
-        "⚔️ Points d'action": 3,
-        "🛡️ Défense": 1,
-        "💰 Trésor": 0
-    };
     
-    // ========== CANVAS ==========
-    const canvas = document.getElementById('sharedCanvas');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-    let lastX = 0, lastY = 0;
-    let currentMode = 'draw';
-    let currentColor = '#1e3c2c';
+    // ========== FONCTIONS DE GESTION DU DECK ==========
     
-    // Panoramique
-    let panX = 0, panY = 0;
-    let scale = 1;
-    let isPanning = false;
-    let panStartX = 0, panStartY = 0;
-    
-    // Initialisation canvas
-    canvas.width = 900;
-    canvas.height = 500;
-    ctx.fillStyle = '#fef5e3';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    function applyPanZoom() {
-        // Sauvegarde le contenu actuel
-        if (window.cachedCanvasData) {
-            const img = new Image();
-            img.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-                ctx.translate(panX, panY);
-                ctx.scale(scale, scale);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                ctx.restore();
-            };
-            img.src = window.cachedCanvasData;
+    // Mélanger un tableau (algorithme Fisher-Yates)
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
+        return array;
     }
     
-    function broadcastCanvas() {
+    // Initialiser un nouveau deck mélangé (copie complète de CARD_LIST)
+    function initNewDeck() {
+        return shuffleArray([...CARD_LIST]);
+    }
+    
+    // Piocher une carte (enlève du deck et retourne la carte)
+    function drawCardFromDeck() {
+        if (currentDeck.length === 0) {
+            // Si plus de cartes, on remet tout
+            currentDeck = initNewDeck();
+        }
+        return currentDeck.shift();
+    }
+    
+    // Sauvegarder le deck dans Firebase
+    function saveDeckToFirebase() {
         if (isUpdatingFromRemote) return;
-        const dataURL = canvas.toDataURL();
-        window.cachedCanvasData = dataURL;
-        canvasRef.set(dataURL).catch(e => console.warn(e));
+        // On sauvegarde juste les IDs des cartes pour économiser de l'espace
+        const deckIds = currentDeck.map(card => card.id);
+        deckRef.set(deckIds);
     }
     
-    function loadCanvasFromData(dataURL) {
-        if (!dataURL) return;
-        const img = new Image();
-        img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            window.cachedCanvasData = dataURL;
-            applyPanZoom();
-        };
-        img.src = dataURL;
-    }
-    
-    function drawLocal(x0, y0, x1, y1, color) {
-        let transformX0 = x0, transformY0 = y0, transformX1 = x1, transformY1 = y1;
-        if (scale !== 1 || panX !== 0 || panY !== 0) {
-            function inverseTransform(x, y) {
-                return { x: (x - panX) / scale, y: (y - panY) / scale };
-            }
-            const p0 = inverseTransform(x0, y0);
-            const p1 = inverseTransform(x1, y1);
-            transformX0 = p0.x; transformY0 = p0.y;
-            transformX1 = p1.x; transformY1 = p1.y;
-        }
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.beginPath();
-        ctx.moveTo(transformX0, transformY0);
-        ctx.lineTo(transformX1, transformY1);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        ctx.restore();
-        applyPanZoom();
-        broadcastCanvas();
-    }
-    
-    function resetCanvas() {
-        ctx.fillStyle = '#fef5e3';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        broadcastCanvas();
-        applyPanZoom();
-    }
-    
-    function getCanvasCoords(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        let clientX, clientY;
-        if (e.touches) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-        let canvasX = (clientX - rect.left) * scaleX;
-        let canvasY = (clientY - rect.top) * scaleY;
-        canvasX = Math.min(Math.max(0, canvasX), canvas.width);
-        canvasY = Math.min(Math.max(0, canvasY), canvas.height);
-        return { x: canvasX, y: canvasY };
-    }
-    
-    function startDraw(e) {
-        if (currentMode !== 'draw') return;
-        e.preventDefault();
-        const coords = getCanvasCoords(e);
-        isDrawing = true;
-        lastX = coords.x;
-        lastY = coords.y;
-    }
-    
-    function drawMove(e) {
-        if (!isDrawing || currentMode !== 'draw') return;
-        e.preventDefault();
-        const coords = getCanvasCoords(e);
-        drawLocal(lastX, lastY, coords.x, coords.y, currentColor);
-        lastX = coords.x;
-        lastY = coords.y;
-    }
-    
-    function startPan(e) {
-        if (currentMode !== 'pan') return;
-        e.preventDefault();
-        isPanning = true;
-        const start = getCanvasCoords(e);
-        panStartX = start.x;
-        panStartY = start.y;
-    }
-    
-    function doPan(e) {
-        if (!isPanning || currentMode !== 'pan') return;
-        e.preventDefault();
-        const cur = getCanvasCoords(e);
-        const dx = cur.x - panStartX;
-        const dy = cur.y - panStartY;
-        panX += dx;
-        panY += dy;
-        panStartX = cur.x;
-        panStartY = cur.y;
-        applyPanZoom();
-    }
-    
-    canvas.addEventListener('mousedown', (e) => {
-        if (currentMode === 'draw') startDraw(e);
-        else if (currentMode === 'pan') startPan(e);
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (isDrawing) drawMove(e);
-        if (isPanning) doPan(e);
-    });
-    window.addEventListener('mouseup', () => {
-        isDrawing = false;
-        isPanning = false;
-    });
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (currentMode === 'draw') startDraw(e);
-        else if (currentMode === 'pan') startPan(e);
-    });
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        if (isDrawing) drawMove(e);
-        if (isPanning) doPan(e);
-    });
-    canvas.addEventListener('touchend', () => {
-        isDrawing = false;
-        isPanning = false;
-    });
-    
-    // ========== TOKENS ==========
-    function renderTokens() {
-        const container = document.getElementById('tokenGrid');
-        container.innerHTML = '';
-        for (const [name, value] of Object.entries(tokensMap)) {
-            const card = document.createElement('div');
-            card.className = 'token-card';
-            card.innerHTML = `
-                <div class="token-name">${escapeHtml(name)}</div>
-                <div class="token-value">${value}</div>
-                <div class="token-buttons">
-                    <button data-name="${escapeHtml(name)}" data-delta="-1">-1</button>
-                    <button data-name="${escapeHtml(name)}" data-delta="1">+1</button>
-                    <button data-name="${escapeHtml(name)}" data-delta="-5">-5</button>
-                    <button data-name="${escapeHtml(name)}" data-delta="5">+5</button>
-                    <button data-name="${escapeHtml(name)}" data-del="true">🗑️</button>
-                </div>
-            `;
-            container.appendChild(card);
-        }
-        
-        document.querySelectorAll('.token-buttons button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const name = btn.getAttribute('data-name');
-                if (btn.hasAttribute('data-del')) {
-                    delete tokensMap[name];
-                    tokensRef.set(tokensMap);
-                    return;
-                }
-                const delta = parseInt(btn.getAttribute('data-delta'));
-                if (!isNaN(delta) && tokensMap[name] !== undefined) {
-                    tokensMap[name] = (tokensMap[name] || 0) + delta;
-                    tokensRef.set(tokensMap);
-                }
+    // Sauvegarder la carte courante
+    function saveCurrentCardToFirebase(card) {
+        if (isUpdatingFromRemote) return;
+        if (card) {
+            currentCardRef.set({
+                id: card.id,
+                image: card.image
             });
-        });
+        } else {
+            currentCardRef.set(null);
+        }
     }
     
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    function addCustomCounter() {
-        let newName = prompt("Nom du compteur (ex: Cristaux, Mana, Influence):", "Nouveau jeton");
-        if (!newName) return;
-        newName = newName.trim().substring(0, 20);
-        if (tokensMap[newName]) {
-            alert("Ce nom existe déjà !");
+    // Charger un deck depuis une liste d'IDs
+    function loadDeckFromIds(ids) {
+        if (!ids || !Array.isArray(ids)) {
+            currentDeck = initNewDeck();
             return;
         }
-        tokensMap[newName] = 0;
-        tokensRef.set(tokensMap);
+        currentDeck = ids.map(id => CARD_LIST.find(card => card.id === id)).filter(card => card !== undefined);
+        // Si certaines cartes manquent, on les rajoute
+        if (currentDeck.length !== CARD_LIST.length) {
+            const existingIds = new Set(currentDeck.map(c => c.id));
+            const missingCards = CARD_LIST.filter(card => !existingIds.has(card.id));
+            currentDeck.push(...missingCards);
+        }
     }
     
-    // ========== SYNC FIREBASE ==========
-    canvasRef.on('value', (snap) => {
-        const data = snap.val();
-        if (data && typeof data === 'string' && !isUpdatingFromRemote) {
-            isUpdatingFromRemote = true;
-            loadCanvasFromData(data);
-            setTimeout(() => { isUpdatingFromRemote = false; }, 100);
+    // Afficher la carte courante dans l'interface (EN GRAND, sans texte)
+    function displayCard(card) {
+        const container = document.getElementById('currentCardDisplay');
+        if (!card) {
+            container.innerHTML = '<div class="empty-card">🎴 Aucune carte piochée... Cliquez sur PIOCHEZ !</div>';
+            return;
         }
+        
+        // Gestion d'erreur si l'image n'existe pas
+        const imgHtml = `
+            <div class="card">
+                <img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:40px;font-size:2rem;\\'>🃟<br><span style=\\'font-size:0.8rem;\\'>Image manquante</span></div>'">
+            </div>
+        `;
+        
+        container.innerHTML = imgHtml;
+    }
+    
+    // Mettre à jour l'affichage des cartes restantes
+    function updateCardsLeftDisplay() {
+        document.getElementById('cardsLeft').innerText = currentDeck.length;
+    }
+    
+    // Fonction principale de pioche (appelée par le bouton)
+    function drawCard() {
+        if (isUpdatingFromRemote) return;
+        
+        // Piocher une carte
+        const newCard = drawCardFromDeck();
+        currentCard = newCard;
+        
+        // Sauvegarder dans Firebase
+        saveCurrentCardToFirebase(newCard);
+        saveDeckToFirebase();
+        
+        // Mettre à jour l'affichage
+        displayCard(newCard);
+        updateCardsLeftDisplay();
+    }
+    
+    // Réinitialiser complètement le deck (remettre toutes les cartes)
+    function resetDeck() {
+        if (isUpdatingFromRemote) return;
+        
+        currentDeck = initNewDeck();
+        currentCard = null;
+        
+        // Sauvegarder
+        saveCurrentCardToFirebase(null);
+        saveDeckToFirebase();
+        
+        // Mettre à jour l'affichage
+        displayCard(null);
+        updateCardsLeftDisplay();
+    }
+    
+    // ========== SYNCHRONISATION FIREBASE ==========
+    
+    // Écouter les changements du deck
+    deckRef.on('value', (snap) => {
+        if (isUpdatingFromRemote) return;
+        isUpdatingFromRemote = true;
+        
+        const deckData = snap.val();
+        loadDeckFromIds(deckData);
+        updateCardsLeftDisplay();
+        
+        setTimeout(() => { isUpdatingFromRemote = false; }, 100);
     });
     
-    tokensRef.on('value', (snap) => {
-        const data = snap.val();
-        if (data && typeof data === 'object') {
-            tokensMap = data;
+    // Écouter les changements de la carte courante
+    currentCardRef.on('value', (snap) => {
+        if (isUpdatingFromRemote) return;
+        isUpdatingFromRemote = true;
+        
+        const cardData = snap.val();
+        if (cardData && cardData.id !== undefined) {
+            currentCard = {
+                id: cardData.id,
+                image: cardData.image
+            };
+            displayCard(currentCard);
         } else {
-            tokensMap = { "⚔️ Points d'action": 3, "🛡️ Défense": 1, "💰 Trésor": 0 };
-            tokensRef.set(tokensMap);
+            currentCard = null;
+            displayCard(null);
         }
-        renderTokens();
+        
+        setTimeout(() => { isUpdatingFromRemote = false; }, 100);
     });
     
-    noteRef.on('value', (snap) => {
-        const noteVal = snap.val();
-        if (noteVal !== null && typeof noteVal === 'string') {
-            document.getElementById('sharedNote').value = noteVal;
-        }
-    });
-    
-    document.getElementById('sharedNote').addEventListener('input', (e) => {
-        noteRef.set(e.target.value);
-    });
-    
-    // Présence
+    // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence');
+    const connectedPlayersRef = database.ref('/presence_pioche');
+    
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
             if (!myPresenceKey) {
@@ -545,53 +379,51 @@
             }
         }
     });
+    
     connectedPlayersRef.on('value', (snap) => {
         const count = snap.numChildren();
         document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${count}`;
     });
     
-    // ========== UI BUTTONS ==========
-    document.getElementById('drawModeBtn').addEventListener('click', () => {
-        currentMode = 'draw';
-        document.getElementById('drawModeBtn').classList.add('active');
-        document.getElementById('moveModeBtn').classList.remove('active');
-        canvas.style.cursor = 'crosshair';
-    });
-    document.getElementById('moveModeBtn').addEventListener('click', () => {
-        currentMode = 'pan';
-        document.getElementById('moveModeBtn').classList.add('active');
-        document.getElementById('drawModeBtn').classList.remove('active');
-        canvas.style.cursor = 'grab';
-    });
-    document.getElementById('colorPicker').addEventListener('input', (e) => {
-        currentColor = e.target.value;
-        document.getElementById('colorPreview').style.backgroundColor = currentColor;
-    });
-    document.getElementById('clearCanvasBtn').addEventListener('click', () => {
-        if (confirm("Effacer tous les dessins du plateau pour tout le monde ?")) resetCanvas();
-    });
-    document.getElementById('globalResetBtn').addEventListener('click', () => {
-        if (confirm("⚠️ RÉINITIALISATION TOTALE : plateau + compteurs + note. Tout le monde verra le changement.")) {
-            resetCanvas();
-            tokensMap = { "🎲 Jetons de base": 0, "🔮 Cristal": 0 };
-            tokensRef.set(tokensMap);
-            noteRef.set("Nouvelle partie !");
-        }
-    });
-    document.getElementById('addCounterBtn').addEventListener('click', addCustomCounter);
+    // ========== INITIALISATION ==========
     
-    // Démarrer avec un canvas propre si vide
-    canvasRef.once('value', (snap) => {
+    // Initialiser le deck si vide
+    deckRef.once('value', (snap) => {
         if (!snap.val()) {
-            resetCanvas();
+            currentDeck = initNewDeck();
+            saveDeckToFirebase();
+            updateCardsLeftDisplay();
+        } else {
+            loadDeckFromIds(snap.val());
+            updateCardsLeftDisplay();
         }
     });
     
-    // Mode actif par défaut
-    document.getElementById('drawModeBtn').classList.add('active');
-    canvas.style.cursor = 'crosshair';
+    // Initialiser l'affichage de la carte si existante
+    currentCardRef.once('value', (snap) => {
+        const cardData = snap.val();
+        if (cardData && cardData.id !== undefined) {
+            currentCard = {
+                id: cardData.id,
+                image: cardData.image
+            };
+            displayCard(currentCard);
+        } else {
+            displayCard(null);
+        }
+    });
     
-    console.log("✅ Prêt ! Base Firebase connectée :", firebaseConfig.databaseURL);
+    // ========== ÉVÉNEMENTS UI ==========
+    document.getElementById('drawBtn').addEventListener('click', drawCard);
+    document.getElementById('resetDeckBtn').addEventListener('click', () => {
+        if (confirm("Remettre toutes les cartes dans la pioche ? La carte actuelle disparaîtra.")) {
+            resetDeck();
+        }
+    });
+    
+    console.log("✅ Pioche prête ! Base Firebase connectée :", firebaseConfig.databaseURL);
+    console.log("📌 N'oubliez pas de créer un dossier 'images' avec vos cartes !");
+    console.log("🖱️ Effet hover : passez la souris sur la carte pour la zoomer !");
 </script>
 </body>
 </html>
