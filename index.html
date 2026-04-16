@@ -87,7 +87,7 @@
         .clear-inv:hover { background: #c47b3e; }
         footer { font-size: 0.7rem; text-align: center; margin-top: 25px; color: #5e4a31; }
 
-        /* ========== STYLE POUR LE ZOOM HEARTHSTONE (CARTE EN TRÈS GRAND) ========== */
+        /* ========== STYLE POUR LE ZOOM HEARTHSTONE ========== */
         .hover-zoom-card {
             position: fixed;
             z-index: 10000;
@@ -111,16 +111,9 @@
             border: 3px solid #ffaa44;
         }
         
-        /* Animation d'entrée */
         @keyframes zoomIn {
-            from {
-                opacity: 0;
-                transform: scale(0.7);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: scale(0.7); }
+            to { opacity: 1; transform: scale(1); }
         }
         .hover-zoom-card.visible {
             animation: zoomIn 0.15s ease-out;
@@ -167,10 +160,9 @@
 </div>
 
 <script>
-    // ========== GESTION DU ZOOM HEARTHSTONE ==========
+    // ========== GESTION DU ZOOM HEARTHSTONE (position remontée) ==========
     const hoverZoomDiv = document.getElementById('hoverZoomCard');
     const hoverZoomImg = document.getElementById('hoverZoomImg');
-    let currentHoverTimeout = null;
     
     function showHoverZoom(imageUrl, mouseX, mouseY) {
         if (!imageUrl) return;
@@ -178,13 +170,14 @@
         hoverZoomImg.src = imageUrl;
         hoverZoomDiv.classList.add('visible');
         
-        // Positionner la carte près de la souris (un peu décalée pour ne pas cacher le curseur)
-        let left = mouseX + 20;
-        let top = mouseY - 150;
+        // Positionner la carte PLUS HAUT par rapport à la souris (pour éviter de déborder vers le bas)
+        // La carte fait 450px de large et environ 630px de haut
+        let left = mouseX + 15;
+        let top = mouseY - 320;  // Remonté de 320px (au lieu de 150 avant)
         
         // Éviter de sortir de l'écran
         const maxLeft = window.innerWidth - 470;
-        const maxTop = window.innerHeight - 300;
+        const maxTop = window.innerHeight - 680;  // Ajusté pour la hauteur de la carte
         const minLeft = 10;
         const minTop = 10;
         
@@ -206,8 +199,8 @@
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const donjonRef = database.ref('/donjon_16_zoom');
-    const butinsRef = database.ref('/butins_16_zoom');
+    const donjonRef = database.ref('/donjon_16_zoom_v2');
+    const butinsRef = database.ref('/butins_16_zoom_v2');
     
     function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
@@ -319,7 +312,7 @@
             for (let slot = 1; slot <= 4; slot++) {
                 const slotDiv = document.createElement('div'); slotDiv.className = 'slot';
                 slotsGrid.appendChild(slotDiv);
-                const slotRef = database.ref(`/slots_16_zoom/inv${inv}_slot${slot}`);
+                const slotRef = database.ref(`/slots_16_zoom_v2/inv${inv}_slot${slot}`);
                 allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
             }
             
@@ -455,11 +448,11 @@
     
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_16_zoom');
+    const connectedPlayersRef = database.ref('/presence_16_zoom_v2');
     presenceRef.on('value', (snap) => { if (snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 16 zones avec ZOOM HEARTHSTONE ! Passe la souris sur une carte pour la voir en TRÈS GRAND.");
+    console.log("✅ 16 zones avec ZOOM HEARTHSTONE ! Position de l'aperçu remontée pour ne pas déborder.");
 </script>
 </body>
 </html>
