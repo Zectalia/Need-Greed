@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Need & Greed - Donjon & Butins (Hearthstone Zoom)</title>
+    <title>Need & Greed - Donjon & Butins (avec corbeille)</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
@@ -85,9 +85,46 @@
         .empty-slot { color: #ecd9b4; font-size: 0.8rem; text-align: center; padding: 20px 5px; }
         .clear-inv { background: #c47b3e88; border: 1px solid #c47b3e; color: white; font-size: 0.7rem; padding: 5px 12px; border-radius: 20px; cursor: pointer; margin-top: 10px; width: 100%; }
         .clear-inv:hover { background: #c47b3e; }
+        
+        /* ZONE CORBEILLE */
+        .trash-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+        }
+        .trash-zone {
+            background: #2c2b28;
+            border-radius: 30px;
+            padding: 15px 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            border: 2px solid #c47b3e;
+        }
+        .trash-zone.drag-over {
+            background: #4a2a2a;
+            border-color: #ff4444;
+            transform: scale(1.02);
+        }
+        .trash-icon {
+            font-size: 3rem;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        .trash-text {
+            color: #fef0cf;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .trash-sub {
+            color: #ecd9b4;
+            font-size: 0.8rem;
+        }
+        
         footer { font-size: 0.7rem; text-align: center; margin-top: 25px; color: #5e4a31; }
 
-        /* ========== STYLE POUR LE ZOOM HEARTHSTONE ========== */
+        /* ZOOM HEARTHSTONE */
         .hover-zoom-card {
             position: fixed;
             z-index: 10000;
@@ -110,14 +147,11 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             border: 3px solid #ffaa44;
         }
-        
         @keyframes zoomIn {
             from { opacity: 0; transform: scale(0.7); }
             to { opacity: 1; transform: scale(1); }
         }
-        .hover-zoom-card.visible {
-            animation: zoomIn 0.15s ease-out;
-        }
+        .hover-zoom-card.visible { animation: zoomIn 0.15s ease-out; }
     </style>
 </head>
 <body>
@@ -151,7 +185,18 @@
         <div class="inventories-grid" id="inventoriesGrid"></div>
     </div>
 
-    <footer>⚡ Synchronisation temps réel<br>💰 Glissez une carte BUTIN vers n'importe quelle zone<br>🖱️ Cliquez sur une carte pour la retourner<br>🔍 Passez la souris sur une carte pour la voir en TRÈS GRAND (style Hearthstone)</footer>
+    <!-- ZONE CORBEILLE POUR SUPPRIMER LES CARTES -->
+    <div class="trash-container">
+        <div id="trashZone" class="trash-zone" draggable="false">
+            <div class="trash-icon">🗑️</div>
+            <div>
+                <div class="trash-text">POUBELLE</div>
+                <div class="trash-sub">Glissez une carte ici pour la supprimer</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>⚡ Synchronisation temps réel<br>💰 Glissez une carte BUTIN vers n'importe quelle zone<br>🖱️ Cliquez sur une carte pour la retourner<br>🔍 Passez la souris sur une carte pour la voir en TRÈS GRAND<br>🗑️ Glissez une carte sur la POUBELLE pour la supprimer définitivement</footer>
 </div>
 
 <!-- Élément pour l'affichage en grand de la carte survolée -->
@@ -160,47 +205,37 @@
 </div>
 
 <script>
-    // ========== GESTION DU ZOOM HEARTHSTONE (position remontée) ==========
+    // ========== GESTION DU ZOOM HEARTHSTONE ==========
     const hoverZoomDiv = document.getElementById('hoverZoomCard');
     const hoverZoomImg = document.getElementById('hoverZoomImg');
     
     function showHoverZoom(imageUrl, mouseX, mouseY) {
         if (!imageUrl) return;
-        
         hoverZoomImg.src = imageUrl;
         hoverZoomDiv.classList.add('visible');
-        
-        // Positionner la carte PLUS HAUT par rapport à la souris (pour éviter de déborder vers le bas)
-        // La carte fait 450px de large et environ 630px de haut
         let left = mouseX + 15;
-        let top = mouseY - 320;  // Remonté de 320px (au lieu de 150 avant)
-        
-        // Éviter de sortir de l'écran
+        let top = mouseY - 320;
         const maxLeft = window.innerWidth - 470;
-        const maxTop = window.innerHeight - 680;  // Ajusté pour la hauteur de la carte
+        const maxTop = window.innerHeight - 680;
         const minLeft = 10;
         const minTop = 10;
-        
         if (left > maxLeft) left = maxLeft;
         if (left < minLeft) left = minLeft;
         if (top > maxTop) top = maxTop;
         if (top < minTop) top = minTop;
-        
         hoverZoomDiv.style.left = left + 'px';
         hoverZoomDiv.style.top = top + 'px';
     }
     
-    function hideHoverZoom() {
-        hoverZoomDiv.classList.remove('visible');
-    }
+    function hideHoverZoom() { hoverZoomDiv.classList.remove('visible'); }
     
     // ========== CONFIGURATION FIREBASE ==========
     const firebaseConfig = { databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/" };
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const donjonRef = database.ref('/donjon_16_zoom_v2');
-    const butinsRef = database.ref('/butins_16_zoom_v2');
+    const donjonRef = database.ref('/donjon_16_trash');
+    const butinsRef = database.ref('/butins_16_trash');
     
     function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
@@ -243,18 +278,9 @@
             if (this.currentCard) {
                 this.element.innerHTML = `<div class="slot-card ${this.flipped ? 'flipped' : ''}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}" data-image="${this.currentCard.image}"><img src="${this.currentCard.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'"></div>`;
                 const cardEl = this.element.querySelector('.slot-card');
-                
-                // Zoom Hearthstone au survol
-                cardEl.addEventListener('mouseenter', (e) => {
-                    const imgSrc = cardEl.getAttribute('data-image');
-                    if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY);
-                });
-                cardEl.addEventListener('mousemove', (e) => {
-                    const imgSrc = cardEl.getAttribute('data-image');
-                    if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY);
-                });
+                cardEl.addEventListener('mouseenter', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
+                cardEl.addEventListener('mousemove', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
                 cardEl.addEventListener('mouseleave', () => hideHoverZoom());
-                
                 cardEl.addEventListener('click', () => { this.flipped = !this.flipped; this.save(); });
                 cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'move', fromInv: this.invNum, fromSlot: this.slotNum, card: this.currentCard })); });
             } else {
@@ -312,7 +338,7 @@
             for (let slot = 1; slot <= 4; slot++) {
                 const slotDiv = document.createElement('div'); slotDiv.className = 'slot';
                 slotsGrid.appendChild(slotDiv);
-                const slotRef = database.ref(`/slots_16_zoom_v2/inv${inv}_slot${slot}`);
+                const slotRef = database.ref(`/slots_16_trash/inv${inv}_slot${slot}`);
                 allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
             }
             
@@ -323,6 +349,39 @@
             grid.appendChild(box);
         }
     }
+    
+    // ========== GESTION DE LA CORBEILLE ==========
+    const trashZone = document.getElementById('trashZone');
+    
+    trashZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        trashZone.classList.add('drag-over');
+    });
+    
+    trashZone.addEventListener('dragleave', () => {
+        trashZone.classList.remove('drag-over');
+    });
+    
+    trashZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        trashZone.classList.remove('drag-over');
+        
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            
+            if (data.type === 'move') {
+                // Supprimer la carte d'une zone
+                const sourceSlot = allSlots.find(s => s.invNum === data.fromInv && s.slotNum === data.fromSlot);
+                if (sourceSlot && sourceSlot.currentCard) {
+                    sourceSlot.clear();
+                }
+            } else if (data.type === 'butin') {
+                // Supprimer la carte de la pioche (juste la carte courante)
+                butinsPioche.removeCurrentCard();
+            }
+        } catch(err) { console.log("Erreur drop corbeille:", err); }
+    });
     
     class Pioche {
         constructor(name, cardList, firebaseRef, uiIds, isDonjon = false, isButins = false) {
@@ -379,18 +438,9 @@
             if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Cliquez sur PIOCHEZ !</div>'; return; }
             this.ui.cardArea.innerHTML = `<div class="card" draggable="true" data-image="${card.image}"><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
             const cardEl = this.ui.cardArea.querySelector('.card');
-            
-            // Zoom Hearthstone au survol de la carte dans la pioche
-            cardEl.addEventListener('mouseenter', (e) => {
-                const imgSrc = cardEl.getAttribute('data-image');
-                if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY);
-            });
-            cardEl.addEventListener('mousemove', (e) => {
-                const imgSrc = cardEl.getAttribute('data-image');
-                if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY);
-            });
+            cardEl.addEventListener('mouseenter', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
+            cardEl.addEventListener('mousemove', (e) => { const imgSrc = cardEl.getAttribute('data-image'); if (imgSrc) showHoverZoom(imgSrc, e.clientX, e.clientY); });
             cardEl.addEventListener('mouseleave', () => hideHoverZoom());
-            
             cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'butin', id: card.id, image: card.image })); });
         }
         
@@ -448,11 +498,12 @@
     
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_16_zoom_v2');
+    const connectedPlayersRef = database.ref('/presence_16_trash');
     presenceRef.on('value', (snap) => { if (snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 16 zones avec ZOOM HEARTHSTONE ! Position de l'aperçu remontée pour ne pas déborder.");
+    console.log("✅ 16 zones avec ZOOM HEARTHSTONE et CORBEILLE !");
+    console.log("🗑️ Glissez une carte sur la corbeille pour la supprimer définitivement.");
 </script>
 </body>
 </html>
