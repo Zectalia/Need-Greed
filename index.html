@@ -250,7 +250,7 @@
             font-weight: bold;
         }
         
-        /* INVENTAIRES - 4 zones chacun */
+        /* INVENTAIRES - Copie exacte de ce qui marchait, répété 4 fois */
         .inventories-container {
             margin-top: 20px;
         }
@@ -273,7 +273,7 @@
             justify-content: center;
             margin-top: 20px;
         }
-        .inventory-card {
+        .inventory-container {
             flex: 1;
             min-width: 280px;
             background: #2c2b28;
@@ -290,7 +290,7 @@
             background: #1a1a1a;
             border-radius: 20px;
         }
-        .inventory-slots {
+        .slots-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
@@ -307,24 +307,21 @@
             justify-content: center;
             border: 2px dashed #c47b3e;
             transition: all 0.2s;
-            cursor: pointer;
         }
         .inventory-slot.drag-over {
             background: #4a3a2a;
             border-color: #ffaa44;
-            transform: scale(1.02);
         }
         .slot-card {
             width: 100%;
             max-width: 110px;
             cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
+            transition: transform 0.2s;
         }
         .slot-card img {
             width: 100%;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            display: block;
         }
         .slot-card.flipped {
             transform: rotate(180deg);
@@ -341,7 +338,7 @@
             text-align: center;
             padding: 20px 5px;
         }
-        .clear-inventory-btn {
+        .clear-inv-btn {
             background: #c47b3e88;
             border: 1px solid #c47b3e;
             color: white;
@@ -350,10 +347,9 @@
             border-radius: 20px;
             cursor: pointer;
             margin-top: 10px;
-            transition: all 0.2s;
             width: 100%;
         }
-        .clear-inventory-btn:hover {
+        .clear-inv-btn:hover {
             background: #c47b3e;
         }
         
@@ -382,11 +378,10 @@
     </div>
 
     <div class="pioches-container">
-        <!-- PIOCHE DONJON -->
         <div class="pioche">
             <div class="pioche-title donjon">🏰 DONJON 🏰</div>
             <div class="card-area" id="donjonCardArea">
-                <div class="empty-card">⚔️ Cliquez sur PIOCHEZ pour commencer !</div>
+                <div class="empty-card">⚔️ Cliquez sur PIOCHEZ !</div>
             </div>
             <button class="draw-btn" id="donjonDrawBtn">⚔️ PIOCHEZ UNE CARTE</button>
             <div class="deck-info">
@@ -395,11 +390,10 @@
                 <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span>
             </div>
             <div class="button-group">
-                <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE (5 monstres + 5 événements)</button>
+                <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE</button>
             </div>
         </div>
 
-        <!-- PIOCHE BUTINS -->
         <div class="pioche">
             <div class="pioche-title butins">💰 BUTINS 💰</div>
             <div class="card-area" id="butinsCardArea">
@@ -410,7 +404,7 @@
                 📚 Cartes restantes : <span id="butinsCardsLeft">0</span>
             </div>
             <div>
-                <button class="reset-pioche-btn" id="resetButinsBtn">🔄 Remettre toutes les cartes Butins</button>
+                <button class="reset-pioche-btn" id="resetButinsBtn">🔄 Remettre toutes les cartes</button>
             </div>
         </div>
     </div>
@@ -422,10 +416,9 @@
     </div>
 
     <footer>
-        ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
-        💰 Glissez une carte BUTIN vers n'importe quelle zone vide<br>
+        ⚡ Synchronisation temps réel • Glissez une carte BUTIN vers n'importe quelle zone vide<br>
         🔄 Glissez une carte d'une zone à une autre (même inventaire ou autre inventaire)<br>
-        🖱️ Cliquez sur une carte pour la retourner à 180°
+        🖱️ Cliquez sur une carte pour la retourner
     </footer>
 </div>
 
@@ -439,9 +432,16 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_16zones_v2');
-    const butinsRef = database.ref('/needandgreed_butins_16zones_v2');
-    const slotsRef = database.ref('/slots_16zones');
+    const donjonRef = database.ref('/donjon_16zones_final');
+    const butinsRef = database.ref('/butins_16zones_final');
+    
+    // Chaque zone a sa propre référence Firebase (comme quand ça marchait)
+    const slotRefs = [];
+    for (let inv = 1; inv <= 4; inv++) {
+        for (let slot = 1; slot <= 4; slot++) {
+            slotRefs.push(database.ref(`/slot_inv${inv}_slot${slot}`));
+        }
+    }
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -488,154 +488,197 @@
         return shuffleArray([...randomMonstres, ...randomEvenements]);
     }
     
-    // ========== GESTION DES 16 ZONES (SIMPLE ET QUI MARCHE) ==========
-    // Structure: allSlots[invIndex][slotIndex] = { card, flipped } ou null
-    let allSlots = [
-        [null, null, null, null],
-        [null, null, null, null],
-        [null, null, null, null],
-        [null, null, null, null]
-    ];
-    let isUpdating = false;
-    
-    function renderAllSlots() {
-        const grid = document.getElementById('inventoriesGrid');
-        if (!grid) return;
-        grid.innerHTML = '';
+    // ========== GESTION D'UNE ZONE (copie exacte de ce qui marchait) ==========
+    class Slot {
+        constructor(invNum, slotNum, firebaseRef, elementId) {
+            this.invNum = invNum;
+            this.slotNum = slotNum;
+            this.firebaseRef = firebaseRef;
+            this.element = document.getElementById(elementId);
+            this.currentCard = null;
+            this.flipped = false;
+            
+            this.init();
+            this.setupDragAndDrop();
+        }
         
-        for (let invIdx = 0; invIdx < 4; invIdx++) {
-            const inventoryDiv = document.createElement('div');
-            inventoryDiv.className = 'inventory-card';
-            
-            const header = document.createElement('div');
-            header.className = 'inventory-header';
-            header.innerText = `📦 Inventaire ${invIdx + 1}`;
-            
-            const slotsGrid = document.createElement('div');
-            slotsGrid.className = 'inventory-slots';
-            
-            for (let slotIdx = 0; slotIdx < 4; slotIdx++) {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'inventory-slot';
-                slotDiv.setAttribute('data-inv', invIdx);
-                slotDiv.setAttribute('data-slot', slotIdx);
-                
-                const slotData = allSlots[invIdx][slotIdx];
-                if (slotData && slotData.card) {
-                    const flippedClass = slotData.flipped ? 'flipped' : '';
-                    slotDiv.innerHTML = `
-                        <div class="slot-card ${flippedClass}" draggable="true" data-inv="${invIdx}" data-slot="${slotIdx}">
-                            <img src="${slotData.card.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'">
-                        </div>
-                    `;
-                    
-                    const cardElement = slotDiv.querySelector('.slot-card');
-                    
-                    // Retourner la carte au clic
-                    cardElement.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        slotData.flipped = !slotData.flipped;
-                        saveAllSlots();
-                        renderAllSlots();
-                    });
-                    
-                    // Drag start pour déplacer la carte
-                    cardElement.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.setData('text/plain', JSON.stringify({
-                            action: 'move',
-                            fromInv: invIdx,
-                            fromSlot: slotIdx,
-                            card: slotData.card
-                        }));
-                        e.dataTransfer.effectAllowed = 'move';
-                    });
+        init() {
+            this.firebaseRef.on('value', (snap) => {
+                const data = snap.val();
+                if (data) {
+                    this.currentCard = data.card;
+                    this.flipped = data.flipped || false;
                 } else {
-                    slotDiv.innerHTML = `<div class="empty-slot">✨ Vide ✨<br><small>Glissez une carte</small></div>`;
+                    this.currentCard = null;
+                    this.flipped = false;
                 }
-                
-                // Drag over
-                slotDiv.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'copy';
-                    slotDiv.classList.add('drag-over');
-                });
-                
-                slotDiv.addEventListener('dragleave', () => {
-                    slotDiv.classList.remove('drag-over');
-                });
-                
-                // Drop
-                slotDiv.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    slotDiv.classList.remove('drag-over');
-                    
-                    try {
-                        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                        const targetInv = invIdx;
-                        const targetSlot = slotIdx;
-                        
-                        if (data.action === 'move') {
-                            // Déplacement d'une carte existante
-                            if (allSlots[targetInv][targetSlot] !== null) {
-                                alert("Cette zone est déjà occupée !");
-                                return;
-                            }
-                            
-                            const sourceInv = data.fromInv;
-                            const sourceSlot = data.fromSlot;
-                            
-                            allSlots[targetInv][targetSlot] = allSlots[sourceInv][sourceSlot];
-                            allSlots[sourceInv][sourceSlot] = null;
-                            saveAllSlots();
-                            renderAllSlots();
-                            
-                        } else if (data.type === 'butin') {
-                            // Nouvelle carte depuis la pioche
-                            if (allSlots[targetInv][targetSlot] !== null) {
-                                alert("Cette zone est déjà occupée !");
-                                return;
-                            }
-                            
-                            allSlots[targetInv][targetSlot] = {
-                                card: { id: data.id, image: data.image, type: data.type },
-                                flipped: false
-                            };
-                            saveAllSlots();
-                            renderAllSlots();
-                            butinsPioche.removeCurrentCard();
-                        }
-                    } catch (err) {
-                        console.log("Erreur drop:", err);
-                    }
-                });
-                
-                slotsGrid.appendChild(slotDiv);
-            }
+                this.render();
+            });
+        }
+        
+        render() {
+            if (!this.element) return;
             
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'clear-inventory-btn';
-            clearBtn.innerText = `🗑️ Vider inventaire ${invIdx + 1}`;
-            clearBtn.addEventListener('click', () => {
-                if (confirm(`Vider tout l'inventaire ${invIdx + 1} ?`)) {
-                    allSlots[invIdx] = [null, null, null, null];
-                    saveAllSlots();
-                    renderAllSlots();
-                }
+            if (this.currentCard) {
+                const flippedClass = this.flipped ? 'flipped' : '';
+                this.element.innerHTML = `
+                    <div class="slot-card ${flippedClass}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}">
+                        <img src="${this.currentCard.image}" alt="Butin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'">
+                    </div>
+                `;
+                const cardElement = this.element.querySelector('.slot-card');
+                cardElement.addEventListener('click', () => {
+                    this.flipped = !this.flipped;
+                    this.save();
+                    this.render();
+                });
+                cardElement.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                        type: 'move',
+                        fromInv: this.invNum,
+                        fromSlot: this.slotNum,
+                        card: this.currentCard
+                    }));
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+            } else {
+                this.element.innerHTML = `<div class="empty-slot">✨ Vide ✨<br><small>Glissez une carte</small></div>`;
+            }
+        }
+        
+        save() {
+            if (this.currentCard) {
+                this.firebaseRef.set({
+                    card: this.currentCard,
+                    flipped: this.flipped
+                });
+            } else {
+                this.firebaseRef.set(null);
+            }
+        }
+        
+        setupDragAndDrop() {
+            this.element.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                this.element.classList.add('drag-over');
             });
             
-            inventoryDiv.appendChild(header);
-            inventoryDiv.appendChild(slotsGrid);
-            inventoryDiv.appendChild(clearBtn);
-            grid.appendChild(inventoryDiv);
+            this.element.addEventListener('dragleave', () => {
+                this.element.classList.remove('drag-over');
+            });
+            
+            this.element.addEventListener('drop', (e) => {
+                e.preventDefault();
+                this.element.classList.remove('drag-over');
+                
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    
+                    if (data.type === 'move') {
+                        // Déplacement depuis une autre zone
+                        if (this.currentCard) {
+                            alert("Cette zone est déjà occupée !");
+                            return;
+                        }
+                        
+                        // Récupérer la zone source
+                        const sourceSlot = getSlotByInvAndSlot(data.fromInv, data.fromSlot);
+                        if (sourceSlot && sourceSlot.currentCard) {
+                            this.currentCard = sourceSlot.currentCard;
+                            this.flipped = sourceSlot.flipped;
+                            sourceSlot.currentCard = null;
+                            sourceSlot.flipped = false;
+                            this.save();
+                            sourceSlot.save();
+                            this.render();
+                            sourceSlot.render();
+                        }
+                        
+                    } else if (data.type === 'butin') {
+                        // Nouvelle carte depuis la pioche
+                        if (this.currentCard) {
+                            alert("Cette zone est déjà occupée !");
+                            return;
+                        }
+                        
+                        this.currentCard = { id: data.id, image: data.image, type: data.type };
+                        this.flipped = false;
+                        this.save();
+                        this.render();
+                        butinsPioche.removeCurrentCard();
+                    }
+                } catch (err) {
+                    console.log("Erreur drop:", err);
+                }
+            });
+        }
+        
+        clear() {
+            this.currentCard = null;
+            this.flipped = false;
+            this.save();
+            this.render();
         }
     }
     
-    function saveAllSlots() {
-        if (isUpdating) return;
-        slotsRef.set(allSlots);
+    // Stocker toutes les zones
+    let allSlots = [];
+    
+    function getSlotByInvAndSlot(inv, slot) {
+        return allSlots.find(s => s.invNum === inv && s.slotNum === slot);
     }
     
-    // ========== CLASSE PIOCHES ==========
+    // ========== CRÉATION DES 16 ZONES ==========
+    function createInventories() {
+        const grid = document.getElementById('inventoriesGrid');
+        grid.innerHTML = '';
+        
+        for (let inv = 1; inv <= 4; inv++) {
+            const container = document.createElement('div');
+            container.className = 'inventory-container';
+            
+            const header = document.createElement('div');
+            header.className = 'inventory-header';
+            header.innerText = `📦 Inventaire ${inv}`;
+            
+            const slotsGrid = document.createElement('div');
+            slotsGrid.className = 'slots-grid';
+            
+            // Créer les 4 zones pour cet inventaire
+            for (let slot = 1; slot <= 4; slot++) {
+                const slotDiv = document.createElement('div');
+                const slotId = `slot_inv${inv}_${slot}`;
+                slotDiv.id = slotId;
+                slotDiv.className = 'inventory-slot';
+                slotsGrid.appendChild(slotDiv);
+                
+                // Créer l'objet Slot
+                const slotRef = database.ref(`/slot_inv${inv}_slot${slot}`);
+                const newSlot = new Slot(inv, slot, slotRef, slotId);
+                allSlots.push(newSlot);
+            }
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'clear-inv-btn';
+            clearBtn.innerText = `🗑️ Vider inventaire ${inv}`;
+            clearBtn.addEventListener('click', () => {
+                if (confirm(`Vider tout l'inventaire ${inv} ?`)) {
+                    for (let slot = 1; slot <= 4; slot++) {
+                        const s = getSlotByInvAndSlot(inv, slot);
+                        if (s) s.clear();
+                    }
+                }
+            });
+            
+            container.appendChild(header);
+            container.appendChild(slotsGrid);
+            container.appendChild(clearBtn);
+            grid.appendChild(container);
+        }
+    }
+    
+    // ========== CLASSE PIOCHES (inchangée, fonctionne) ==========
     class Pioche {
         constructor(name, cardList, firebaseRef, uiIds, isDonjon = false, isButins = false) {
             this.name = name;
@@ -701,7 +744,7 @@
                 this.ui.drawBtn.classList.add('disabled');
                 this.ui.drawBtn.disabled = true;
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
-                if (!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
+                if (!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE"</span></div>';
             } else {
                 this.ui.drawBtn.classList.remove('disabled');
                 this.ui.drawBtn.disabled = false;
@@ -719,28 +762,25 @@
         
         displayCard(card, isDraggable = true) {
             if (this.isFinished && !card) {
-                this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
+                this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>';
                 return;
             }
-            if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Aucune carte piochée...<br>Cliquez sur PIOCHEZ !</div>'; return; }
+            if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Cliquez sur PIOCHEZ !</div>'; return; }
             
             const draggableAttr = (this.isButins && isDraggable) ? 'draggable="true"' : '';
-            this.ui.cardArea.innerHTML = `<div class="card" ${draggableAttr} data-card-id="${card.id}" data-card-image="${card.image}" data-card-type="${card.type}"><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:40px;font-size:2rem;\\'>🃟<br><span style=\\'font-size:0.8rem;\\'>Image manquante</span></div>'"></div>`;
+            this.ui.cardArea.innerHTML = `<div class="card" ${draggableAttr}><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
             
             if (this.isButins && isDraggable) {
                 const cardElement = this.ui.cardArea.querySelector('.card');
                 if (cardElement) {
                     cardElement.addEventListener('dragstart', (e) => {
                         e.dataTransfer.setData('text/plain', JSON.stringify({
-                            action: 'new',
                             type: 'butin',
                             id: card.id,
                             image: card.image
                         }));
                         e.dataTransfer.effectAllowed = 'copy';
-                        cardElement.classList.add('dragging');
                     });
-                    cardElement.addEventListener('dragend', () => cardElement.classList.remove('dragging'));
                 }
             }
         }
@@ -803,8 +843,8 @@
             if (this.isDonjon) this.firebaseRef.child('isFinished').on('value', (snap) => { if (this.isUpdating) return; this.isUpdating = true; this.isFinished = snap.val() === true; this.updateFinishedState(); setTimeout(() => this.isUpdating = false, 100); });
             this.firebaseRef.child('currentCard').on('value', (snap) => { if (this.isUpdating) return; this.isUpdating = true; const cardData = snap.val(); if (cardData && cardData.image && !this.isFinished) { this.currentCard = cardData; this.displayCard(this.currentCard); } else if (!this.isFinished) this.displayCard(null); setTimeout(() => this.isUpdating = false, 100); });
             this.ui.drawBtn.addEventListener('click', () => this.drawCard());
-            if (this.ui.resetBtn && this.isButins) this.ui.resetBtn.addEventListener('click', () => { if (confirm("Remettre toutes les cartes Butins ?")) this.resetDeck(); });
-            if (this.ui.generateBtn) this.ui.generateBtn.addEventListener('click', () => { if (confirm("LANCER UNE NOUVELLE DESCENTE ?")) this.generateNewDescente(); });
+            if (this.ui.resetBtn && this.isButins) this.ui.resetBtn.addEventListener('click', () => { if (confirm("Remettre toutes les cartes ?")) this.resetDeck(); });
+            if (this.ui.generateBtn) this.ui.generateBtn.addEventListener('click', () => { if (confirm("NOUVELLE DESCENTE ?")) this.generateNewDescente(); });
         }
     }
     
@@ -819,45 +859,24 @@
         generateBtn: null, composition: null, finishedBadge: null
     }, false, true);
     
-    // Chargement des slots depuis Firebase
-    slotsRef.on('value', (snap) => {
-        if (isUpdating) return;
-        isUpdating = true;
-        const data = snap.val();
-        if (data && Array.isArray(data) && data.length === 4) {
-            allSlots = data;
-        } else {
-            allSlots = [
-                [null, null, null, null],
-                [null, null, null, null],
-                [null, null, null, null],
-                [null, null, null, null]
-            ];
-        }
-        renderAllSlots();
-        setTimeout(() => { isUpdating = false; }, 100);
-    });
+    // Création des 16 zones
+    createInventories();
     
     // Reset global
     document.getElementById('resetAllBtn').addEventListener('click', () => {
-        if (confirm("⚠️ RÉINITIALISATION TOTALE : Les pioches et les 16 zones seront vidées.")) {
+        if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) {
             butinsPioche.resetDeck();
             donjonPioche.generateNewDescente();
-            allSlots = [
-                [null, null, null, null],
-                [null, null, null, null],
-                [null, null, null, null],
-                [null, null, null, null]
-            ];
-            saveAllSlots();
-            renderAllSlots();
+            for (const slot of allSlots) {
+                slot.clear();
+            }
         }
     });
     
     // Présence
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_16zones_v2');
+    const connectedPlayersRef = database.ref('/presence_final_16');
     presenceRef.on('value', (snap) => {
         if (snap.val() === true && !myPresenceKey) {
             myPresenceKey = connectedPlayersRef.push().key;
@@ -867,7 +886,7 @@
     });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 16 zones prêtes ! 4 inventaires × 4 zones chacun");
+    console.log("✅ 16 zones prêtes ! Chaque zone a sa propre référence Firebase comme dans la version qui marchait");
 </script>
 </body>
 </html>
