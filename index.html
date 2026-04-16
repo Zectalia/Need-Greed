@@ -430,9 +430,9 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v8');
-    const butinsRef = database.ref('/needandgreed_butins_v6');
-    const inventoriesRef = database.ref('/needandgreed_inventories_v2');
+    const donjonRef = database.ref('/needandgreed_donjon_v9');
+    const butinsRef = database.ref('/needandgreed_butins_v7');
+    const inventoriesRef = database.ref('/needandgreed_inventories_v3');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -496,7 +496,7 @@
     }
     
     // ========== GESTION DES INVENTAIRES (4 zones) ==========
-    let inventories = [[], [], [], []]; // Chaque inventaire contient { id, image, flipped }
+    let inventories = [[], [], [], []];
     
     function renderInventory(inventoryIndex) {
         const container = document.getElementById(`inventory${inventoryIndex}`);
@@ -520,7 +520,6 @@
             
             cardDiv.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // Retourner la carte
                 inventories[inventoryIndex][idx].flipped = !inventories[inventoryIndex][idx].flipped;
                 saveInventoriesToFirebase();
                 renderInventory(inventoryIndex);
@@ -718,21 +717,17 @@
                     cardElement.setAttribute('data-card-image', card.image);
                     cardElement.setAttribute('data-card-type', card.type);
                     
-                    // Nettoyer les anciens listeners
-                    const newCardElement = cardElement.cloneNode(true);
-                    cardElement.parentNode.replaceChild(newCardElement, cardElement);
-                    
-                    newCardElement.addEventListener('dragstart', (e) => {
+                    cardElement.addEventListener('dragstart', (e) => {
                         e.dataTransfer.setData('text/plain', JSON.stringify({
                             id: card.id,
                             image: card.image,
                             type: card.type
                         }));
                         e.dataTransfer.effectAllowed = 'copy';
-                        newCardElement.classList.add('dragging');
+                        cardElement.classList.add('dragging');
                     });
-                    newCardElement.addEventListener('dragend', (e) => {
-                        newCardElement.classList.remove('dragging');
+                    cardElement.addEventListener('dragend', (e) => {
+                        cardElement.classList.remove('dragging');
                     });
                 }
             }
@@ -783,7 +778,6 @@
         }
         
         removeCurrentCard() {
-            // Supprime la carte actuelle de la pioche (quand elle est déposée)
             if (this.currentCard) {
                 this.currentCard = null;
                 this.saveCurrentCard(null);
@@ -950,28 +944,30 @@
             const dropzone = document.getElementById(`inventory${i}`);
             if (!dropzone) continue;
             
-            dropzone.addEventListener('dragover', (e) => {
+            // Nettoyer les anciens listeners en clonant
+            const newDropzone = dropzone.cloneNode(true);
+            dropzone.parentNode.replaceChild(newDropzone, dropzone);
+            
+            newDropzone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'copy';
-                dropzone.classList.add('drag-over');
+                newDropzone.classList.add('drag-over');
             });
             
-            dropzone.addEventListener('dragleave', (e) => {
-                dropzone.classList.remove('drag-over');
+            newDropzone.addEventListener('dragleave', (e) => {
+                newDropzone.classList.remove('drag-over');
             });
             
-            dropzone.addEventListener('drop', (e) => {
+            newDropzone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                dropzone.classList.remove('drag-over');
+                newDropzone.classList.remove('drag-over');
                 
                 try {
                     const cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    console.log("Carte déposée:", cardData);
+                    console.log("Carte déposée dans l'inventaire", i, cardData);
                     if (cardData.type === 'butin') {
-                        // Ajouter la carte à l'inventaire
                         const success = addCardToInventory(cardData, i);
                         if (success) {
-                            // Retirer la carte de la pioche Butins
                             butinsPioche.removeCurrentCard();
                         }
                     } else {
@@ -988,7 +984,9 @@
     for (let i = 0; i < 4; i++) {
         const clearBtn = document.querySelector(`[data-clear="${i}"]`);
         if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
+            const newClearBtn = clearBtn.cloneNode(true);
+            clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
+            newClearBtn.addEventListener('click', () => {
                 if (confirm(`Vider l'inventaire ${i+1} ?`)) {
                     clearInventory(i);
                 }
@@ -997,7 +995,10 @@
     }
     
     // ========== RESET GLOBAL ==========
-    document.getElementById('resetAllBtn').addEventListener('click', () => {
+    const resetBtn = document.getElementById('resetAllBtn');
+    const newResetBtn = resetBtn.cloneNode(true);
+    resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+    newResetBtn.addEventListener('click', () => {
         if (confirm("⚠️ RÉINITIALISATION TOTALE : Les pioches et les inventaires seront vidés.")) {
             butinsPioche.resetDeck();
             donjonPioche.generateNewDescente();
@@ -1013,7 +1014,7 @@
     // ========== PRÉSENCE ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v8');
+    const connectedPlayersRef = database.ref('/presence_pioches_v9');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -1030,13 +1031,12 @@
         document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${count}`;
     });
     
-    // Initialisation des zones de drop
+    // Initialisation
     setupInventoryDropZones();
     
     console.log("✅ Tout est prêt !");
-    console.log("💡 Glissez une carte BUTIN vers un inventaire → la carte disparaît de la pioche !");
+    console.log("💡 Glissez une carte BUTIN vers un inventaire → la carte disparaît de la pioche et apparaît dans l'inventaire !");
     console.log("🖱️ Cliquez sur une carte dans un inventaire pour la retourner à 180°");
-    console.log("📦 4 inventaires indépendants, chacun avec sa propre liste de cartes");
 </script>
 </body>
 </html>
