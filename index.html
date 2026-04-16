@@ -22,7 +22,7 @@
             padding: 20px;
         }
         .game-container {
-            max-width: 1200px;
+            max-width: 1300px;
             width: 100%;
             background: #ecd9b4;
             border-radius: 48px;
@@ -65,6 +65,20 @@
             background: #a85f2c;
             transform: scale(0.97);
         }
+        .generate-btn {
+            background: #6b3e8f;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 6px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .generate-btn:hover {
+            background: #8b5eb3;
+            transform: scale(0.97);
+        }
         .pioches-container {
             display: flex;
             flex-wrap: wrap;
@@ -74,7 +88,7 @@
         }
         .pioche {
             flex: 1;
-            min-width: 300px;
+            min-width: 320px;
             background: #2c2b28;
             border-radius: 32px;
             padding: 25px 20px;
@@ -101,7 +115,7 @@
             background: #1a1a1a;
             border-radius: 20px;
             padding: 30px 20px;
-            min-height: 450px;
+            min-height: 420px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -112,7 +126,7 @@
             background: transparent;
             text-align: center;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            max-width: 350px;
+            max-width: 320px;
             width: 100%;
             cursor: pointer;
         }
@@ -143,13 +157,13 @@
             color: #2d1f12;
             font-size: 1.3rem;
             font-weight: bold;
-            padding: 12px 30px;
+            padding: 12px 25px;
             border-radius: 60px;
             cursor: pointer;
             transition: all 0.2s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             margin: 15px 0 10px;
-            width: 80%;
+            width: 90%;
         }
         .draw-btn:hover {
             background: #ffcc66;
@@ -180,6 +194,28 @@
         .reset-pioche-btn:hover {
             background: #c47b3e;
         }
+        .generate-pioche-btn {
+            background: #6b3e8f88;
+            border: 1px solid #8b5eb3;
+            color: white;
+            font-size: 0.8rem;
+            padding: 5px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 8px;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+        .generate-pioche-btn:hover {
+            background: #8b5eb3;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
         footer {
             font-size: 0.7rem;
             text-align: center;
@@ -192,6 +228,13 @@
         }
         .card {
             animation: fadeIn 0.25s ease;
+        }
+        .badge {
+            background: #00000099;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 8px;
         }
     </style>
 </head>
@@ -214,9 +257,11 @@
             <button class="draw-btn" id="donjonDrawBtn">⚔️ PIOCHEZ UNE CARTE</button>
             <div class="deck-info">
                 📚 Cartes restantes : <span id="donjonCardsLeft">0</span>
+                <span class="badge" id="donjonComposition"></span>
             </div>
-            <div>
-                <button class="reset-pioche-btn" id="resetDonjonBtn">🔄 Remettre toutes les cartes Donjon</button>
+            <div class="button-group">
+                <button class="reset-pioche-btn" id="resetDonjonBtn">🔄 Remettre les 10 cartes</button>
+                <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVEAU DONJON (5 monstres + 5 événements)</button>
             </div>
         </div>
 
@@ -237,7 +282,8 @@
     </div>
 
     <footer>
-        ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir
+        ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
+        🎲 Bouton "NOUVEAU DONJON" : prend 5 monstres (dossier Monstre/) + 5 événements (dossier Evenements/)
     </footer>
 </div>
 
@@ -251,31 +297,86 @@
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    // Références pour les deux pioches
-    const donjonRef = database.ref('/needandgreed_donjon');
+    // Références
+    const donjonRef = database.ref('/needandgreed_donjon_v2');
     const butinsRef = database.ref('/needandgreed_butins');
     
     // ========== CONFIGURATION DES CARTES ==========
-    // DONJON : 33 cartes nommées 1.png à 33.png dans le dossier "Donjon"
-    const NB_DONJON_CARDS = 33;
-    const DONJON_CARDS = [];
-    for (let i = 1; i <= NB_DONJON_CARDS; i++) {
-        DONJON_CARDS.push({ id: i, image: `Donjon/${i}.png` });
+    // Format des noms : "00.png", "01.png", "02.png" ... "33.png"
+    function formatCardNumber(num) {
+        return num.toString().padStart(2, '0');
     }
     
-    // BUTINS : 33 cartes nommées 1.png à 33.png dans le dossier "Butins"
+    // === DONJON : configuration des sources ===
+    // On va chercher les cartes dans "Monstre/" et "Evenements/"
+    const NB_MONSTRE = 33;  // 00 à 32
+    const NB_EVENEMENTS = 33; // 00 à 32
+    
+    // Générer la liste de TOUS les monstres disponibles
+    const ALL_MONSTRES = [];
+    for (let i = 0; i < NB_MONSTRE; i++) {
+        ALL_MONSTRES.push({ 
+            id: `M_${formatCardNumber(i)}`, 
+            image: `Monstre/${formatCardNumber(i)}.png`,
+            type: 'monstre',
+            num: i
+        });
+    }
+    
+    // Générer la liste de TOUS les événements disponibles
+    const ALL_EVENEMENTS = [];
+    for (let i = 0; i < NB_EVENEMENTS; i++) {
+        ALL_EVENEMENTS.push({ 
+            id: `E_${formatCardNumber(i)}`, 
+            image: `Evenements/${formatCardNumber(i)}.png`,
+            type: 'evenement',
+            num: i
+        });
+    }
+    
+    // === BUTINS : dossier "Butins" avec 00.png à 33.png ===
     const NB_BUTINS_CARDS = 33;
     const BUTINS_CARDS = [];
-    for (let i = 1; i <= NB_BUTINS_CARDS; i++) {
-        BUTINS_CARDS.push({ id: i, image: `Butins/${i}.png` });
+    for (let i = 0; i < NB_BUTINS_CARDS; i++) {
+        BUTINS_CARDS.push({ 
+            id: `B_${formatCardNumber(i)}`, 
+            image: `Butins/${formatCardNumber(i)}.png`,
+            type: 'butin',
+            num: i
+        });
+    }
+    
+    // ========== FONCTIONS UTILITAIRES ==========
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    
+    // Prendre N éléments aléatoires d'un tableau (sans remise)
+    function getRandomElements(arr, n) {
+        if (n > arr.length) n = arr.length;
+        const shuffled = shuffleArray([...arr]);
+        return shuffled.slice(0, n);
+    }
+    
+    // Générer un nouveau deck Donjon : 5 monstres + 5 événements aléatoires
+    function generateNewDonjonDeck() {
+        const randomMonstres = getRandomElements(ALL_MONSTRES, 5);
+        const randomEvenements = getRandomElements(ALL_EVENEMENTS, 5);
+        const newDeck = [...randomMonstres, ...randomEvenements];
+        return shuffleArray(newDeck);
     }
     
     // ========== CLASSE POUR GÉRER UNE PIOCHE ==========
     class Pioche {
-        constructor(name, cardList, firebaseRef, uiIds) {
+        constructor(name, cardList, firebaseRef, uiIds, isDonjon = false) {
             this.name = name;
             this.cardList = cardList;
             this.firebaseRef = firebaseRef;
+            this.isDonjon = isDonjon;
             this.currentDeck = [];
             this.currentCard = null;
             this.isUpdating = false;
@@ -283,32 +384,23 @@
                 cardArea: document.getElementById(uiIds.cardArea),
                 cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
                 drawBtn: document.getElementById(uiIds.drawBtn),
-                resetBtn: document.getElementById(uiIds.resetBtn)
+                resetBtn: document.getElementById(uiIds.resetBtn),
+                compositionSpan: uiIds.composition ? document.getElementById(uiIds.composition) : null
             };
             
             this.init();
             this.setupListeners();
         }
         
-        // Mélanger un tableau
-        shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-        
-        // Initialiser un nouveau deck mélangé
-        initNewDeck() {
-            return this.shuffleArray([...this.cardList]);
-        }
-        
         // Sauvegarder le deck dans Firebase
         saveDeck() {
             if (this.isUpdating) return;
-            const deckIds = this.currentDeck.map(card => card.id);
-            this.firebaseRef.child('deck').set(deckIds);
+            const deckData = this.currentDeck.map(card => ({
+                id: card.id,
+                image: card.image,
+                type: card.type
+            }));
+            this.firebaseRef.child('deck').set(deckData);
         }
         
         // Sauvegarder la carte courante
@@ -317,25 +409,40 @@
             if (card) {
                 this.firebaseRef.child('currentCard').set({
                     id: card.id,
-                    image: card.image
+                    image: card.image,
+                    type: card.type
                 });
             } else {
                 this.firebaseRef.child('currentCard').set(null);
             }
         }
         
-        // Charger un deck depuis une liste d'IDs
-        loadDeckFromIds(ids) {
-            if (!ids || !Array.isArray(ids)) {
-                this.currentDeck = this.initNewDeck();
+        // Charger un deck depuis les données Firebase
+        loadDeckFromData(data) {
+            if (!data || !Array.isArray(data)) {
+                if (this.isDonjon) {
+                    this.currentDeck = generateNewDonjonDeck();
+                } else {
+                    this.currentDeck = shuffleArray([...this.cardList]);
+                }
                 return;
             }
-            this.currentDeck = ids.map(id => this.cardList.find(card => card.id === id)).filter(card => card !== undefined);
-            if (this.currentDeck.length !== this.cardList.length) {
-                const existingIds = new Set(this.currentDeck.map(c => c.id));
-                const missingCards = this.cardList.filter(card => !existingIds.has(card.id));
-                this.currentDeck.push(...missingCards);
+            this.currentDeck = data.filter(card => card && card.image);
+            if (this.currentDeck.length === 0) {
+                if (this.isDonjon) {
+                    this.currentDeck = generateNewDonjonDeck();
+                } else {
+                    this.currentDeck = shuffleArray([...this.cardList]);
+                }
             }
+        }
+        
+        // Afficher la composition du Donjon (nombre monstres/événements)
+        updateCompositionDisplay() {
+            if (!this.ui.compositionSpan || !this.isDonjon) return;
+            const nbMonstres = this.currentDeck.filter(c => c.type === 'monstre').length;
+            const nbEvenements = this.currentDeck.filter(c => c.type === 'evenement').length;
+            this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements}`;
         }
         
         // Afficher la carte
@@ -347,7 +454,7 @@
             
             const imgHtml = `
                 <div class="card">
-                    <img src="${card.image}" alt="Carte ${card.id}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:40px;font-size:2rem;\\'>🃟<br><span style=\\'font-size:0.8rem;\\'>Image ${card.id} manquante<br>dossier ${this.name}</span></div>'">
+                    <img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:40px;font-size:2rem;\\'>🃟<br><span style=\\'font-size:0.8rem;\\'>Image manquante<br>${card.image}</span></div>'">
                 </div>
             `;
             this.ui.cardArea.innerHTML = imgHtml;
@@ -356,6 +463,9 @@
         // Mettre à jour l'affichage des cartes restantes
         updateCardsLeftDisplay() {
             this.ui.cardsLeftSpan.innerText = this.currentDeck.length;
+            if (this.isDonjon) {
+                this.updateCompositionDisplay();
+            }
         }
         
         // Piocher une carte
@@ -363,7 +473,11 @@
             if (this.isUpdating) return;
             
             if (this.currentDeck.length === 0) {
-                this.currentDeck = this.initNewDeck();
+                if (this.isDonjon) {
+                    this.currentDeck = generateNewDonjonDeck();
+                } else {
+                    this.currentDeck = shuffleArray([...this.cardList]);
+                }
             }
             const newCard = this.currentDeck.shift();
             this.currentCard = newCard;
@@ -378,7 +492,25 @@
         resetDeck() {
             if (this.isUpdating) return;
             
-            this.currentDeck = this.initNewDeck();
+            if (this.isDonjon) {
+                this.currentDeck = generateNewDonjonDeck();
+            } else {
+                this.currentDeck = shuffleArray([...this.cardList]);
+            }
+            this.currentCard = null;
+            
+            this.saveCurrentCard(null);
+            this.saveDeck();
+            this.displayCard(null);
+            this.updateCardsLeftDisplay();
+        }
+        
+        // Générer un nouveau Donjon (spécifique à la pioche Donjon)
+        generateNewDonjon() {
+            if (!this.isDonjon) return;
+            if (this.isUpdating) return;
+            
+            this.currentDeck = generateNewDonjonDeck();
             this.currentCard = null;
             
             this.saveCurrentCard(null);
@@ -390,23 +522,25 @@
         // Initialiser depuis Firebase
         init() {
             this.firebaseRef.child('deck').once('value', (snap) => {
-                if (!snap.val()) {
-                    this.currentDeck = this.initNewDeck();
+                const data = snap.val();
+                if (!data || data.length === 0) {
+                    if (this.isDonjon) {
+                        this.currentDeck = generateNewDonjonDeck();
+                    } else {
+                        this.currentDeck = shuffleArray([...this.cardList]);
+                    }
                     this.saveDeck();
                     this.updateCardsLeftDisplay();
                 } else {
-                    this.loadDeckFromIds(snap.val());
+                    this.loadDeckFromData(data);
                     this.updateCardsLeftDisplay();
                 }
             });
             
             this.firebaseRef.child('currentCard').once('value', (snap) => {
                 const cardData = snap.val();
-                if (cardData && cardData.id !== undefined) {
-                    this.currentCard = {
-                        id: cardData.id,
-                        image: cardData.image
-                    };
+                if (cardData && cardData.image) {
+                    this.currentCard = cardData;
                     this.displayCard(this.currentCard);
                 } else {
                     this.displayCard(null);
@@ -419,7 +553,7 @@
             this.firebaseRef.child('deck').on('value', (snap) => {
                 if (this.isUpdating) return;
                 this.isUpdating = true;
-                this.loadDeckFromIds(snap.val());
+                this.loadDeckFromData(snap.val());
                 this.updateCardsLeftDisplay();
                 setTimeout(() => { this.isUpdating = false; }, 100);
             });
@@ -428,11 +562,8 @@
                 if (this.isUpdating) return;
                 this.isUpdating = true;
                 const cardData = snap.val();
-                if (cardData && cardData.id !== undefined) {
-                    this.currentCard = {
-                        id: cardData.id,
-                        image: cardData.image
-                    };
+                if (cardData && cardData.image) {
+                    this.currentCard = cardData;
                     this.displayCard(this.currentCard);
                 } else {
                     this.currentCard = null;
@@ -451,23 +582,32 @@
     }
     
     // ========== CRÉATION DES DEUX PIOCHES ==========
-    const donjonPioche = new Pioche('Donjon', DONJON_CARDS, donjonRef, {
+    const donjonPioche = new Pioche('Donjon', [], donjonRef, {
         cardArea: 'donjonCardArea',
         cardsLeft: 'donjonCardsLeft',
         drawBtn: 'donjonDrawBtn',
-        resetBtn: 'resetDonjonBtn'
-    });
+        resetBtn: 'resetDonjonBtn',
+        composition: 'donjonComposition'
+    }, true);
     
     const butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, {
         cardArea: 'butinsCardArea',
         cardsLeft: 'butinsCardsLeft',
         drawBtn: 'butinsDrawBtn',
-        resetBtn: 'resetButinsBtn'
+        resetBtn: 'resetButinsBtn',
+        composition: null
+    }, false);
+    
+    // ========== BOUTON GÉNÉRER NOUVEAU DONJON ==========
+    document.getElementById('generateDonjonBtn').addEventListener('click', () => {
+        if (confirm("🎲 Générer un NOUVEAU DONJON ?\n\n5 monstres aléatoires + 5 événements aléatoires seront piochés.\nLa carte actuelle disparaîtra et le deck sera remplacé.")) {
+            donjonPioche.generateNewDonjon();
+        }
     });
     
     // ========== RESET GLOBAL ==========
     document.getElementById('resetAllBtn').addEventListener('click', () => {
-        if (confirm("⚠️ RÉINITIALISATION TOTALE : Les deux pioches seront remises à zéro. Tout le monde verra le changement.")) {
+        if (confirm("⚠️ RÉINITIALISATION TOTALE : Les deux pioches seront remises à zéro.")) {
             donjonPioche.resetDeck();
             butinsPioche.resetDeck();
         }
@@ -476,7 +616,7 @@
     // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches');
+    const connectedPlayersRef = database.ref('/presence_pioches_v2');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -494,9 +634,12 @@
     });
     
     console.log("✅ Deux pioches prêtes !");
-    console.log("📌 Dossiers nécessaires : 'Donjon/' et 'Butins/' avec les images 1.png à 33.png");
-    console.log("🎴 Donjon → Donjon/1.png ... Donjon/33.png");
-    console.log("💰 Butins → Butins/1.png ... Butins/33.png");
+    console.log("📌 Format des images : 00.png, 01.png, 02.png ...");
+    console.log("📁 Dossiers nécessaires :");
+    console.log("   - Monstre/00.png à 32.png");
+    console.log("   - Evenements/00.png à 32.png");
+    console.log("   - Butins/00.png à 32.png");
+    console.log("🎲 Bouton 'NOUVEAU DONJON' : 5 monstres + 5 événements aléatoires");
 </script>
 </body>
 </html>
