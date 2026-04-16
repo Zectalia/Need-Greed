@@ -193,25 +193,30 @@
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const donjonRef = database.ref('/donjon_3desc_v2');
-    const butinsRef = database.ref('/butins_3desc_v2');
+    const donjonRef = database.ref('/donjon_final');
+    const butinsRef = database.ref('/butins_final');
     
     function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
-    // ========== CARTES DISPONIBLES ==========
+    // ========== CARTES DISPONIBLES - VALEURS CORRIGÉES ==========
+    // 32 MONSTRES (00 à 31)
     const ALL_MONSTRES = [];
-    for (let i = 0; i < 26; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
+    for (let i = 0; i < 32; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
     
+    // 47 ÉVÉNEMENTS (00 à 46)
     const ALL_EVENEMENTS = [];
-    for (let i = 0; i < 29; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
+    for (let i = 0; i < 47; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
     
+    // 8 BOSS (00 à 07)
     const ALL_BOSS = [];
-    for (let i = 0; i < 10; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
+    for (let i = 0; i < 8; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
     
+    // 36 BUTINS (00 à 35)
     const BUTINS_CARDS = [];
-    for (let i = 0; i < 37; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
+    for (let i = 0; i < 36; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
     
     function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+    
     function getRandomElements(arr, n, excludeIds = []) {
         let available = arr.filter(c => !excludeIds.includes(c.id));
         const shuffled = shuffleArray([...available]);
@@ -227,6 +232,7 @@
         const monstres = getRandomElements(ALL_MONSTRES, 8);
         const evenements = getRandomElements(ALL_EVENEMENTS, 12);
         lastDescente1Cards = { monstres: [...monstres], evenements: [...evenements] };
+        console.log(`Descente 1 générée: ${monstres.length} monstres, ${evenements.length} événements`);
         return shuffleArray([...monstres, ...evenements]);
     }
     
@@ -237,6 +243,7 @@
         const monstres = getRandomElements(ALL_MONSTRES, 12, usedMonstreIds);
         const evenements = getRandomElements(ALL_EVENEMENTS, 16, usedEvenementIds);
         lastDescente2Cards = { monstres: [...monstres], evenements: [...evenements] };
+        console.log(`Descente 2 générée: ${monstres.length} monstres, ${evenements.length} événements`);
         return shuffleArray([...monstres, ...evenements]);
     }
     
@@ -246,6 +253,7 @@
         const descente2Cards = [...lastDescente2Cards.monstres, ...lastDescente2Cards.evenements];
         const bosses = getRandomElements(ALL_BOSS, 2);
         const allCards = [...descente1Cards, ...descente2Cards, ...bosses];
+        console.log(`Descente 3 générée: ${descente1Cards.length} (D1) + ${descente2Cards.length} (D2) + ${bosses.length} bosses = ${allCards.length} cartes`);
         return shuffleArray(allCards);
     }
     
@@ -337,7 +345,7 @@
             for (let slot = 1; slot <= 4; slot++) {
                 const slotDiv = document.createElement('div'); slotDiv.className = 'slot';
                 slotsGrid.appendChild(slotDiv);
-                const slotRef = database.ref(`/slots_3desc_v2/inv${inv}_slot${slot}`);
+                const slotRef = database.ref(`/slots_final/inv${inv}_slot${slot}`);
                 allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
             }
             
@@ -523,11 +531,15 @@
     
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_3desc_v2');
+    const connectedPlayersRef = database.ref('/presence_final');
     presenceRef.on('value', (snap) => { if (snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
     
-    console.log("✅ 3 types de descente disponibles !");
+    console.log("✅ Configuration finale avec vos nombres !");
+    console.log(`📊 ${ALL_MONSTRES.length} Monstres (00 à ${ALL_MONSTRES.length-1})`);
+    console.log(`📊 ${ALL_EVENEMENTS.length} Événements (00 à ${ALL_EVENEMENTS.length-1})`);
+    console.log(`📊 ${BUTINS_CARDS.length} Butins (00 à ${BUTINS_CARDS.length-1})`);
+    console.log(`📊 ${ALL_BOSS.length} Boss (00 à ${ALL_BOSS.length-1})`);
     console.log("Descente 1: 8 monstres + 12 événements");
     console.log("Descente 2: 12 monstres + 16 événements (différents)");
     console.log("Descente 3: Descente 1 + Descente 2 + 2 bosses");
