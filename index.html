@@ -65,20 +65,6 @@
             background: #a85f2c;
             transform: scale(0.97);
         }
-        .generate-btn {
-            background: #6b3e8f;
-            border: none;
-            color: white;
-            font-weight: bold;
-            padding: 6px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .generate-btn:hover {
-            background: #8b5eb3;
-            transform: scale(0.97);
-        }
         .pioches-container {
             display: flex;
             flex-wrap: wrap;
@@ -151,6 +137,20 @@
             background: #3f2a1f66;
             border-radius: 24px;
         }
+        .finish-message {
+            color: #ffaa44;
+            font-size: 1.4rem;
+            text-align: center;
+            padding: 40px;
+            background: #2d1f12cc;
+            border-radius: 24px;
+            font-weight: bold;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
         .draw-btn {
             background: #ffaa44;
             border: none;
@@ -164,6 +164,16 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             margin: 15px 0 10px;
             width: 90%;
+        }
+        .draw-btn.disabled {
+            background: #888;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+        .draw-btn.disabled:hover {
+            background: #888;
+            transform: none;
         }
         .draw-btn:hover {
             background: #ffcc66;
@@ -236,6 +246,15 @@
             font-size: 0.7rem;
             margin-left: 8px;
         }
+        .finished-badge {
+            background: #ffaa44;
+            color: #2d1f12;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -252,16 +271,17 @@
         <div class="pioche">
             <div class="pioche-title donjon">🏰 DONJON 🏰</div>
             <div class="card-area" id="donjonCardArea">
-                <div class="empty-card">⚔️ Cliquez sur PIOCHEZ !</div>
+                <div class="empty-card">⚔️ Cliquez sur PIOCHEZ pour commencer !</div>
             </div>
             <button class="draw-btn" id="donjonDrawBtn">⚔️ PIOCHEZ UNE CARTE</button>
             <div class="deck-info">
                 📚 Cartes restantes : <span id="donjonCardsLeft">0</span>
                 <span class="badge" id="donjonComposition"></span>
+                <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span>
             </div>
             <div class="button-group">
-                <button class="reset-pioche-btn" id="resetDonjonBtn">🔄 Remettre les 10 cartes</button>
-                <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVEAU DONJON (5 monstres + 5 événements)</button>
+                <button class="reset-pioche-btn" id="resetDonjonBtn" style="display:none;">🔄 Remettre les 10 cartes</button>
+                <button class="generate-pioche-btn" id="generateDonjonBtn">🎲 NOUVELLE DESCENTE (5 monstres + 5 événements)</button>
             </div>
         </div>
 
@@ -283,7 +303,8 @@
 
     <footer>
         ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
-        🎲 Bouton "NOUVEAU DONJON" : prend 5 monstres (dossier Monstre/) + 5 événements (dossier Evenements/)
+        🎲 Quand le Donjon n'a plus de cartes → message "Descente terminée"<br>
+        🎲 Cliquez sur "NOUVELLE DESCENTE" pour recommencer
     </footer>
 </div>
 
@@ -298,21 +319,18 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v2');
+    const donjonRef = database.ref('/needandgreed_donjon_v3');
     const butinsRef = database.ref('/needandgreed_butins');
     
     // ========== CONFIGURATION DES CARTES ==========
-    // Format des noms : "00.png", "01.png", "02.png" ... "33.png"
     function formatCardNumber(num) {
         return num.toString().padStart(2, '0');
     }
     
-    // === DONJON : configuration des sources ===
-    // On va chercher les cartes dans "Monstre/" et "Evenements/"
-    const NB_MONSTRE = 33;  // 00 à 32
-    const NB_EVENEMENTS = 33; // 00 à 32
+    // === DONJON : monstres et événements ===
+    const NB_MONSTRE = 33;
+    const NB_EVENEMENTS = 33;
     
-    // Générer la liste de TOUS les monstres disponibles
     const ALL_MONSTRES = [];
     for (let i = 0; i < NB_MONSTRE; i++) {
         ALL_MONSTRES.push({ 
@@ -323,7 +341,6 @@
         });
     }
     
-    // Générer la liste de TOUS les événements disponibles
     const ALL_EVENEMENTS = [];
     for (let i = 0; i < NB_EVENEMENTS; i++) {
         ALL_EVENEMENTS.push({ 
@@ -334,7 +351,7 @@
         });
     }
     
-    // === BUTINS : dossier "Butins" avec 00.png à 33.png ===
+    // === BUTINS ===
     const NB_BUTINS_CARDS = 33;
     const BUTINS_CARDS = [];
     for (let i = 0; i < NB_BUTINS_CARDS; i++) {
@@ -355,14 +372,12 @@
         return array;
     }
     
-    // Prendre N éléments aléatoires d'un tableau (sans remise)
     function getRandomElements(arr, n) {
         if (n > arr.length) n = arr.length;
         const shuffled = shuffleArray([...arr]);
         return shuffled.slice(0, n);
     }
     
-    // Générer un nouveau deck Donjon : 5 monstres + 5 événements aléatoires
     function generateNewDonjonDeck() {
         const randomMonstres = getRandomElements(ALL_MONSTRES, 5);
         const randomEvenements = getRandomElements(ALL_EVENEMENTS, 5);
@@ -380,19 +395,49 @@
             this.currentDeck = [];
             this.currentCard = null;
             this.isUpdating = false;
+            this.isFinished = false;  // Pour le Donjon : true quand plus de cartes
             this.ui = {
                 cardArea: document.getElementById(uiIds.cardArea),
                 cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
                 drawBtn: document.getElementById(uiIds.drawBtn),
                 resetBtn: document.getElementById(uiIds.resetBtn),
-                compositionSpan: uiIds.composition ? document.getElementById(uiIds.composition) : null
+                generateBtn: uiIds.generateBtn ? document.getElementById(uiIds.generateBtn) : null,
+                compositionSpan: uiIds.composition ? document.getElementById(uiIds.composition) : null,
+                finishedBadge: uiIds.finishedBadge ? document.getElementById(uiIds.finishedBadge) : null
             };
             
             this.init();
             this.setupListeners();
         }
         
-        // Sauvegarder le deck dans Firebase
+        // Mettre à jour l'interface selon l'état "fini"
+        updateFinishedState() {
+            if (!this.isDonjon) return;
+            
+            if (this.isFinished) {
+                // Désactiver le bouton pioche
+                this.ui.drawBtn.classList.add('disabled');
+                this.ui.drawBtn.disabled = true;
+                // Afficher le badge de fin
+                if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
+                // Cacher le bouton reset classique
+                if (this.ui.resetBtn) this.ui.resetBtn.style.display = 'none';
+                // Afficher un message dans la zone de carte
+                if (!this.currentCard) {
+                    this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
+                }
+            } else {
+                // Réactiver le bouton pioche
+                this.ui.drawBtn.classList.remove('disabled');
+                this.ui.drawBtn.disabled = false;
+                // Cacher le badge de fin
+                if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'none';
+                // Afficher le bouton reset (mais on le garde caché pour le Donjon)
+                if (this.ui.resetBtn) this.ui.resetBtn.style.display = 'none';
+            }
+        }
+        
+        // Sauvegarder le deck
         saveDeck() {
             if (this.isUpdating) return;
             const deckData = this.currentDeck.map(card => ({
@@ -401,6 +446,8 @@
                 type: card.type
             }));
             this.firebaseRef.child('deck').set(deckData);
+            // Sauvegarder aussi l'état "fini"
+            this.firebaseRef.child('isFinished').set(this.isFinished);
         }
         
         // Sauvegarder la carte courante
@@ -417,29 +464,55 @@
             }
         }
         
-        // Charger un deck depuis les données Firebase
+        // Charger un deck depuis les données
         loadDeckFromData(data) {
-            if (!data || !Array.isArray(data)) {
+            if (!data || !Array.isArray(data) || data.length === 0) {
                 if (this.isDonjon) {
-                    this.currentDeck = generateNewDonjonDeck();
+                    this.currentDeck = [];
+                    this.isFinished = true;
                 } else {
                     this.currentDeck = shuffleArray([...this.cardList]);
+                    this.isFinished = false;
                 }
+                this.updateFinishedState();
                 return;
             }
             this.currentDeck = data.filter(card => card && card.image);
             if (this.currentDeck.length === 0) {
                 if (this.isDonjon) {
-                    this.currentDeck = generateNewDonjonDeck();
+                    this.isFinished = true;
                 } else {
                     this.currentDeck = shuffleArray([...this.cardList]);
+                    this.isFinished = false;
                 }
+            } else {
+                this.isFinished = false;
+            }
+            this.updateFinishedState();
+        }
+        
+        // Charger l'état "fini" depuis Firebase
+        loadFinishedState(finished) {
+            if (finished === true) {
+                this.isFinished = true;
+                this.updateFinishedState();
+                // Si fini et pas de carte, afficher le message
+                if (!this.currentCard) {
+                    this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
+                }
+            } else {
+                this.isFinished = false;
+                this.updateFinishedState();
             }
         }
         
-        // Afficher la composition du Donjon (nombre monstres/événements)
+        // Afficher la composition du Donjon
         updateCompositionDisplay() {
             if (!this.ui.compositionSpan || !this.isDonjon) return;
+            if (!this.currentDeck || this.currentDeck.length === 0) {
+                this.ui.compositionSpan.innerText = `🏁 Terminé`;
+                return;
+            }
             const nbMonstres = this.currentDeck.filter(c => c.type === 'monstre').length;
             const nbEvenements = this.currentDeck.filter(c => c.type === 'evenement').length;
             this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements}`;
@@ -447,6 +520,11 @@
         
         // Afficher la carte
         displayCard(card) {
+            if (this.isFinished && !card) {
+                this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
+                return;
+            }
+            
             if (!card) {
                 this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Aucune carte piochée...<br>Cliquez sur PIOCHEZ !</div>';
                 return;
@@ -466,19 +544,34 @@
             if (this.isDonjon) {
                 this.updateCompositionDisplay();
             }
+            
+            // Vérifier si on est à court de cartes (après une pioche)
+            if (this.isDonjon && this.currentDeck.length === 0 && !this.isFinished) {
+                this.isFinished = true;
+                this.saveDeck();
+                this.updateFinishedState();
+                this.displayCard(null);
+            }
         }
         
         // Piocher une carte
         drawCard() {
             if (this.isUpdating) return;
+            if (this.isFinished) {
+                // Ne rien faire, la descente est finie
+                return;
+            }
             
             if (this.currentDeck.length === 0) {
-                if (this.isDonjon) {
-                    this.currentDeck = generateNewDonjonDeck();
-                } else {
-                    this.currentDeck = shuffleArray([...this.cardList]);
-                }
+                // Plus de cartes -> descente terminée
+                this.isFinished = true;
+                this.saveDeck();
+                this.updateFinishedState();
+                this.displayCard(null);
+                this.updateCardsLeftDisplay();
+                return;
             }
+            
             const newCard = this.currentDeck.shift();
             this.currentCard = newCard;
             
@@ -486,37 +579,50 @@
             this.saveDeck();
             this.displayCard(newCard);
             this.updateCardsLeftDisplay();
+            
+            // Après avoir pioché, vérifier si le deck est vide
+            if (this.currentDeck.length === 0) {
+                this.isFinished = true;
+                this.saveDeck();
+                this.updateFinishedState();
+            }
         }
         
-        // Réinitialiser la pioche
+        // Réinitialiser la pioche (pour Butins uniquement)
         resetDeck() {
             if (this.isUpdating) return;
             
             if (this.isDonjon) {
-                this.currentDeck = generateNewDonjonDeck();
+                // Pour le Donjon, on ne réinitialise pas automatiquement
+                // On garde le comportement de fin de descente
+                return;
             } else {
                 this.currentDeck = shuffleArray([...this.cardList]);
+                this.currentCard = null;
+                this.isFinished = false;
+                
+                this.saveCurrentCard(null);
+                this.saveDeck();
+                this.displayCard(null);
+                this.updateCardsLeftDisplay();
+                this.updateFinishedState();
             }
-            this.currentCard = null;
-            
-            this.saveCurrentCard(null);
-            this.saveDeck();
-            this.displayCard(null);
-            this.updateCardsLeftDisplay();
         }
         
-        // Générer un nouveau Donjon (spécifique à la pioche Donjon)
-        generateNewDonjon() {
+        // Générer une nouvelle descente (Donjon uniquement)
+        generateNewDescente() {
             if (!this.isDonjon) return;
             if (this.isUpdating) return;
             
             this.currentDeck = generateNewDonjonDeck();
             this.currentCard = null;
+            this.isFinished = false;
             
             this.saveCurrentCard(null);
             this.saveDeck();
             this.displayCard(null);
             this.updateCardsLeftDisplay();
+            this.updateFinishedState();
         }
         
         // Initialiser depuis Firebase
@@ -525,9 +631,11 @@
                 const data = snap.val();
                 if (!data || data.length === 0) {
                     if (this.isDonjon) {
-                        this.currentDeck = generateNewDonjonDeck();
+                        this.currentDeck = [];
+                        this.isFinished = true;
                     } else {
                         this.currentDeck = shuffleArray([...this.cardList]);
+                        this.isFinished = false;
                     }
                     this.saveDeck();
                     this.updateCardsLeftDisplay();
@@ -537,11 +645,21 @@
                 }
             });
             
+            this.firebaseRef.child('isFinished').once('value', (snap) => {
+                const finished = snap.val();
+                if (finished !== null) {
+                    this.isFinished = finished;
+                    this.updateFinishedState();
+                }
+            });
+            
             this.firebaseRef.child('currentCard').once('value', (snap) => {
                 const cardData = snap.val();
-                if (cardData && cardData.image) {
+                if (cardData && cardData.image && !this.isFinished) {
                     this.currentCard = cardData;
                     this.displayCard(this.currentCard);
+                } else if (this.isFinished) {
+                    this.displayCard(null);
                 } else {
                     this.displayCard(null);
                 }
@@ -558,13 +676,22 @@
                 setTimeout(() => { this.isUpdating = false; }, 100);
             });
             
+            this.firebaseRef.child('isFinished').on('value', (snap) => {
+                if (this.isUpdating) return;
+                this.isUpdating = true;
+                this.loadFinishedState(snap.val());
+                setTimeout(() => { this.isUpdating = false; }, 100);
+            });
+            
             this.firebaseRef.child('currentCard').on('value', (snap) => {
                 if (this.isUpdating) return;
                 this.isUpdating = true;
                 const cardData = snap.val();
-                if (cardData && cardData.image) {
+                if (cardData && cardData.image && !this.isFinished) {
                     this.currentCard = cardData;
                     this.displayCard(this.currentCard);
+                } else if (this.isFinished) {
+                    this.displayCard(null);
                 } else {
                     this.currentCard = null;
                     this.displayCard(null);
@@ -573,11 +700,22 @@
             });
             
             this.ui.drawBtn.addEventListener('click', () => this.drawCard());
-            this.ui.resetBtn.addEventListener('click', () => {
-                if (confirm(`Remettre toutes les cartes ${this.name} dans la pioche ?`)) {
-                    this.resetDeck();
-                }
-            });
+            
+            if (this.ui.resetBtn) {
+                this.ui.resetBtn.addEventListener('click', () => {
+                    if (confirm(`Remettre toutes les cartes ${this.name} dans la pioche ?`)) {
+                        this.resetDeck();
+                    }
+                });
+            }
+            
+            if (this.ui.generateBtn) {
+                this.ui.generateBtn.addEventListener('click', () => {
+                    if (confirm("🎲 LANCER UNE NOUVELLE DESCENTE ?\n\n5 monstres aléatoires + 5 événements aléatoires seront piochés.\nLa carte actuelle disparaîtra et le deck sera remplacé.")) {
+                        this.generateNewDescente();
+                    }
+                });
+            }
         }
     }
     
@@ -587,7 +725,9 @@
         cardsLeft: 'donjonCardsLeft',
         drawBtn: 'donjonDrawBtn',
         resetBtn: 'resetDonjonBtn',
-        composition: 'donjonComposition'
+        generateBtn: 'generateDonjonBtn',
+        composition: 'donjonComposition',
+        finishedBadge: 'donjonFinishedBadge'
     }, true);
     
     const butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, {
@@ -595,28 +735,23 @@
         cardsLeft: 'butinsCardsLeft',
         drawBtn: 'butinsDrawBtn',
         resetBtn: 'resetButinsBtn',
-        composition: null
+        generateBtn: null,
+        composition: null,
+        finishedBadge: null
     }, false);
-    
-    // ========== BOUTON GÉNÉRER NOUVEAU DONJON ==========
-    document.getElementById('generateDonjonBtn').addEventListener('click', () => {
-        if (confirm("🎲 Générer un NOUVEAU DONJON ?\n\n5 monstres aléatoires + 5 événements aléatoires seront piochés.\nLa carte actuelle disparaîtra et le deck sera remplacé.")) {
-            donjonPioche.generateNewDonjon();
-        }
-    });
     
     // ========== RESET GLOBAL ==========
     document.getElementById('resetAllBtn').addEventListener('click', () => {
         if (confirm("⚠️ RÉINITIALISATION TOTALE : Les deux pioches seront remises à zéro.")) {
-            donjonPioche.resetDeck();
             butinsPioche.resetDeck();
+            donjonPioche.generateNewDescente();
         }
     });
     
     // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v2');
+    const connectedPlayersRef = database.ref('/presence_pioches_v3');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -635,11 +770,8 @@
     
     console.log("✅ Deux pioches prêtes !");
     console.log("📌 Format des images : 00.png, 01.png, 02.png ...");
-    console.log("📁 Dossiers nécessaires :");
-    console.log("   - Monstre/00.png à 32.png");
-    console.log("   - Evenements/00.png à 32.png");
-    console.log("   - Butins/00.png à 32.png");
-    console.log("🎲 Bouton 'NOUVEAU DONJON' : 5 monstres + 5 événements aléatoires");
+    console.log("🏁 Quand le Donjon n'a plus de cartes → message 'Descente terminée'");
+    console.log("🎲 Bouton 'NOUVELLE DESCENTE' pour recommencer");
 </script>
 </body>
 </html>
