@@ -154,13 +154,12 @@
 <div class="game-container">
     <div class="top-bar">
         <div class="players-online" id="playerCountDisplay">👥 Connectés: --</div>
-        <div>🎴 Need & Greed - Pioche</div>
+        <div>🎴 Need & Greed - Pioche (33 cartes)</div>
         <button class="reset-btn" id="resetDeckBtn">🔄 Remettre toutes les cartes</button>
     </div>
 
     <div class="card-area">
         <div id="currentCardDisplay">
-            <!-- La carte s'affiche ici en GRAND -->
             <div class="empty-card">🎴 Cliquez sur PIOCHEZ !</div>
         </div>
         
@@ -191,23 +190,17 @@
     const currentCardRef = gameRef.child('currentCard');
     const deckRef = gameRef.child('deck');
     
-    // ========== LISTE DES CARTES (DOSSIER IMAGES) ==========
-    // 📌 IMPORTANT : Mettez vos images dans un dossier "images" à côté de index.html
-    // Les noms des fichiers doivent correspondre exactement à ce qui est écrit ci-dessous
-    // Exemple : images/carte_epée.png, images/carte_potion.png, etc.
+    // ========== GÉNÉRATION AUTOMATIQUE DE 33 CARTES ==========
+    // Les images doivent s'appeler 1.png, 2.png, 3.png ... 33.png dans le dossier "images"
+    const NB_CARDS = 33;
+    const CARD_LIST = [];
     
-    const CARD_LIST = [
-        { id: 0, image: "images/carte_epee.png" },
-        { id: 1, image: "images/carte_potion.png" },
-        { id: 2, image: "images/carte_bouclier.png" },
-        { id: 3, image: "images/carte_tresor.png" },
-        { id: 4, image: "images/carte_feu.png" },
-        { id: 5, image: "images/carte_cape.png" },
-        { id: 6, image: "images/carte_dague.png" },
-        { id: 7, image: "images/carte_amulette.png" },
-        { id: 8, image: "images/carte_parchemin.png" },
-        { id: 9, image: "images/carte_rune.png" }
-    ];
+    for (let i = 1; i <= NB_CARDS; i++) {
+        CARD_LIST.push({
+            id: i,
+            image: `images/${i}.png`
+        });
+    }
     
     // État local du deck (liste des cartes restantes)
     let currentDeck = [];
@@ -242,7 +235,7 @@
     // Sauvegarder le deck dans Firebase
     function saveDeckToFirebase() {
         if (isUpdatingFromRemote) return;
-        // On sauvegarde juste les IDs des cartes pour économiser de l'espace
+        // On sauvegarde juste les IDs des cartes
         const deckIds = currentDeck.map(card => card.id);
         deckRef.set(deckIds);
     }
@@ -286,7 +279,7 @@
         // Gestion d'erreur si l'image n'existe pas
         const imgHtml = `
             <div class="card">
-                <img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:40px;font-size:2rem;\\'>🃟<br><span style=\\'font-size:0.8rem;\\'>Image manquante</span></div>'">
+                <img src="${card.image}" alt="Carte ${card.id}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding:40px;font-size:2rem;\\'>🃟<br><span style=\\'font-size:0.8rem;\\'>Image ${card.id} manquante</span></div>'">
             </div>
         `;
         
@@ -421,8 +414,8 @@
         }
     });
     
-    console.log("✅ Pioche prête ! Base Firebase connectée :", firebaseConfig.databaseURL);
-    console.log("📌 N'oubliez pas de créer un dossier 'images' avec vos cartes !");
+    console.log("✅ Pioche prête avec 33 cartes !");
+    console.log("📌 Placez vos images dans le dossier 'images/' : 1.png, 2.png, 3.png ... 33.png");
     console.log("🖱️ Effet hover : passez la souris sur la carte pour la zoomer !");
 </script>
 </body>
