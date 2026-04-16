@@ -302,7 +302,7 @@
 
     <footer>
         ⚡ Synchronisation temps réel • Survolez une carte pour l'agrandir<br>
-        🎲 Quand le Donjon n'a plus de cartes → message "Descente terminée"<br>
+        🎲 La dernière carte s'affiche normalement → le message apparaît uniquement si on tente de piocher ensuite<br>
         🎲 Cliquez sur "NOUVELLE DESCENTE" pour recommencer<br>
         📊 Monstres: 26 | Événements: 29 | Butins: 37
     </footer>
@@ -319,8 +319,8 @@
     const database = firebase.database();
     
     // Références
-    const donjonRef = database.ref('/needandgreed_donjon_v4');
-    const butinsRef = database.ref('/needandgreed_butins_v2');
+    const donjonRef = database.ref('/needandgreed_donjon_v5');
+    const butinsRef = database.ref('/needandgreed_butins_v3');
     
     // ========== CONFIGURATION DES CARTES ==========
     function formatCardNumber(num) {
@@ -395,7 +395,7 @@
             this.currentDeck = [];
             this.currentCard = null;
             this.isUpdating = false;
-            this.isFinished = false;
+            this.isFinished = false;  // true = plus de cartes, afficher message si on tente de piocher
             this.ui = {
                 cardArea: document.getElementById(uiIds.cardArea),
                 cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
@@ -414,15 +414,20 @@
             if (!this.isDonjon) return;
             
             if (this.isFinished) {
+                // Désactiver le bouton pioche
                 this.ui.drawBtn.classList.add('disabled');
                 this.ui.drawBtn.disabled = true;
+                // Afficher le badge
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
+                // Afficher le message de fin (si aucune carte n'est affichée)
                 if (!this.currentCard) {
                     this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
                 }
             } else {
+                // Réactiver le bouton pioche
                 this.ui.drawBtn.classList.remove('disabled');
                 this.ui.drawBtn.disabled = false;
+                // Cacher le badge
                 if (this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'none';
             }
         }
@@ -483,9 +488,6 @@
             if (finished === true) {
                 this.isFinished = true;
                 this.updateFinishedState();
-                if (!this.currentCard) {
-                    this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
-                }
             } else {
                 this.isFinished = false;
                 this.updateFinishedState();
@@ -504,6 +506,7 @@
         }
         
         displayCard(card) {
+            // Si on est en état "fini" et qu'il n'y a pas de carte, afficher le message de fin
             if (this.isFinished && !card) {
                 this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁<br><span style="font-size:0.9rem;">Cliquez sur "NOUVELLE DESCENTE" pour continuer</span></div>';
                 return;
@@ -527,28 +530,28 @@
             if (this.isDonjon) {
                 this.updateCompositionDisplay();
             }
-            
-            if (this.isDonjon && this.currentDeck.length === 0 && !this.isFinished) {
-                this.isFinished = true;
-                this.saveDeck();
-                this.updateFinishedState();
-                this.displayCard(null);
-            }
         }
         
         drawCard() {
             if (this.isUpdating) return;
-            if (this.isFinished) return;
             
-            if (this.currentDeck.length === 0) {
-                this.isFinished = true;
-                this.saveDeck();
-                this.updateFinishedState();
-                this.displayCard(null);
-                this.updateCardsLeftDisplay();
+            // Si déjà fini, ne rien faire (le bouton est désactivé, mais sécurité)
+            if (this.isFinished) {
                 return;
             }
             
+            // Vérifier s'il reste des cartes
+            if (this.currentDeck.length === 0) {
+                // Plus de cartes ! On passe en mode "fini"
+                this.isFinished = true;
+                this.saveDeck();
+                this.updateFinishedState();
+                // Afficher le message de fin
+                this.displayCard(null);
+                return;
+            }
+            
+            // Il reste des cartes, on pioche normalement
             const newCard = this.currentDeck.shift();
             this.currentCard = newCard;
             
@@ -556,12 +559,6 @@
             this.saveDeck();
             this.displayCard(newCard);
             this.updateCardsLeftDisplay();
-            
-            if (this.currentDeck.length === 0) {
-                this.isFinished = true;
-                this.saveDeck();
-                this.updateFinishedState();
-            }
         }
         
         resetDeck() {
@@ -610,6 +607,7 @@
                     }
                     this.saveDeck();
                     this.updateCardsLeftDisplay();
+                    this.updateFinishedState();
                 } else {
                     this.loadDeckFromData(data);
                     this.updateCardsLeftDisplay();
@@ -665,7 +663,10 @@
                     this.currentCard = cardData;
                     this.displayCard(this.currentCard);
                 } else if (this.isFinished) {
-                    this.displayCard(null);
+                    // Ne pas écraser le message de fin
+                    if (this.currentCard === null) {
+                        this.displayCard(null);
+                    }
                 } else {
                     this.currentCard = null;
                     this.displayCard(null);
@@ -725,7 +726,7 @@
     // ========== PRÉSENCE / JOUEURS CONNECTÉS ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_pioches_v4');
+    const connectedPlayersRef = database.ref('/presence_pioches_v5');
     
     presenceRef.on('value', (snap) => {
         if (snap.val() === true) {
@@ -747,8 +748,7 @@
     console.log("   - Monstres : 26 (00 à 25)");
     console.log("   - Événements : 29 (00 à 28)");
     console.log("   - Butins : 37 (00 à 36)");
-    console.log("📁 Dossiers nécessaires : Monstre/, Evenements/, Butins/");
-    console.log("🎲 Bouton 'NOUVELLE DESCENTE' pour recommencer");
+    console.log("🎯 La dernière carte s'affiche normalement, le message apparaît ensuite");
 </script>
 </body>
 </html>
