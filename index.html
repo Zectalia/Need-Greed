@@ -16,7 +16,80 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
         }
+        
+        /* ========== PANNEAU DES DÉS (À GAUCHE) ========== */
+        .dice-panel {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 20px 15px;
+            border-radius: 30px;
+            border: 2px solid #ffaa44;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .dice {
+            width: 70px;
+            height: 70px;
+            background: #2c2b28;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #c47b3e;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .dice:hover {
+            transform: scale(1.05);
+            border-color: #ffaa44;
+            box-shadow: 0 0 15px rgba(255,170,68,0.5);
+        }
+        .dice:active {
+            transform: scale(0.95);
+        }
+        .dice-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        .dice-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffaa44;
+            background: #1a1a1a;
+            width: 45px;
+            text-align: center;
+            border-radius: 20px;
+            padding: 2px;
+        }
+        .dice-label {
+            font-size: 0.6rem;
+            color: #fef0cf;
+            margin-top: 3px;
+        }
+        
+        /* Animation du lancer */
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dice-rolling {
+            animation: roll 0.3s ease-out;
+        }
+        
         .game-container {
             max-width: 1600px;
             width: 100%;
@@ -26,6 +99,7 @@
             padding: 30px;
             border: 1px solid #c9aa6f;
             text-align: center;
+            margin-left: 100px;
         }
         .top-bar {
             display: flex;
@@ -94,12 +168,29 @@
         .inventory-box { width: 100%; background: #2c2b28; border-radius: 24px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .inventory-title { font-size: 1.3rem; font-weight: bold; color: #ffaa44; margin-bottom: 15px; padding: 8px; background: #1a1a1a; border-radius: 20px; text-align: center; }
         .slots-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px; }
-        .slot { background: #1a1a1a; border-radius: 16px; padding: 15px; min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #c47b3e; transition: all 0.2s; }
+        .slot { background: #1a1a1a; border-radius: 16px; padding: 15px; min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #c47b3e; transition: all 0.2s; position: relative; }
         .slot.drag-over { background: #4a3a2a; border-color: #ffaa44; }
+        
+        .empty-slot {
+            color: #ecd9b4;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 20px 5px;
+        }
+        .slot-emoji {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .slot-label {
+            font-size: 0.7rem;
+            color: #ffaa44;
+            font-weight: bold;
+        }
+        
         .slot-card { width: 100%; max-width: 110px; cursor: pointer; transition: transform 0.2s; }
         .slot-card img { width: 100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block; }
         .slot-card.flipped { transform: rotate(180deg); }
-        .empty-slot { color: #ecd9b4; font-size: 0.8rem; text-align: center; padding: 20px 5px; }
         
         .sliders-container { display: flex; gap: 15px; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px solid #c47b3e; }
         .slider-wrapper { flex: 1; text-align: center; }
@@ -134,12 +225,44 @@
         .modal-header h2 { color: #ffaa44; font-size: 1.8rem; }
         .close-modal { background: #c47b3e; border: none; color: white; font-size: 1.5rem; font-weight: bold; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; }
         .close-modal:hover { background: #a85f2c; }
-        .modal-body h3 { color: #ffaa44; margin: 20px 0 10px 0; }
-        .modal-body p, .modal-body li { text-align: left; }
+        .modal-body { line-height: 1.5; }
+        .modal-body h3 { color: #ffaa44; margin: 20px 0 10px 0; font-size: 1.3rem; }
+        .modal-body h3:first-of-type { margin-top: 0; }
+        .modal-body p { margin-bottom: 10px; text-align: left; }
         .modal-body ul, .modal-body ol { margin-left: 25px; margin-bottom: 15px; }
+        .modal-body li { margin: 8px 0; text-align: left; }
+        .modal-body hr { border-color: #c47b3e; margin: 15px 0; }
+        
+        @media (max-width: 900px) {
+            .dice-panel { left: 5px; padding: 10px 8px; gap: 10px; }
+            .dice { width: 50px; height: 50px; }
+            .dice-icon { font-size: 1.3rem; }
+            .dice-value { font-size: 1rem; width: 35px; }
+            .dice-label { font-size: 0.5rem; }
+            .game-container { margin-left: 70px; padding: 15px; }
+        }
     </style>
 </head>
 <body>
+
+<!-- PANNEAU DES DÉS (À GAUCHE) -->
+<div class="dice-panel">
+    <div class="dice" id="diceD4">
+        <div class="dice-icon">🎲</div>
+        <div class="dice-value" id="d4Value">4</div>
+        <div class="dice-label">D4</div>
+    </div>
+    <div class="dice" id="diceD6">
+        <div class="dice-icon">🎲</div>
+        <div class="dice-value" id="d6Value">6</div>
+        <div class="dice-label">D6</div>
+    </div>
+    <div class="dice" id="diceD8">
+        <div class="dice-icon">🎲</div>
+        <div class="dice-value" id="d8Value">8</div>
+        <div class="dice-label">D8</div>
+    </div>
+</div>
 
 <div class="game-container">
     <div class="top-bar">
@@ -152,7 +275,6 @@
     </div>
 
     <div class="pioches-container">
-        <!-- PIOCHE DONJON -->
         <div class="pioche">
             <div class="pioche-title donjon">🏰 DONJON 🏰</div>
             <div class="card-area" id="donjonCardArea"><div class="empty-card">⚔️ Choisissez une descente !</div></div>
@@ -176,7 +298,6 @@
             </div>
         </div>
 
-        <!-- PIOCHE BUTINS -->
         <div class="pioche">
             <div class="pioche-title butins">💰 BUTINS 💰</div>
             <div class="card-area" id="butinsCardArea"><div class="empty-card">💎 Cliquez sur PIOCHEZ !</div></div>
@@ -204,6 +325,7 @@
     <footer>⚡ Synchronisation temps réel • Glissez une carte BUTIN vers une zone • Cliquez sur une carte pour la retourner • Passez la souris sur une carte pour zoomer • Glissez sur la POUBELLE pour supprimer • ➕ +1 BOSS pour la Descente 3</footer>
 </div>
 
+<!-- MODALE DES RÈGLES -->
 <div id="rulesModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -212,23 +334,92 @@
         </div>
         <div class="modal-body">
             <h3>🎮 LE JEU EN BREF</h3>
-            <p>Jeu de descente de donjon où les joueurs coopèrent pour obtenir du butin, qui leur offre des effets et permet la victoire au plus riche après 3 descentes.</p>
-            <h3>⚙️ PRÉPARATION</h3>
-            <p>Chaque joueur choisit un héros (15 PV), lance un dé pour l'ordre, reçoit un rôle (Tank/CàC/DPS/Soutien). Le donjon est préparé avec 8 monstres + 12 événements (Descente 1) ou 12+16 (Descente 2) ou fusion +2 bosses (Descente 3).</p>
-            <h3>⚔️ COMBAT</h3>
-            <p>Ordre : Tank → CàC → DPS → Soutien. Les monstres agissent selon leurs coffres (1=premier, 2=après 2 actions, 3=après 4 actions). Les joueurs lancent un dé pour les dégâts. À 0 PV, le joueur perd tout sauf un butin &lt;2 lingots et devient spectre.</p>
-            <h3>💰 LOOTING</h3>
-            <p>Le joueur qui tue un monstre pioche des butins. Il peut les garder, les donner, ou subir un Ninja Loot (dé contre dé, le perdant perd 3 PV).</p>
+            <p>C'est un jeu de descente de donjon dans lequel les joueurs vont devoir coopérer afin d'obtenir du butin. Ce même butin va leur offrir de nouveaux effets lors de leur descente en donjon, et c'est aussi ce même butin qui permettra aux joueurs d'obtenir la victoire. Régulièrement, les joueurs auront la possibilité de vendre leurs butins pour augmenter leur richesse, le joueur le plus riche à la fin de la partie est déclaré vainqueur.</p>
+
+            <h3>⚙️ PRÉPARATION DU JEU</h3>
+            <ol>
+                <li>Placer le plateau "Donjon"</li>
+                <li>Chaque joueur sélectionne une carte héros, un dé et des jetons de vote. Ils définissent leur roue de PV sur "15".</li>
+                <li>Les joueurs installent ensuite leur carte autour du plateau de jeu "Donjon"</li>
+                <li>Chaque joueur lance son dé, le joueur qui fait le plus grand score décide de l'ordre des joueurs en leur distribuant les jetons de rôle suivants : Tank / CàC / Dps Distance / Soutien</li>
+                <li>Retirez les monstres à 3 coffres. Sélectionner en deux aléatoires à placer lors de la descente 3</li>
+                <li>Pour commencer votre descente :<br>
+                    - Descente 1 : 8 monstres + 12 événements<br>
+                    - Descente 2 : 12 monstres + 16 événements<br>
+                    - Descente 3 : Mélanger descentes 1 et 2 + monstres à 3 coffres
+                </li>
+            </ol>
+
+            <h3>⚔️ DÉROULÉ DE LA PARTIE</h3>
+            <p>Lorsque tout est en place, le joueur qui a obtenu le plus haut lancer de dé pioche une carte dans la pioche et la retourne face verso sur le plateau donjon.</p>
+            <ul>
+                <li><strong>Cartes non-monstres :</strong> Résolvez l'effet et piochez la carte suivante.</li>
+                <li><strong>Carte Monstre :</strong> Entrez en phase de combat.</li>
+            </ul>
+
+            <h3>⚔️ PHASE COMBAT</h3>
+            <p>En mode combat, l'ordre des jetons s'applique. Le Tank agit en premier, suivi du CàC, du DPS puis du Soutien. Les monstres à 1 coffre agissent forcément en premier, les monstres à 2 coffres agissent après 2 actions de joueurs et les monstres à 3 coffres agissent après 4 actions de joueurs.</p>
+            <ul>
+                <li>Lorsque c'est le tour d'un joueur, celui-ci lance un dé, le résultat détermine le nombre de dégâts infligés au monstre.</li>
+                <li>Lorsque c'est le tour du monstre, celui-ci lance le nombre de dés indiqué sur sa carte et applique le bonus aux dégâts, également indiqué.</li>
+                <li>Lorsqu'un joueur tombe à 0 PV, il peut conserver un butin strictement inférieur à 2 Lingots d'or, il perd tout le reste de son butin ainsi que la moitié de sa richesse actuelle. Il devient un spectre pour le reste de cette descente (détaillé plus bas).</li>
+                <li>Lorsqu'un monstre atteint 0 PV, le joueur qui a infligé le coup fatal pioche le nombre de cartes "Butin" indiqué sur la carte monstre. Il entre ensuite en phase de "Looting".</li>
+            </ul>
+
+            <h3>💰 PHASE LOOTING</h3>
+            <p>Lorsqu'un monstre est vaincu, le joueur ayant porté le coup fatal pioche le nombre de cartes butins indiqué. Il décide ensuite s'il souhaite conserver le butin pour lui ou le laisser aux autres joueurs. Il peut décider de le donner à un joueur ou de les laisser débattre pour savoir qui le récupérera.</p>
+            <p><strong>Ninja Loot :</strong> Lorsque les cartes butins sont révélées, un ou plusieurs joueurs peuvent décider de "Ninja Loot", c'est-à-dire voler l'équipement. Pour cela, le joueur qui a pioché le butin et les joueurs qui souhaitent "Ninja Loot" lancent un d6. Celui qui obtient le plus haut résultat choisit de garder UN butin, le reste s'il existe revient à celui qui a porté le coup fatal. Si le Ninja Looter perd son défi, il perd 3 PV.</p>
+
             <h3>📦 INVENTAIRE</h3>
-            <p>4 emplacements. Les symboles activent les effets des butins.</p>
-            <h3>🃏 ÉVÉNEMENTS</h3>
-            <p>Vote à la majorité (vert/rouge) selon le nombre exigé sur la carte.</p>
-            <h3>👻 SPECTRE</h3>
-            <p>Peut soigner/infliger 1 PV ou mélanger un inventaire (1 fois par joueur par descente).</p>
-            <h3>🎖️ RÔLES</h3>
-            <p>Tank: Armure +1PV • CàC: Arme +1PV • DPS: relance dé si coup fatal • Soutien: soin 3PV → gagne 1 richesse.</p>
-            <h3>🌊 CASCADE</h3>
-            <p>Tank→CàC→DPS→Soutien→Tank. Si la cible est absente, passer à la suivante.</p>
+            <p>Chaque héros possède un inventaire de 4 places. Les symboles indiqués sur les cases signifient que si un butin possédant le même symbole est placé ici, son effet s'activera. Dans le cas contraire, si le symbole est différent, son effet ne s'activera pas. (Les trésors n'ont pas besoin d'une case précise).</p>
+
+            <h3>🃏 LA PIOCHE</h3>
+            <p>La pioche est gérée au début de partie par le joueur ayant obtenu le jet de dés le plus élevé, puis ce privilège est transféré au joueur ayant vaincu le monstre lors du combat précédent. Dans la pioche se trouvent des cartes "Monstres" ainsi que des cartes "Événements". Lorsqu'une carte "Événements" apparaît, les joueurs entrent en phase de vote. Ils peuvent décider de donner un jeton vert ou un jeton rouge dans l'urne de vote. Lorsque tout le monde a voté, on vide l'urne pour révéler le résultat.</p>
+            <p>Les cartes "Événements" ont 4 degrés d'exigences. Certaines cartes ne demanderont qu'un seul vote VERT pour être appliquées, tandis que d'autres demanderont 4 votes VERT pour être appliquées. Si une carte "Événements" n'est pas appliquée, piocher la carte suivante.</p>
+            <p>Attention, si une carte demande X votes VERT et X votes ROUGES, il faut respecter le nombre exigé. Une carte à 2 votes VERT ne s'activera pas s'il y a 3 ou 4 votes VERT.</p>
+
+            <h3>🏃 LA FUITE / SORTIE DU DONJON</h3>
+            <p>Après la résolution d'une carte "Événements" ou à la fin d'un combat, un joueur peut mettre en pause la partie pour annoncer son départ du donjon. Il retire alors sa carte héros du plateau "Donjon", son inventaire est sauvegardé et il ne participera plus ni au combat, ni aux votes pendant le reste de la descente. Il lui est également impossible de récupérer du butin. Lorsque tous les joueurs ne sont plus dans le donjon (Fuite ou Mort), la descente prend fin et tout le monde est envoyé en phase de vente. Sur ce plateau, les joueurs peuvent vendre une partie de leur inventaire selon leur souhait. Si un joueur décide de conserver une partie de son inventaire, il l'utilisera lors de la descente suivante.</p>
+
+            <h3>👻 LE RÔLE DE SPECTRE</h3>
+            <p>Si par malheur vous venez à mourir lors d'une descente, ne pleurez pas trop vite, vous avez encore un rôle à accomplir. Vous devenez un spectre, vous ne pouvez plus participer aux votes ou aux phases de loot, vous ne pouvez pas être la cible d'attaques ou d'un événement, mais vous pouvez réaliser 3 actions lors d'un combat qui sont :</p>
+            <ul>
+                <li>Soigner 1 PV à un Joueur OU au monstre</li>
+                <li>Infliger 1 PV à un Joueur OU au monstre</li>
+                <li>Mélanger l'inventaire d'un Joueur (Une seule fois par Joueur et par descente)</li>
+            </ul>
+
+            <h3>🏆 FIN DE PARTIE</h3>
+            <p>Lorsque les joueurs ont accompli un total de 3 descentes et terminé leurs ventes, celui qui a obtenu le plus de richesse est déclaré vainqueur de la partie !</p>
+
+            <h3>🎖️ INFORMATIONS SUR LES JETONS RÔLES</h3>
+            <ul>
+                <li><strong>Tank :</strong> Les équipements "Armure" vous confèrent 1 PV supplémentaire (Même non équipé)</li>
+                <li><strong>CàC :</strong> Les équipements "Arme" vous confèrent 1 PV supplémentaire (Même non équipé)</li>
+                <li><strong>DPS à Distance :</strong> Vous pouvez relancer une fois votre dé d'attaque si vous êtes en capacité d'infliger un coup fatal</li>
+                <li><strong>Soutien :</strong> Vous pouvez soigner 3 PV à un joueur au lieu d'attaquer, gagnez 1 de richesse chaque fois que vous soignez un joueur via ce bonus</li>
+            </ul>
+            <p>Lorsqu'un Joueur est déclaré Leader, il réorganise la distribution des Jetons rôles. Lorsqu'un Joueur meurt ou prend la fuite, son Jeton est retiré de la descente en cours et ne pourra pas être redistribué à l'élection d'un nouveau Leader.</p>
+
+            <h3>🌊 LA RÈGLE DE CASCADE</h3>
+            <p>Si un monstre a pour cible un Jeton rôle qui n'est plus en jeu, la règle de Cascade s'applique. Prenons un exemple clair : Le CàC n'est plus dans le donjon et notre monstre est censé prendre pour cible le CàC. La règle de Cascade dit alors que c'est le DPS à distance qui sera la nouvelle cible du monstre.</p>
+            <p><strong>Tank → CàC → DPS à distance → Soutien → Tank</strong></p>
+            <p>Si un joueur est amené à subir plusieurs attaques en une action à cause de cette règle, n'appliquez que la première attaque.</p>
+
+            <h3>🔄 PRÉCISION ENTRE LES DESCENTES</h3>
+            <p>Les joueurs récupèrent automatiquement leurs PV de base (15) et appliquent de nouveau les effets de leurs équipements affectant les PV.</p>
+
+            <h3>⚠️ PRÉCISION SUR LES EFFETS NÉGATIFS ET BUTIN MAUDIT</h3>
+            <p>Ceux-ci s'appliquent même si le butin n'est pas sur la case de l'inventaire approprié.</p>
+
+            <h3>📦 PRÉCISION SUR LA GESTION DE L'INVENTAIRE</h3>
+            <p>Vous êtes libre de le gérer comme vous le souhaitez, mais il est interdit d'y toucher pendant les combats ou lors de la résolution d'une carte événement.</p>
+
+            <h3>🤝 NÉGOCIER ENTRE LES JOUEURS</h3>
+            <p>Les joueurs sont libres de s'échanger leurs butins ou leurs richesses, tant que les deux parties sont consentantes. Cependant, ces négociations sont suspendues lors d'une résolution de carte événement pour éviter toute magouille.</p>
+
+            <h3>🔥 PRÉCISION SUR LES BUTINS ENFLAMMÉS</h3>
+            <p>Le joueur peut décider de ne pas activer l'effet d'un butin enflammé.</p>
         </div>
     </div>
 </div>
@@ -236,51 +427,79 @@
 <div id="hoverZoomCard" class="hover-zoom-card"><img id="hoverZoomImg" src=""></div>
 
 <script>
-    // ========== GESTION DU NOMBRE DE BOSS POUR DESCENTE 3 ==========
-    let extraBossCount = 2; // Base = 2 bosses
-    
-    function updateBossDisplay() {
-        document.getElementById('bossCountDisplay').textContent = extraBossCount;
+    // ========== GESTION DES DÉS ==========
+    function rollDice(sides) {
+        return Math.floor(Math.random() * sides) + 1;
     }
     
+    function animateDice(element, newValue) {
+        element.classList.add('dice-rolling');
+        setTimeout(() => {
+            element.classList.remove('dice-rolling');
+        }, 300);
+    }
+    
+    // D4
+    const diceD4 = document.getElementById('diceD4');
+    const d4Value = document.getElementById('d4Value');
+    diceD4.addEventListener('click', () => {
+        const result = rollDice(4);
+        animateDice(diceD4, result);
+        d4Value.textContent = result;
+        // Animation visuelle supplémentaire
+        diceD4.style.transform = 'scale(0.95)';
+        setTimeout(() => { diceD4.style.transform = ''; }, 150);
+    });
+    
+    // D6
+    const diceD6 = document.getElementById('diceD6');
+    const d6Value = document.getElementById('d6Value');
+    diceD6.addEventListener('click', () => {
+        const result = rollDice(6);
+        animateDice(diceD6, result);
+        d6Value.textContent = result;
+        diceD6.style.transform = 'scale(0.95)';
+        setTimeout(() => { diceD6.style.transform = ''; }, 150);
+    });
+    
+    // D8
+    const diceD8 = document.getElementById('diceD8');
+    const d8Value = document.getElementById('d8Value');
+    diceD8.addEventListener('click', () => {
+        const result = rollDice(8);
+        animateDice(diceD8, result);
+        d8Value.textContent = result;
+        diceD8.style.transform = 'scale(0.95)';
+        setTimeout(() => { diceD8.style.transform = ''; }, 150);
+    });
+    
+    // ========== GESTION DU NOMBRE DE BOSS POUR DESCENTE 3 ==========
+    let extraBossCount = 2;
+    function updateBossDisplay() { document.getElementById('bossCountDisplay').textContent = extraBossCount; }
     function generateDescente3WithBosses() {
         const descente1Cards = [...lastDescente1Cards.monstres, ...lastDescente1Cards.evenements];
         const descente2Cards = [...lastDescente2Cards.monstres, ...lastDescente2Cards.evenements];
         const bosses = getRandomElements(ALL_BOSS, extraBossCount);
-        const allCards = [...descente1Cards, ...descente2Cards, ...bosses];
-        return shuffleArray(allCards);
+        return shuffleArray([...descente1Cards, ...descente2Cards, ...bosses]);
     }
-    
-    // Bouton pour ajouter un boss
     document.getElementById('addBossBtn').addEventListener('click', () => {
-        if (extraBossCount < 3) {
-            extraBossCount++;
-            updateBossDisplay();
-            alert(`Descente 3 aura maintenant ${extraBossCount} boss !`);
-        } else {
-            alert("Maximum 3 bosses atteint !");
-        }
+        if (extraBossCount < 3) { extraBossCount++; updateBossDisplay(); alert(`Descente 3 aura maintenant ${extraBossCount} boss !`); }
+        else alert("Maximum 3 bosses atteint !");
     });
     
     // ========== SLIDER DONJON ==========
     const donjonHpSlider = document.getElementById('donjonHpSlider');
     const donjonHpValue = document.getElementById('donjonHpValue');
-    
-    donjonHpSlider.addEventListener('input', (e) => {
-        donjonHpValue.textContent = e.target.value;
-        database.ref('/donjonHp').set(parseInt(e.target.value));
-    });
+    donjonHpSlider.addEventListener('input', (e) => { donjonHpValue.textContent = e.target.value; database.ref('/donjonHp').set(parseInt(e.target.value)); });
     
     // ========== ZOOM ==========
     const hoverZoomDiv = document.getElementById('hoverZoomCard');
     const hoverZoomImg = document.getElementById('hoverZoomImg');
-    
     function showHoverZoom(imageUrl, mouseX, mouseY) {
         if (!imageUrl) return;
         hoverZoomImg.src = imageUrl;
         hoverZoomDiv.classList.add('visible');
-        let left = mouseX + 20;
-        let top = mouseY - 300;
+        let left = mouseX + 20, top = mouseY - 300;
         const maxLeft = window.innerWidth - 430;
         if (left > maxLeft) left = maxLeft;
         if (left < 10) left = 10;
@@ -288,7 +507,6 @@
         hoverZoomDiv.style.left = left + 'px';
         hoverZoomDiv.style.top = top + 'px';
     }
-    
     function hideHoverZoom() { hoverZoomDiv.classList.remove('visible'); }
     
     // ========== MODALE ==========
@@ -301,13 +519,11 @@
     const firebaseConfig = { databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/" };
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    
-    const donjonRef = database.ref('/donjon_final_v8');
-    const butinsRef = database.ref('/butins_final_v8');
+    const donjonRef = database.ref('/donjon_final_v11');
+    const butinsRef = database.ref('/butins_final_v11');
     
     function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
-    // CARTES
     const ALL_MONSTRES = []; for (let i = 0; i < 32; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
     const ALL_EVENEMENTS = []; for (let i = 0; i < 47; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
     const ALL_BOSS = []; for (let i = 0; i < 8; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
@@ -321,7 +537,6 @@
     
     let lastDescente1Cards = { monstres: [], evenements: [] };
     let lastDescente2Cards = { monstres: [], evenements: [] };
-    
     function generateDescente1() {
         const monstres = getRandomElements(ALL_MONSTRES, 8);
         const evenements = getRandomElements(ALL_EVENEMENTS, 12);
@@ -337,18 +552,27 @@
         return shuffleArray([...monstres, ...evenements]);
     }
     
+    // ========== DÉFINITION DES EMOJIS PAR INVENTAIRE ==========
+    const inventoryEmojis = [
+        ['🗡️', '🗡️', '🛡️', '🛡️'],
+        ['🛡️', '🛡️', '💍', '💍'],
+        ['💍', '💍', '🗡️', '🗡️'],
+        ['🗡️', '🛡️', '💍', '🗡️']
+    ];
+    
     let allSlots = [];
     let roleStates = [0, 0, 0, 0];
     const roles = [{ emoji: "🛡️", classe: "bleu" }, { emoji: "⚔️", classe: "rouge" }, { emoji: "🏹", classe: "vert" }, { emoji: "📖", classe: "blanc" }];
     
     class InventorySlot {
-        constructor(invNum, slotNum, firebaseRef, element) {
+        constructor(invNum, slotNum, firebaseRef, element, emoji) {
             this.invNum = invNum;
             this.slotNum = slotNum;
             this.firebaseRef = firebaseRef;
             this.element = element;
             this.currentCard = null;
             this.flipped = false;
+            this.emoji = emoji;
             this.init();
             this.setupDragAndDrop();
         }
@@ -373,7 +597,11 @@
                 cardEl.addEventListener('click', () => { this.flipped = !this.flipped; this.save(); });
                 cardEl.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'move', fromInv: this.invNum, fromSlot: this.slotNum, card: this.currentCard })); });
             } else {
-                this.element.innerHTML = `<div class="empty-slot">✨ Vide ✨<br><small>Glissez une carte</small></div>`;
+                let emojiLabel = "";
+                if (this.emoji === '🗡️') emojiLabel = "Épée";
+                else if (this.emoji === '🛡️') emojiLabel = "Bouclier";
+                else if (this.emoji === '💍') emojiLabel = "Anneau";
+                this.element.innerHTML = `<div class="empty-slot"><span class="slot-emoji">${this.emoji}</span><span class="slot-label">${emojiLabel}</span></div>`;
             }
         }
         
@@ -447,8 +675,9 @@
                 const slotDiv = document.createElement('div');
                 slotDiv.className = 'slot';
                 slotsGrid.appendChild(slotDiv);
-                const slotRef = database.ref(`/slots_v8/inv${inv}_slot${slot}`);
-                allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
+                const slotRef = database.ref(`/slots_v11/inv${inv}_slot${slot}`);
+                const emoji = inventoryEmojis[inv-1][slot-1];
+                allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv, emoji));
             }
             
             // Sliders
@@ -632,7 +861,6 @@
     
     buildInventories();
     
-    // ========== BOUTONS ==========
     document.getElementById('descente1Btn').addEventListener('click', () => {
         if (confirm("Lancer la DESCENTE 1 ?\n8 monstres + 12 événements")) donjonPioche.setNewDeck(generateDescente1());
     });
@@ -651,8 +879,7 @@
         if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) {
             butinsPioche.resetDeck(); donjonPioche.setNewDeck([]); allSlots.forEach(s => s.clear());
             lastDescente1Cards = { monstres: [], evenements: [] }; lastDescente2Cards = { monstres: [], evenements: [] };
-            extraBossCount = 2;
-            updateBossDisplay();
+            extraBossCount = 2; updateBossDisplay();
             for (let i = 1; i <= 4; i++) { database.ref(`/sliders/inv${i}_slider1`).set(0); database.ref(`/sliders/inv${i}_slider2`).set(0); }
             database.ref('/donjonHp').set(50);
         }
@@ -663,10 +890,9 @@
         if (val !== null && donjonHpSlider.value != val) { donjonHpSlider.value = val; donjonHpValue.textContent = val; }
     });
     
-    // ========== PRÉSENCE ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_v8');
+    const connectedPlayersRef = database.ref('/presence_v11');
     presenceRef.on('value', (snap) => {
         if (snap.val() === true && !myPresenceKey) {
             myPresenceKey = connectedPlayersRef.push().key;
