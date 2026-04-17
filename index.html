@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Need & Greed - Donjon & Butins</title>
+    <title>Need & Greed - Donjon & Butins (Pioches synchronisées)</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
@@ -49,11 +49,7 @@
             border: 2px solid #c47b3e;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        .dice:hover {
-            transform: scale(1.05);
-            border-color: #ffaa44;
-            box-shadow: 0 0 15px rgba(255,170,68,0.5);
-        }
+        .dice:hover { transform: scale(1.05); border-color: #ffaa44; box-shadow: 0 0 15px rgba(255,170,68,0.5); }
         .dice:active { transform: scale(0.95); }
         .dice-icon { font-size: 2.5rem; margin-bottom: 8px; }
         .dice-value { font-size: 1.6rem; font-weight: bold; color: #ffaa44; background: #1a1a1a; width: 55px; text-align: center; border-radius: 30px; padding: 5px; }
@@ -542,11 +538,11 @@
     }
     
     // ========== CONSTRUCTION DES INVENTAIRES ==========
-    const donjonRef = database.ref('/donjon_sync');
-    const butinsRef = database.ref('/butins_sync');
-    const inventoryNamesRef = database.ref('/inventory_names');
-    const slidersRef = database.ref('/sliders');
-    const slotsBaseRef = database.ref('/slots');
+    const donjonRef = database.ref('/donjon_sync_final');
+    const butinsRef = database.ref('/butins_sync_final');
+    const inventoryNamesRef = database.ref('/inventory_names_final');
+    const slidersRef = database.ref('/sliders_final');
+    const slotsBaseRef = database.ref('/slots_final');
     
     let butinsPioche = null;
     let donjonPioche = null;
@@ -634,57 +630,36 @@
         } catch(err) { console.log(err); }
     };
     
-    // ========== PIOCHES SYNCHRONISÉES ==========
+    // ========== PIOCHES SYNCHRONISÉES (VERSION CORRIGÉE) ==========
+    // On utilise des transactions Firebase pour éviter les conflits de concurrence
     class Pioche {
         constructor(name, cardList, firebaseRef, uiIds, isDonjon = false, isButins = false) {
             this.name = name; this.cardList = cardList; this.firebaseRef = firebaseRef; this.isDonjon = isDonjon; this.isButins = isButins;
-            this.currentDeck = []; this.currentCard = null; this.isUpdating = false; this.isFinished = false;
+            this.currentCard = null; 
+            this.isUpdating = false; 
+            this.isFinished = false;
             this.ui = {
-                cardArea: document.getElementById(uiIds.cardArea), cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
-                drawBtn: document.getElementById(uiIds.drawBtn), resetBtn: document.getElementById(uiIds.resetBtn),
+                cardArea: document.getElementById(uiIds.cardArea), 
+                cardsLeftSpan: document.getElementById(uiIds.cardsLeft),
+                drawBtn: document.getElementById(uiIds.drawBtn), 
+                resetBtn: document.getElementById(uiIds.resetBtn),
                 compositionSpan: uiIds.composition ? document.getElementById(uiIds.composition) : null,
                 finishedBadge: uiIds.finishedBadge ? document.getElementById(uiIds.finishedBadge) : null
             };
-            this.init(); this.setupListeners();
+            this.init(); 
+            this.setupListeners();
         }
-        removeCurrentCard() { if(this.isButins && this.currentCard) { this.currentCard = null; this.saveCurrentCard(null); this.displayCard(null); } }
-        saveDeck() { if(this.isUpdating) return; this.firebaseRef.child('deck').set(this.currentDeck.map(c => ({ id: c.id, image: c.image, type: c.type }))); if(this.isDonjon) this.firebaseRef.child('isFinished').set(this.isFinished); }
-        saveCurrentCard(card) { if(this.isUpdating) return; this.firebaseRef.child('currentCard').set(card ? { id: card.id, image: card.image, type: card.type } : null); }
-        loadDeckFromData(data) {
-            if(!data || !Array.isArray(data) || data.length === 0) {
-                if(this.isDonjon) { this.currentDeck = []; this.isFinished = true; }
-                else { this.currentDeck = shuffleArray([...this.cardList]); this.isFinished = false; }
-                this.updateFinishedState(); return;
-            }
-            this.currentDeck = data.filter(c => c && c.image);
-            if(this.currentDeck.length === 0) {
-                if(this.isDonjon) this.isFinished = true;
-                else { this.currentDeck = shuffleArray([...this.cardList]); this.isFinished = false; }
-            } else this.isFinished = false;
-            this.updateFinishedState();
-        }
-        updateFinishedState() {
-            if(!this.isDonjon) return;
-            if(this.isFinished) {
-                this.ui.drawBtn.classList.add('disabled'); this.ui.drawBtn.disabled = true;
-                if(this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
-                if(!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>';
-            } else {
-                this.ui.drawBtn.classList.remove('disabled'); this.ui.drawBtn.disabled = false;
-                if(this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'none';
-            }
-        }
-        updateCompositionDisplay() {
-            if(!this.ui.compositionSpan || !this.isDonjon) return;
-            if(!this.currentDeck || this.currentDeck.length === 0) { this.ui.compositionSpan.innerText = '🏁 Terminé'; return; }
-            const nbM = this.currentDeck.filter(c => c.type === 'monstre').length;
-            const nbE = this.currentDeck.filter(c => c.type === 'evenement').length;
-            const nbB = this.currentDeck.filter(c => c.type === 'boss').length;
-            this.ui.compositionSpan.innerText = nbB > 0 ? `🐉${nbM} ⚡${nbE} 👑${nbB}` : `🐉${nbM} ⚡${nbE}`;
-        }
+        
+        // Afficher la carte courante
         displayCard(card) {
-            if(this.isFinished && !card) { this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>'; return; }
-            if(!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Choisissez une descente !</div>'; return; }
+            if(this.isFinished && !card) { 
+                this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>'; 
+                return; 
+            }
+            if(!card) { 
+                this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Choisissez une descente !</div>'; 
+                return; 
+            }
             this.ui.cardArea.innerHTML = `<div class="card" draggable="true" data-image="${card.image}"><img src="${card.image}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
             const cardEl = this.ui.cardArea.querySelector('.card');
             cardEl.onmouseenter = (e) => { const src = cardEl.getAttribute('data-image'); if(src) showHoverZoom(src, e.clientX, e.clientY); };
@@ -692,44 +667,151 @@
             cardEl.onmouseleave = () => hideHoverZoom();
             cardEl.ondragstart = (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'butin', id: card.id, image: card.image })); };
         }
-        updateCardsLeftDisplay() { this.ui.cardsLeftSpan.innerText = this.currentDeck.length; if(this.isDonjon) this.updateCompositionDisplay(); }
+        
+        updateCardsLeftDisplay(count) { 
+            this.ui.cardsLeftSpan.innerText = count; 
+            if(this.isDonjon && this.ui.compositionSpan && this.currentDeck) {
+                const nbM = this.currentDeck.filter(c => c.type === 'monstre').length;
+                const nbE = this.currentDeck.filter(c => c.type === 'evenement').length;
+                const nbB = this.currentDeck.filter(c => c.type === 'boss').length;
+                this.ui.compositionSpan.innerText = nbB > 0 ? `🐉${nbM} ⚡${nbE} 👑${nbB}` : `🐉${nbM} ⚡${nbE}`;
+            }
+        }
+        
+        updateFinishedState(isFinished) {
+            if(!this.isDonjon) return;
+            this.isFinished = isFinished;
+            if(isFinished) {
+                this.ui.drawBtn.classList.add('disabled'); 
+                this.ui.drawBtn.disabled = true;
+                if(this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'inline-block';
+                if(!this.currentCard) this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>';
+            } else {
+                this.ui.drawBtn.classList.remove('disabled'); 
+                this.ui.drawBtn.disabled = false;
+                if(this.ui.finishedBadge) this.ui.finishedBadge.style.display = 'none';
+            }
+        }
+        
+        removeCurrentCard() { 
+            if(this.isButins && this.currentCard) { 
+                this.currentCard = null; 
+                this.firebaseRef.child('currentCard').set(null);
+                this.displayCard(null); 
+            } 
+        }
+        
+        // Piocher une carte (transaction pour éviter les conflits)
         drawCard() {
             if(this.isUpdating) return;
             if(this.isFinished && this.isDonjon) return;
-            if(this.currentDeck.length === 0) {
-                if(this.isDonjon) { this.isFinished = true; this.saveDeck(); this.updateFinishedState(); this.displayCard(null); }
-                else if(this.isButins) { this.currentDeck = shuffleArray([...this.cardList]); this.saveDeck(); const nc = this.currentDeck.shift(); this.currentCard = nc; this.saveCurrentCard(nc); this.displayCard(nc); this.updateCardsLeftDisplay(); }
-                return;
-            }
-            const nc = this.currentDeck.shift();
-            this.currentCard = nc;
-            this.saveCurrentCard(nc);
-            this.saveDeck();
-            this.displayCard(nc);
-            this.updateCardsLeftDisplay();
-            if(this.isDonjon && this.currentDeck.length === 0) { this.isFinished = true; this.saveDeck(); this.updateFinishedState(); }
-        }
-        resetDeck() { if(this.isUpdating) return; if(this.isButins) { this.currentDeck = shuffleArray([...this.cardList]); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); } }
-        setNewDeck(nd) { if(this.isUpdating) return; this.currentDeck = [...nd]; this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); }
-        init() {
-            this.firebaseRef.child('deck').once('value', (snap) => {
-                const data = snap.val();
-                if(!data || data.length === 0) {
-                    if(this.isDonjon) { this.currentDeck = []; this.isFinished = true; }
-                    else { this.currentDeck = shuffleArray([...this.cardList]); this.isFinished = false; }
-                    this.saveDeck(); this.updateCardsLeftDisplay(); this.updateFinishedState();
-                } else { this.loadDeckFromData(data); this.updateCardsLeftDisplay(); }
+            
+            // Utiliser une transaction pour garantir l'atomicité
+            this.firebaseRef.child('deck').transaction((currentDeck) => {
+                if (!currentDeck || !Array.isArray(currentDeck) || currentDeck.length === 0) {
+                    if(this.isDonjon) {
+                        this.isFinished = true;
+                        this.firebaseRef.child('isFinished').set(true);
+                        this.displayCard(null);
+                        this.updateCardsLeftDisplay(0);
+                    } else if(this.isButins) {
+                        const newDeck = shuffleArray([...this.cardList]);
+                        this.firebaseRef.child('deck').set(newDeck);
+                        const newCard = newDeck.shift();
+                        this.firebaseRef.child('currentCard').set(newCard);
+                        this.updateCardsLeftDisplay(newDeck.length);
+                    }
+                    return;
+                }
+                
+                // Prendre la première carte
+                const newCard = currentDeck.shift();
+                this.firebaseRef.child('currentCard').set(newCard);
+                this.updateCardsLeftDisplay(currentDeck.length);
+                
+                if(this.isDonjon && currentDeck.length === 0) {
+                    this.firebaseRef.child('isFinished').set(true);
+                }
+                
+                return currentDeck;
             });
-            if(this.isDonjon) this.firebaseRef.child('isFinished').once('value', (snap) => { if(snap.val() !== null) { this.isFinished = snap.val(); this.updateFinishedState(); } });
-            this.firebaseRef.child('currentCard').once('value', (snap) => { const cd = snap.val(); if(cd && cd.image && !this.isFinished) { this.currentCard = cd; this.displayCard(cd); } else this.displayCard(null); });
         }
-        setupListeners() {
-            this.firebaseRef.child('deck').on('value', (snap) => { if(this.isUpdating) return; this.isUpdating = true; this.loadDeckFromData(snap.val()); this.updateCardsLeftDisplay(); setTimeout(() => this.isUpdating = false, 100); });
-            if(this.isDonjon) this.firebaseRef.child('isFinished').on('value', (snap) => { if(this.isUpdating) return; this.isUpdating = true; this.isFinished = snap.val() === true; this.updateFinishedState(); setTimeout(() => this.isUpdating = false, 100); });
-            this.firebaseRef.child('currentCard').on('value', (snap) => { if(this.isUpdating) return; this.isUpdating = true; const cd = snap.val(); if(cd && cd.image && !this.isFinished) { this.currentCard = cd; this.displayCard(cd); } else if(!this.isFinished) this.displayCard(null); setTimeout(() => this.isUpdating = false, 100); });
+        
+        resetDeck() { 
+            if(this.isUpdating) return; 
+            if(this.isButins) { 
+                const newDeck = shuffleArray([...this.cardList]);
+                this.firebaseRef.child('deck').set(newDeck);
+                this.firebaseRef.child('currentCard').set(null);
+                this.updateCardsLeftDisplay(newDeck.length);
+                this.updateFinishedState(false);
+                this.displayCard(null);
+            } 
+        }
+        
+        setNewDeck(newDeck) { 
+            if(this.isUpdating) return; 
+            this.firebaseRef.child('deck').set([...newDeck]);
+            this.firebaseRef.child('currentCard').set(null);
+            this.firebaseRef.child('isFinished').set(false);
+            this.updateCardsLeftDisplay(newDeck.length);
+            this.updateFinishedState(false);
+            this.displayCard(null);
+            // Sauvegarder le deck localement pour l'affichage de la composition
+            this.currentDeck = [...newDeck];
+            if(this.isDonjon && this.ui.compositionSpan) {
+                const nbM = this.currentDeck.filter(c => c.type === 'monstre').length;
+                const nbE = this.currentDeck.filter(c => c.type === 'evenement').length;
+                const nbB = this.currentDeck.filter(c => c.type === 'boss').length;
+                this.ui.compositionSpan.innerText = nbB > 0 ? `🐉${nbM} ⚡${nbE} 👑${nbB}` : `🐉${nbM} ⚡${nbE}`;
+            }
+        }
+        
+        init() {
+            // Écouter les changements du deck (pour le compteur)
+            this.firebaseRef.child('deck').on('value', (snap) => {
+                const data = snap.val();
+                if(data && Array.isArray(data)) {
+                    this.currentDeck = data;
+                    this.updateCardsLeftDisplay(data.length);
+                    if(this.isDonjon && data.length === 0 && !this.isFinished) {
+                        this.firebaseRef.child('isFinished').set(true);
+                    }
+                } else if(!this.isButins) {
+                    this.updateCardsLeftDisplay(0);
+                }
+            });
+            
+            // Écouter l'état "fini" pour le donjon
+            if(this.isDonjon) {
+                this.firebaseRef.child('isFinished').on('value', (snap) => {
+                    const finished = snap.val() === true;
+                    this.updateFinishedState(finished);
+                });
+            }
+            
+            // Écouter la carte courante
+            this.firebaseRef.child('currentCard').on('value', (snap) => {
+                const cardData = snap.val();
+                if(cardData && cardData.image) {
+                    this.currentCard = cardData;
+                    this.displayCard(cardData);
+                } else {
+                    this.currentCard = null;
+                    if(!this.isFinished) this.displayCard(null);
+                }
+            });
+            
+            // Bouton pioche
             this.ui.drawBtn.onclick = () => this.drawCard();
-            if(this.ui.resetBtn && this.isButins) this.ui.resetBtn.onclick = () => { if(confirm("Remettre toutes les cartes Butins ?")) this.resetDeck(); };
+            
+            // Bouton reset pour les butins
+            if(this.ui.resetBtn && this.isButins) {
+                this.ui.resetBtn.onclick = () => { if(confirm("Remettre toutes les cartes Butins ?")) this.resetDeck(); };
+            }
         }
+        
+        setupListeners() {}
     }
     
     donjonPioche = new Pioche('Donjon', [], donjonRef, { cardArea: 'donjonCardArea', cardsLeft: 'donjonCardsLeft', drawBtn: 'donjonDrawBtn', resetBtn: null, composition: 'donjonComposition', finishedBadge: 'donjonFinishedBadge' }, true, false);
@@ -748,28 +830,26 @@
     
     document.getElementById('resetAllBtn').onclick = () => {
         if(confirm("⚠️ RÉINITIALISATION TOTALE ?")) {
-            butinsPioche.resetDeck(); donjonPioche.setNewDeck([]); allSlots.forEach(s => s.clear());
-            lastDescente1Cards = { monstres: [], evenements: [] }; lastDescente2Cards = { monstres: [], evenements: [] };
-            extraBossCount = 2; updateBossDisplay();
+            butinsPioche.resetDeck(); 
+            donjonPioche.setNewDeck([]); 
+            allSlots.forEach(s => s.clear());
+            lastDescente1Cards = { monstres: [], evenements: [] }; 
+            lastDescente2Cards = { monstres: [], evenements: [] };
+            extraBossCount = 2; 
+            updateBossDisplay();
             for(let i = 1; i <= 4; i++) { slidersRef.child(`inv${i}_s1`).set(0); slidersRef.child(`inv${i}_s2`).set(0); }
             database.ref('/donjonHp').set(50);
             for(let i = 1; i <= 4; i++) { inventoryNamesRef.child(`inv${i}`).set(`Joueur ${i}`); }
             for(let i = 1; i <= 4; i++) { rolesRef.child(`inv${i}`).set(0); }
             roleStates = [0, 0, 0, 0];
             voteRef.set({ vert: 0, rouge: 0 });
-            // Reset des pioches
-            donjonRef.child('deck').set([]);
-            donjonRef.child('currentCard').set(null);
-            donjonRef.child('isFinished').set(false);
-            butinsRef.child('deck').set([]);
-            butinsRef.child('currentCard').set(null);
         }
     };
     
     // ========== PRÉSENCE ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence');
+    const connectedPlayersRef = database.ref('/presence_final');
     presenceRef.on('value', (snap) => { if(snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
 </script>
