@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Need & Greed - Donjon & Butins (3 types de descente)</title>
+    <title>Need & Greed - Donjon & Butins</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
@@ -16,7 +16,6 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            cursor: default;
         }
         .game-container {
             max-width: 1600px;
@@ -27,8 +26,6 @@
             padding: 30px;
             border: 1px solid #c9aa6f;
             text-align: center;
-            position: relative;
-            z-index: 1;
         }
         .top-bar {
             display: flex;
@@ -46,16 +43,17 @@
         }
         .players-online { background: #00000066; padding: 5px 16px; border-radius: 40px; font-size: 0.9rem; }
         .rules-btn { background: #ffaa44; border: none; color: #2d1f12; font-weight: bold; padding: 6px 18px; border-radius: 30px; cursor: pointer; transition: all 0.2s; }
-        .rules-btn:hover { background: #ffcc66; transform: scale(0.97); }
-        .reset-btn { background: #c47b3e; border: none; color: white; font-weight: bold; padding: 6px 18px; border-radius: 30px; cursor: pointer; transition: all 0.2s; }
+        .rules-btn:hover { background: #ffcc66; }
+        .reset-btn { background: #c47b3e; border: none; color: white; font-weight: bold; padding: 6px 18px; border-radius: 30px; cursor: pointer; }
         .reset-btn:hover { background: #a85f2c; }
+        
         .pioches-container { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; margin-bottom: 40px; }
         .pioche { flex: 1; min-width: 320px; background: #2c2b28; border-radius: 32px; padding: 25px 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .pioche-title { font-size: 1.8rem; font-weight: bold; margin-bottom: 20px; padding: 10px; border-radius: 50px; background: #3f2a1f; color: #fef0cf; }
         .pioche-title.donjon { background: #5a2d2d; }
         .pioche-title.butins { background: #2d5a3b; }
         .card-area { background: #1a1a1a; border-radius: 20px; padding: 30px 20px; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px; }
-        .card { background: transparent; text-align: center; transition: transform 0.2s; max-width: 320px; width: 100%; cursor: pointer; position: relative; }
+        .card { background: transparent; text-align: center; transition: transform 0.2s; max-width: 320px; width: 100%; cursor: grab; }
         .card:active { cursor: grabbing; }
         .card img { max-width: 100%; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: block; margin: 0 auto; pointer-events: none; }
         .empty-card { color: #ecd9b4; font-size: 1.2rem; text-align: center; padding: 40px; background: #3f2a1f66; border-radius: 24px; }
@@ -69,111 +67,52 @@
         .reset-pioche-btn:hover { background: #c47b3e; }
         
         .button-group { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
-        .descente-btn { background: #6b3e8f; border: none; color: white; font-weight: bold; padding: 8px 16px; border-radius: 30px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
-        .descente-btn:hover { background: #8b5eb3; transform: scale(1.02); }
+        .descente-btn { background: #6b3e8f; border: none; color: white; font-weight: bold; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-size: 0.9rem; }
+        .descente-btn:hover { background: #8b5eb3; }
         .descente-btn.descente1 { background: #2d5a3b; }
         .descente-btn.descente2 { background: #5a2d2d; }
         .descente-btn.descente3 { background: #8b5eb3; }
+        .boss-badge { background: #ffaa44; color: #2d1f12; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .add-boss-btn { background: #ffaa44; border: none; color: #2d1f12; font-weight: bold; padding: 2px 8px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; margin-left: 5px; }
+        .add-boss-btn:hover { background: #ffcc66; }
         
         .badge { background: #00000099; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; }
         .finished-badge { background: #ffaa44; color: #2d1f12; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; font-weight: bold; }
         
-        /* ZONES ROLES CIRCULAIRES - Un par inventaire */
-        .inventories-header {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-        .role-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            border: 3px solid #ffaa44;
-            background: #2c5f8a;
-            flex-shrink: 0;
-        }
-        .role-circle:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        }
-        .role-circle.bleu { background: #2c5f8a; box-shadow: 0 0 15px rgba(44,95,138,0.5); }
-        .role-circle.rouge { background: #8a2c2c; box-shadow: 0 0 15px rgba(138,44,44,0.5); }
-        .role-circle.vert { background: #2c8a4a; box-shadow: 0 0 15px rgba(44,138,74,0.5); }
-        .role-circle.blanc { background: #8a7a5a; box-shadow: 0 0 15px rgba(138,122,90,0.5); }
+        /* SLIDER DONJON */
+        .donjon-slider-wrapper { margin-top: 15px; padding-top: 10px; border-top: 1px solid #c47b3e; display: flex; justify-content: center; }
+        .donjon-slider-container { background: #1a1a1a; border-radius: 30px; padding: 8px 20px; display: inline-flex; align-items: center; gap: 15px; }
+        .donjon-slider-container label { color: #ffaa44; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .donjon-slider-container input { width: 150px; cursor: pointer; accent-color: #ffaa44; }
+        .donjon-slider-container span { color: #fef0cf; font-weight: bold; font-size: 1rem; min-width: 35px; }
         
+        /* INVENTAIRES */
         .inventories-container { margin-top: 20px; }
         .inventories-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; padding: 10px 30px; border-radius: 50px; background: #3f2a1f; color: #fef0cf; display: inline-block; }
-        .inventories-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .inventory-wrapper {
-            flex: 1;
-            min-width: 280px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .inventory-box {
-            width: 100%;
-            background: #2c2b28;
-            border-radius: 24px;
-            padding: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
+        .inventories-grid { display: flex; flex-wrap: wrap; gap: 25px; justify-content: center; margin-top: 20px; }
+        .inventory-wrapper { flex: 1; min-width: 280px; display: flex; flex-direction: column; align-items: center; }
+        .inventory-box { width: 100%; background: #2c2b28; border-radius: 24px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .inventory-title { font-size: 1.3rem; font-weight: bold; color: #ffaa44; margin-bottom: 15px; padding: 8px; background: #1a1a1a; border-radius: 20px; text-align: center; }
         .slots-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px; }
-        .slot { background: #1a1a1a; border-radius: 16px; padding: 15px; min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #c47b3e; transition: all 0.2s; position: relative; }
+        .slot { background: #1a1a1a; border-radius: 16px; padding: 15px; min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #c47b3e; transition: all 0.2s; }
         .slot.drag-over { background: #4a3a2a; border-color: #ffaa44; }
-        .slot-card { width: 100%; max-width: 110px; cursor: pointer; transition: transform 0.2s; position: relative; }
+        .slot-card { width: 100%; max-width: 110px; cursor: pointer; transition: transform 0.2s; }
         .slot-card img { width: 100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: block; }
         .slot-card.flipped { transform: rotate(180deg); }
         .empty-slot { color: #ecd9b4; font-size: 0.8rem; text-align: center; padding: 20px 5px; }
         
-        /* STYLE DES SLIDERS */
-        .sliders-container {
-            display: flex;
-            gap: 15px;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #c47b3e;
-        }
-        .slider-wrapper {
-            flex: 1;
-            text-align: center;
-        }
-        .slider-wrapper label {
-            display: block;
-            color: #ffaa44;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .slider-wrapper input {
-            width: 100%;
-            cursor: pointer;
-            accent-color: #ffaa44;
-        }
-        .slider-wrapper span {
-            display: block;
-            color: #fef0cf;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-top: 5px;
-        }
+        .sliders-container { display: flex; gap: 15px; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px solid #c47b3e; }
+        .slider-wrapper { flex: 1; text-align: center; }
+        .slider-wrapper label { display: block; color: #ffaa44; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; }
+        .slider-wrapper input { width: 100%; cursor: pointer; accent-color: #ffaa44; }
+        .slider-wrapper span { display: block; color: #fef0cf; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
+        
+        .role-circle { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 3px solid #ffaa44; margin-bottom: 10px; }
+        .role-circle:hover { transform: scale(1.05); }
+        .role-circle.bleu { background: #2c5f8a; }
+        .role-circle.rouge { background: #8a2c2c; }
+        .role-circle.vert { background: #2c8a4a; }
+        .role-circle.blanc { background: #8a7a5a; }
         
         .clear-inv { background: #c47b3e88; border: 1px solid #c47b3e; color: white; font-size: 0.7rem; padding: 5px 12px; border-radius: 20px; cursor: pointer; margin-top: 10px; width: 100%; }
         .clear-inv:hover { background: #c47b3e; }
@@ -181,80 +120,23 @@
         .trash-container { margin-top: 30px; display: flex; justify-content: center; }
         .trash-zone { background: #2c2b28; border-radius: 30px; padding: 15px 30px; display: inline-flex; align-items: center; gap: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: all 0.2s; border: 2px solid #c47b3e; }
         .trash-zone.drag-over { background: #4a2a2a; border-color: #ff4444; transform: scale(1.02); }
-        .trash-icon { font-size: 3rem; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
+        .trash-icon { font-size: 3rem; }
         .trash-text { color: #fef0cf; font-size: 1.2rem; font-weight: bold; }
         .trash-sub { color: #ecd9b4; font-size: 0.8rem; }
         
         footer { font-size: 0.7rem; text-align: center; margin-top: 25px; color: #5e4a31; }
-
-        .hover-zoom-card {
-            position: fixed;
-            z-index: 10000;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            opacity: 0;
-            transform: scale(0.8);
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
-        }
-        .hover-zoom-card.visible { opacity: 1; transform: scale(1); }
-        .hover-zoom-card img { width: 450px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 3px solid #ffaa44; }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
-        .hover-zoom-card.visible { animation: zoomIn 0.15s ease-out; }
-
-        /* MODALE DES RÈGLES */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 20000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #2c2b28;
-            margin: 2% auto;
-            padding: 20px;
-            border-radius: 30px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            color: #fef0cf;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 2px solid #ffaa44;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #ffaa44;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
+        .hover-zoom-card { position: fixed; z-index: 10000; pointer-events: none; transition: opacity 0.2s ease; opacity: 0; }
+        .hover-zoom-card.visible { opacity: 1; }
+        .hover-zoom-card img { width: 400px; border-radius: 16px; border: 3px solid #ffaa44; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .modal { display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        .modal-content { background: #2c2b28; margin: 2% auto; padding: 20px; border-radius: 30px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; color: #fef0cf; border: 2px solid #ffaa44; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffaa44; padding-bottom: 15px; margin-bottom: 20px; }
         .modal-header h2 { color: #ffaa44; font-size: 1.8rem; }
-        .close-modal {
-            background: #c47b3e;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-        .close-modal:hover { background: #a85f2c; transform: scale(1.05); }
-        .modal-body { line-height: 1.5; }
-        .modal-body h3 { color: #ffaa44; margin: 20px 0 10px 0; font-size: 1.3rem; }
-        .modal-body h3:first-of-type { margin-top: 0; }
-        .modal-body p { margin-bottom: 10px; text-align: left; }
+        .close-modal { background: #c47b3e; border: none; color: white; font-size: 1.5rem; font-weight: bold; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; }
+        .close-modal:hover { background: #a85f2c; }
+        .modal-body h3 { color: #ffaa44; margin: 20px 0 10px 0; }
+        .modal-body p, .modal-body li { text-align: left; }
         .modal-body ul, .modal-body ol { margin-left: 25px; margin-bottom: 15px; }
-        .modal-body li { margin: 8px 0; text-align: left; }
-        .modal-body hr { border-color: #c47b3e; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -262,7 +144,7 @@
 <div class="game-container">
     <div class="top-bar">
         <div class="players-online" id="playerCountDisplay">👥 Connectés: --</div>
-        <div>🎲 Need & Greed - Donjon & Butins (3 types de descente)</div>
+        <div>🎲 Need & Greed - Donjon & Butins</div>
         <div style="display: flex; gap: 10px;">
             <button class="rules-btn" id="rulesBtn">📖 RÈGLES</button>
             <button class="reset-btn" id="resetAllBtn">🔄 Reset complet</button>
@@ -270,17 +152,31 @@
     </div>
 
     <div class="pioches-container">
+        <!-- PIOCHE DONJON -->
         <div class="pioche">
             <div class="pioche-title donjon">🏰 DONJON 🏰</div>
             <div class="card-area" id="donjonCardArea"><div class="empty-card">⚔️ Choisissez une descente !</div></div>
+            <div class="donjon-slider-wrapper">
+                <div class="donjon-slider-container">
+                    <label>🏰 PV DONJON</label>
+                    <input type="range" id="donjonHpSlider" min="0" max="50" value="50">
+                    <span id="donjonHpValue">50</span>
+                </div>
+            </div>
             <button class="draw-btn" id="donjonDrawBtn">⚔️ PIOCHEZ UNE CARTE</button>
             <div class="deck-info">📚 Cartes restantes : <span id="donjonCardsLeft">0</span> <span class="badge" id="donjonComposition"></span> <span id="donjonFinishedBadge" class="finished-badge" style="display:none;">🏁 DESCENTE FINIE</span></div>
             <div class="button-group">
                 <button class="descente-btn descente1" id="descente1Btn">🎲 DESCENTE 1<br><small>8 monstres + 12 événements</small></button>
                 <button class="descente-btn descente2" id="descente2Btn">🎲 DESCENTE 2<br><small>12 monstres + 16 événements</small></button>
-                <button class="descente-btn descente3" id="descente3Btn">🎲 DESCENTE 3<br><small>Descente 1 + Descente 2 + 2 Boss</small></button>
+                <button class="descente-btn descente3" id="descente3Btn">🎲 DESCENTE 3<br><small>Descente 1 + Descente 2 + <span id="bossCountDisplay">2</span> Boss</small></button>
+            </div>
+            <div style="margin-top: 5px;">
+                <button id="addBossBtn" class="add-boss-btn">➕ +1 BOSS</button>
+                <span style="font-size:0.7rem; color:#ecd9b4; margin-left:5px;">(max 3 bosses)</span>
             </div>
         </div>
+
+        <!-- PIOCHE BUTINS -->
         <div class="pioche">
             <div class="pioche-title butins">💰 BUTINS 💰</div>
             <div class="card-area" id="butinsCardArea"><div class="empty-card">💎 Cliquez sur PIOCHEZ !</div></div>
@@ -305,10 +201,9 @@
         </div>
     </div>
 
-    <footer>⚡ Synchronisation temps réel<br>💰 Glissez une carte BUTIN vers n'importe quelle zone<br>🖱️ Cliquez sur une carte pour la retourner<br>🔍 Passez la souris sur une carte pour zoomer<br>🗑️ Glissez une carte sur la POUBELLE pour la supprimer<br>🎲 DESCENTE 3 = Descente 1 + Descente 2 + 2 Boss<br>🛡️ Cliquez sur chaque cercle pour changer de rôle<br>📊 Chaque inventaire a 2 sliders (0-50) pour gérer des compteurs</footer>
+    <footer>⚡ Synchronisation temps réel • Glissez une carte BUTIN vers une zone • Cliquez sur une carte pour la retourner • Passez la souris sur une carte pour zoomer • Glissez sur la POUBELLE pour supprimer • ➕ +1 BOSS pour la Descente 3</footer>
 </div>
 
-<!-- MODALE DES RÈGLES -->
 <div id="rulesModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -317,120 +212,66 @@
         </div>
         <div class="modal-body">
             <h3>🎮 LE JEU EN BREF</h3>
-            <p>C'est un jeu de descente de donjon dans lequel les joueurs vont devoir coopérer afin d'obtenir du butin. Ce même butin va leur offrir de nouveaux effets lors de leur descente en donjon, et c'est aussi ce même butin qui permettra aux joueurs d'obtenir la victoire. Régulièrement, les joueurs auront la possibilité de vendre leurs butins pour augmenter leur richesse, le joueur le plus riche à la fin de la partie est déclaré vainqueur.</p>
-
-            <h3>⚙️ PRÉPARATION DU JEU</h3>
-            <ol>
-                <li>Placer le plateau "Donjon"</li>
-                <li>Chaque joueur sélectionne une carte héros, un dé et des jetons de vote. Ils définissent leur roue de PV sur "15".</li>
-                <li>Les joueurs installent ensuite leur carte autour du plateau de jeu "Donjon"</li>
-                <li>Chaque joueur lance son dé, le joueur qui fait le plus grand score décide de l'ordre des joueurs en leur distribuant les jetons de rôle suivants : Tank / CàC / Dps Distance / Soutien</li>
-                <li>Retirez les monstres à 3 coffres. Sélectionner en deux aléatoires à placer lors de la descente 3</li>
-                <li>Pour commencer votre descente :<br>
-                    - Descente 1 : 8 monstres + 12 événements<br>
-                    - Descente 2 : 12 monstres + 16 événements<br>
-                    - Descente 3 : Mélanger descentes 1 et 2 + monstres à 3 coffres
-                </li>
-            </ol>
-
-            <h3>⚔️ DÉROULÉ DE LA PARTIE</h3>
-            <p>Lorsque tout est en place, le joueur qui a obtenu le plus haut lancer de dé pioche une carte dans la pioche et la retourne face verso sur le plateau donjon.</p>
-            <ul>
-                <li><strong>Cartes non-monstres :</strong> Résolvez l'effet et piochez la carte suivante.</li>
-                <li><strong>Carte Monstre :</strong> Entrez en phase de combat.</li>
-            </ul>
-
-            <h3>⚔️ PHASE COMBAT</h3>
-            <p>Ordre des jetons : Tank → CàC → DPS Distance → Soutien.<br>
-            Monstres à 1 coffre agissent en premier, monstres à 2 coffres après 2 actions joueurs, monstres à 3 coffres après 4 actions joueurs.</p>
-            <ul>
-                <li>Tour joueur : lance un dé → dégâts infligés au monstre</li>
-                <li>Tour monstre : lance le nombre de dé indiqué + bonus aux dégâts</li>
-                <li>Joueur à 0 PV : conserve un butin &lt; 2 lingots d'or, perd le reste + moitié richesse, devient spectre</li>
-                <li>Monstre à 0 PV : le joueur qui a infligé le coup fatal pioche le nombre de butins indiqué → phase Looting</li>
-            </ul>
-
-            <h3>💰 PHASE LOOTING</h3>
-            <p>Le joueur ayant porté le coup fatal pioche les butins. Il peut les conserver, les donner ou les laisser aux autres.<br>
-            <strong>Ninja Loot :</strong> Un joueur peut tenter de voler. Le propriétaire et les voleurs lancent un d6. Le plus haut résultat garde UN butin. Si le Ninja Looter perd, il perd 3 PV.</p>
-
+            <p>Jeu de descente de donjon où les joueurs coopèrent pour obtenir du butin, qui leur offre des effets et permet la victoire au plus riche après 3 descentes.</p>
+            <h3>⚙️ PRÉPARATION</h3>
+            <p>Chaque joueur choisit un héros (15 PV), lance un dé pour l'ordre, reçoit un rôle (Tank/CàC/DPS/Soutien). Le donjon est préparé avec 8 monstres + 12 événements (Descente 1) ou 12+16 (Descente 2) ou fusion +2 bosses (Descente 3).</p>
+            <h3>⚔️ COMBAT</h3>
+            <p>Ordre : Tank → CàC → DPS → Soutien. Les monstres agissent selon leurs coffres (1=premier, 2=après 2 actions, 3=après 4 actions). Les joueurs lancent un dé pour les dégâts. À 0 PV, le joueur perd tout sauf un butin &lt;2 lingots et devient spectre.</p>
+            <h3>💰 LOOTING</h3>
+            <p>Le joueur qui tue un monstre pioche des butins. Il peut les garder, les donner, ou subir un Ninja Loot (dé contre dé, le perdant perd 3 PV).</p>
             <h3>📦 INVENTAIRE</h3>
-            <p>Chaque héros possède 4 places. Les symboles sur les cases activent les effets des butins. Les trésors n'ont pas besoin de case précise.</p>
-
-            <h3>🃏 LA PIOCHE</h3>
-            <p>Gérée par le joueur ayant fait le dé le plus haut, puis transférée au vainqueur du combat.<br>
-            Cartes Événements : phase de vote (jetons vert/rouge). Certaines cartes exigent un nombre précis de votes VERT pour être appliquées. Sinon, piocher la carte suivante.</p>
-
-            <h3>🏃 LA FUITE / SORTIE DU DONJON</h3>
-            <p>Un joueur peut quitter le donjon après un événement ou un combat. Son inventaire est sauvegardé, il ne participe plus. Quand tous les joueurs sont partis ou morts, la descente prend fin → phase de vente.</p>
-
-            <h3>👻 LE RÔLE DE SPECTRE</h3>
-            <p>En cas de mort, vous devenez spectre. Vous pouvez : soigner 1 PV (joueur ou monstre), infliger 1 PV, ou mélanger l'inventaire d'un joueur (1 fois par joueur par descente).</p>
-
-            <h3>🏆 FIN DE PARTIE</h3>
-            <p>Après 3 descentes et les ventes, le joueur le plus riche est déclaré vainqueur !</p>
-
-            <h3>🎖️ INFORMATIONS SUR LES JETONS RÔLES</h3>
-            <ul>
-                <li><strong>Tank :</strong> Les équipements "Armure" confèrent 1 PV supplémentaire</li>
-                <li><strong>CàC :</strong> Les équipements "Arme" confèrent 1 PV supplémentaire</li>
-                <li><strong>DPS Distance :</strong> Relance une fois le dé d'attaque si coup fatal possible</li>
-                <li><strong>Soutien :</strong> Peut soigner 3 PV au lieu d'attaquer, gagne 1 richesse par soin</li>
-            </ul>
-            <p>Le Leader réorganise la distribution des rôles. En cas de mort/fuite, le jeton est retiré.</p>
-
-            <h3>🌊 RÈGLE DE CASCADE</h3>
-            <p>Si un monstre cible un jeton absent, la cible suivante dans l'ordre est choisie :<br>
-            <strong>Tank → CàC → DPS Distance → Soutien → Tank</strong><br>
-            Si un joueur subit plusieurs attaques à cause de cette règle, n'appliquez que la première.</p>
-
-            <h3>🔄 PRÉCISION ENTRE LES DESCENTES</h3>
-            <p>Les joueurs récupèrent automatiquement leurs PV de base (15) et réappliquent les effets des équipements affectant les PV.</p>
-
-            <h3>⚠️ EFFETS NÉGATIFS ET BUTIN MAUDIT</h3>
-            <p>Ceux-ci s'appliquent même si le butin n'est pas sur la case appropriée.</p>
-
-            <h3>📦 GESTION DE L'INVENTAIRE</h3>
-            <p>Vous êtes libre de le gérer, mais il est interdit d'y toucher pendant les combats ou la résolution d'une carte événement.</p>
-
-            <h3>🤝 NÉGOCIER ENTRE LES JOUEURS</h3>
-            <p>Les joueurs peuvent échanger butins ou richesses librement, sauf pendant les événements.</p>
-
-            <h3>🔥 PRÉCISION SUR LES BUTINS ENFLAMMÉS</h3>
-            <p>Le joueur peut décider de ne pas activer l'effet d'un butin enflammé.</p>
+            <p>4 emplacements. Les symboles activent les effets des butins.</p>
+            <h3>🃏 ÉVÉNEMENTS</h3>
+            <p>Vote à la majorité (vert/rouge) selon le nombre exigé sur la carte.</p>
+            <h3>👻 SPECTRE</h3>
+            <p>Peut soigner/infliger 1 PV ou mélanger un inventaire (1 fois par joueur par descente).</p>
+            <h3>🎖️ RÔLES</h3>
+            <p>Tank: Armure +1PV • CàC: Arme +1PV • DPS: relance dé si coup fatal • Soutien: soin 3PV → gagne 1 richesse.</p>
+            <h3>🌊 CASCADE</h3>
+            <p>Tank→CàC→DPS→Soutien→Tank. Si la cible est absente, passer à la suivante.</p>
         </div>
     </div>
 </div>
 
-<div id="hoverZoomCard" class="hover-zoom-card"><img id="hoverZoomImg" src="" alt="Zoom carte"></div>
+<div id="hoverZoomCard" class="hover-zoom-card"><img id="hoverZoomImg" src=""></div>
 
 <script>
-    // ========== GESTION DES CERCLES DE RÔLE (1 par inventaire) ==========
-    let roleStates = [0, 0, 0, 0];
+    // ========== GESTION DU NOMBRE DE BOSS POUR DESCENTE 3 ==========
+    let extraBossCount = 2; // Base = 2 bosses
     
-    const roles = [
-        { emoji: "🛡️", classe: "bleu", nom: "Bouclier" },
-        { emoji: "⚔️", classe: "rouge", nom: "Épée" },
-        { emoji: "🏹", classe: "vert", nom: "Arc" },
-        { emoji: "📖", classe: "blanc", nom: "Livre" }
-    ];
-    
-    function updateRoleCircle(circle, index) {
-        const currentRole = roles[roleStates[index]];
-        circle.textContent = currentRole.emoji;
-        circle.className = `role-circle ${currentRole.classe}`;
+    function updateBossDisplay() {
+        document.getElementById('bossCountDisplay').textContent = extraBossCount;
     }
     
-    // ========== MODALE RÈGLES ==========
-    const modal = document.getElementById('rulesModal');
-    const rulesBtn = document.getElementById('rulesBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
+    function generateDescente3WithBosses() {
+        const descente1Cards = [...lastDescente1Cards.monstres, ...lastDescente1Cards.evenements];
+        const descente2Cards = [...lastDescente2Cards.monstres, ...lastDescente2Cards.evenements];
+        const bosses = getRandomElements(ALL_BOSS, extraBossCount);
+        const allCards = [...descente1Cards, ...descente2Cards, ...bosses];
+        return shuffleArray(allCards);
+    }
     
-    rulesBtn.onclick = function() { modal.style.display = 'block'; }
-    closeModalBtn.onclick = function() { modal.style.display = 'none'; }
-    window.onclick = function(event) { if (event.target == modal) modal.style.display = 'none'; }
+    // Bouton pour ajouter un boss
+    document.getElementById('addBossBtn').addEventListener('click', () => {
+        if (extraBossCount < 3) {
+            extraBossCount++;
+            updateBossDisplay();
+            alert(`Descente 3 aura maintenant ${extraBossCount} boss !`);
+        } else {
+            alert("Maximum 3 bosses atteint !");
+        }
+    });
     
-    // ========== ZOOM HEARTHSTONE ==========
+    // ========== SLIDER DONJON ==========
+    const donjonHpSlider = document.getElementById('donjonHpSlider');
+    const donjonHpValue = document.getElementById('donjonHpValue');
+    
+    donjonHpSlider.addEventListener('input', (e) => {
+        donjonHpValue.textContent = e.target.value;
+        database.ref('/donjonHp').set(parseInt(e.target.value));
+    });
+    
+    // ========== ZOOM ==========
     const hoverZoomDiv = document.getElementById('hoverZoomCard');
     const hoverZoomImg = document.getElementById('hoverZoomImg');
     
@@ -438,13 +279,11 @@
         if (!imageUrl) return;
         hoverZoomImg.src = imageUrl;
         hoverZoomDiv.classList.add('visible');
-        let left = mouseX + 15;
-        let top = mouseY - 320;
-        const maxLeft = window.innerWidth - 470;
-        const maxTop = window.innerHeight - 680;
+        let left = mouseX + 20;
+        let top = mouseY - 300;
+        const maxLeft = window.innerWidth - 430;
         if (left > maxLeft) left = maxLeft;
         if (left < 10) left = 10;
-        if (top > maxTop) top = maxTop;
         if (top < 10) top = 10;
         hoverZoomDiv.style.left = left + 'px';
         hoverZoomDiv.style.top = top + 'px';
@@ -452,35 +291,32 @@
     
     function hideHoverZoom() { hoverZoomDiv.classList.remove('visible'); }
     
-    // ========== CONFIGURATION FIREBASE ==========
+    // ========== MODALE ==========
+    const modal = document.getElementById('rulesModal');
+    document.getElementById('rulesBtn').onclick = () => modal.style.display = 'block';
+    document.getElementById('closeModalBtn').onclick = () => modal.style.display = 'none';
+    window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
+    
+    // ========== FIREBASE ==========
     const firebaseConfig = { databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/" };
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     
-    const donjonRef = database.ref('/donjon_final_v5');
-    const butinsRef = database.ref('/butins_final_v5');
+    const donjonRef = database.ref('/donjon_final_v8');
+    const butinsRef = database.ref('/butins_final_v8');
     
     function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
     
-    // ========== CARTES DISPONIBLES ==========
-    const ALL_MONSTRES = [];
-    for (let i = 0; i < 32; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
-    
-    const ALL_EVENEMENTS = [];
-    for (let i = 0; i < 47; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
-    
-    const ALL_BOSS = [];
-    for (let i = 0; i < 8; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
-    
-    const BUTINS_CARDS = [];
-    for (let i = 0; i < 36; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
+    // CARTES
+    const ALL_MONSTRES = []; for (let i = 0; i < 32; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
+    const ALL_EVENEMENTS = []; for (let i = 0; i < 47; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
+    const ALL_BOSS = []; for (let i = 0; i < 8; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
+    const BUTINS_CARDS = []; for (let i = 0; i < 36; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
     
     function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-    
     function getRandomElements(arr, n, excludeIds = []) {
         let available = arr.filter(c => !excludeIds.includes(c.id));
-        const shuffled = shuffleArray([...available]);
-        return shuffled.slice(0, Math.min(n, available.length));
+        return shuffleArray([...available]).slice(0, Math.min(n, available.length));
     }
     
     let lastDescente1Cards = { monstres: [], evenements: [] };
@@ -492,7 +328,6 @@
         lastDescente1Cards = { monstres: [...monstres], evenements: [...evenements] };
         return shuffleArray([...monstres, ...evenements]);
     }
-    
     function generateDescente2() {
         const usedMonstreIds = lastDescente1Cards.monstres.map(c => c.id);
         const usedEvenementIds = lastDescente1Cards.evenements.map(c => c.id);
@@ -502,23 +337,9 @@
         return shuffleArray([...monstres, ...evenements]);
     }
     
-    function generateDescente3() {
-        const descente1Cards = [...lastDescente1Cards.monstres, ...lastDescente1Cards.evenements];
-        const descente2Cards = [...lastDescente2Cards.monstres, ...lastDescente2Cards.evenements];
-        const bosses = getRandomElements(ALL_BOSS, 2);
-        const allCards = [...descente1Cards, ...descente2Cards, ...bosses];
-        return shuffleArray(allCards);
-    }
-    
     let allSlots = [];
-    
-    // Stockage des valeurs des sliders (pour chaque inventaire)
-    let sliderValues = [
-        { slider1: 0, slider2: 0 },
-        { slider1: 0, slider2: 0 },
-        { slider1: 0, slider2: 0 },
-        { slider1: 0, slider2: 0 }
-    ];
+    let roleStates = [0, 0, 0, 0];
+    const roles = [{ emoji: "🛡️", classe: "bleu" }, { emoji: "⚔️", classe: "rouge" }, { emoji: "🏹", classe: "vert" }, { emoji: "📖", classe: "blanc" }];
     
     class InventorySlot {
         constructor(invNum, slotNum, firebaseRef, element) {
@@ -544,7 +365,7 @@
         render() {
             if (!this.element) return;
             if (this.currentCard) {
-                this.element.innerHTML = `<div class="slot-card ${this.flipped ? 'flipped' : ''}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}" data-image="${this.currentCard.image}"><img src="${this.currentCard.image}" alt="Carte" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'"></div>`;
+                this.element.innerHTML = `<div class="slot-card ${this.flipped ? 'flipped' : ''}" draggable="true" data-inv="${this.invNum}" data-slot="${this.slotNum}" data-image="${this.currentCard.image}"><img src="${this.currentCard.image}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'140\\' viewBox=\\'0 0 100 140\\'%3E%3Crect width=\\'100\\' height=\\'140\\' fill=\\'%233f2a1f\\'/%3E%3Ctext x=\\'50\\' y=\\'70\\' text-anchor=\\'middle\\' fill=\\'%23ffaa44\\' font-size=\\'12\\'%3E?%3C/text%3E%3C/svg%3E'"></div>`;
                 const cardEl = this.element.querySelector('.slot-card');
                 cardEl.addEventListener('mouseenter', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
                 cardEl.addEventListener('mousemove', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
@@ -597,20 +418,19 @@
         const grid = document.getElementById('inventoriesGrid');
         grid.innerHTML = '';
         allSlots = [];
-        roleStates = [0, 0, 0, 0];
         
         for (let inv = 1; inv <= 4; inv++) {
             const wrapper = document.createElement('div');
             wrapper.className = 'inventory-wrapper';
             
-            // Cercle de rôle
             const roleCircle = document.createElement('div');
             roleCircle.className = 'role-circle bleu';
             roleCircle.textContent = '🛡️';
             const circleIndex = inv - 1;
             roleCircle.addEventListener('click', () => {
                 roleStates[circleIndex] = (roleStates[circleIndex] + 1) % 4;
-                updateRoleCircle(roleCircle, circleIndex);
+                roleCircle.textContent = roles[roleStates[circleIndex]].emoji;
+                roleCircle.className = `role-circle ${roles[roleStates[circleIndex]].classe}`;
             });
             
             const inventoryBox = document.createElement('div');
@@ -627,88 +447,50 @@
                 const slotDiv = document.createElement('div');
                 slotDiv.className = 'slot';
                 slotsGrid.appendChild(slotDiv);
-                const slotRef = database.ref(`/slots_final_v5/inv${inv}_slot${slot}`);
+                const slotRef = database.ref(`/slots_v8/inv${inv}_slot${slot}`);
                 allSlots.push(new InventorySlot(inv, slot, slotRef, slotDiv));
             }
             
-            // SLIDERS
+            // Sliders
             const slidersDiv = document.createElement('div');
             slidersDiv.className = 'sliders-container';
             
-            // Slider 1
             const slider1Wrapper = document.createElement('div');
             slider1Wrapper.className = 'slider-wrapper';
-            const label1 = document.createElement('label');
-            label1.textContent = '💰 RICHESSE';
-            const slider1 = document.createElement('input');
-            slider1.type = 'range';
-            slider1.min = 0;
-            slider1.max = 50;
-            slider1.value = sliderValues[inv-1].slider1;
-            const value1 = document.createElement('span');
-            value1.textContent = slider1.value;
+            slider1Wrapper.innerHTML = '<label>💰 RICHESSE</label><input type="range" min="0" max="50" value="0"><span>0</span>';
+            const slider1 = slider1Wrapper.querySelector('input');
+            const value1 = slider1Wrapper.querySelector('span');
             slider1.addEventListener('input', (e) => {
-                const val = parseInt(e.target.value);
-                value1.textContent = val;
-                sliderValues[inv-1].slider1 = val;
-                // Sauvegarder dans Firebase
-                database.ref(`/sliders/inv${inv}_slider1`).set(val);
+                value1.textContent = e.target.value;
+                database.ref(`/sliders/inv${inv}_slider1`).set(parseInt(e.target.value));
             });
-            slider1Wrapper.appendChild(label1);
-            slider1Wrapper.appendChild(slider1);
-            slider1Wrapper.appendChild(value1);
             
-            // Slider 2
             const slider2Wrapper = document.createElement('div');
             slider2Wrapper.className = 'slider-wrapper';
-            const label2 = document.createElement('label');
-            label2.textContent = '💀 PV';
-            const slider2 = document.createElement('input');
-            slider2.type = 'range';
-            slider2.min = 0;
-            slider2.max = 50;
-            slider2.value = sliderValues[inv-1].slider2;
-            const value2 = document.createElement('span');
-            value2.textContent = slider2.value;
+            slider2Wrapper.innerHTML = '<label>💀 PV</label><input type="range" min="0" max="50" value="0"><span>0</span>';
+            const slider2 = slider2Wrapper.querySelector('input');
+            const value2 = slider2Wrapper.querySelector('span');
             slider2.addEventListener('input', (e) => {
-                const val = parseInt(e.target.value);
-                value2.textContent = val;
-                sliderValues[inv-1].slider2 = val;
-                database.ref(`/sliders/inv${inv}_slider2`).set(val);
+                value2.textContent = e.target.value;
+                database.ref(`/sliders/inv${inv}_slider2`).set(parseInt(e.target.value));
             });
-            slider2Wrapper.appendChild(label2);
-            slider2Wrapper.appendChild(slider2);
-            slider2Wrapper.appendChild(value2);
+            
+            database.ref(`/sliders/inv${inv}_slider1`).on('value', (snap) => {
+                const val = snap.val();
+                if (val !== null && slider1.value != val) { slider1.value = val; value1.textContent = val; }
+            });
+            database.ref(`/sliders/inv${inv}_slider2`).on('value', (snap) => {
+                const val = snap.val();
+                if (val !== null && slider2.value != val) { slider2.value = val; value2.textContent = val; }
+            });
             
             slidersDiv.appendChild(slider1Wrapper);
             slidersDiv.appendChild(slider2Wrapper);
             
-            // Charger les valeurs depuis Firebase
-            database.ref(`/sliders/inv${inv}_slider1`).on('value', (snap) => {
-                const val = snap.val();
-                if (val !== null && slider1.value != val) {
-                    slider1.value = val;
-                    value1.textContent = val;
-                    sliderValues[inv-1].slider1 = val;
-                }
-            });
-            database.ref(`/sliders/inv${inv}_slider2`).on('value', (snap) => {
-                const val = snap.val();
-                if (val !== null && slider2.value != val) {
-                    slider2.value = val;
-                    value2.textContent = val;
-                    sliderValues[inv-1].slider2 = val;
-                }
-            });
-            
             const clearBtn = document.createElement('button');
             clearBtn.className = 'clear-inv';
             clearBtn.innerText = `🗑️ Vider inventaire ${inv}`;
-            clearBtn.addEventListener('click', () => { 
-                if(confirm(`Vider l'inventaire ${inv} ?`)) {
-                    allSlots.filter(s => s.invNum === inv).forEach(s => s.clear());
-                }
-            });
+            clearBtn.addEventListener('click', () => { if(confirm(`Vider l'inventaire ${inv} ?`)) allSlots.filter(s => s.invNum === inv).forEach(s => s.clear()); });
             
             inventoryBox.appendChild(title);
             inventoryBox.appendChild(slotsGrid);
@@ -721,8 +503,9 @@
         }
     }
     
+    // ========== CORBEILLE ==========
     const trashZone = document.getElementById('trashZone');
-    trashZone.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; trashZone.classList.add('drag-over'); });
+    trashZone.addEventListener('dragover', (e) => { e.preventDefault(); trashZone.classList.add('drag-over'); });
     trashZone.addEventListener('dragleave', () => { trashZone.classList.remove('drag-over'); });
     trashZone.addEventListener('drop', (e) => {
         e.preventDefault();
@@ -736,6 +519,7 @@
         } catch(err) { console.log(err); }
     });
     
+    // ========== PIOCHES ==========
     class Pioche {
         constructor(name, cardList, firebaseRef, uiIds, isDonjon = false, isButins = false) {
             this.name = name; this.cardList = cardList; this.firebaseRef = firebaseRef; this.isDonjon = isDonjon; this.isButins = isButins;
@@ -785,14 +569,13 @@
             const nbMonstres = this.currentDeck.filter(c => c.type === 'monstre').length;
             const nbEvenements = this.currentDeck.filter(c => c.type === 'evenement').length;
             const nbBoss = this.currentDeck.filter(c => c.type === 'boss').length;
-            if (nbBoss > 0) this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements} 👑${nbBoss}`;
-            else this.ui.compositionSpan.innerText = `🐉${nbMonstres} ⚡${nbEvenements}`;
+            this.ui.compositionSpan.innerText = nbBoss > 0 ? `🐉${nbMonstres} ⚡${nbEvenements} 👑${nbBoss}` : `🐉${nbMonstres} ⚡${nbEvenements}`;
         }
         
         displayCard(card) {
             if (this.isFinished && !card) { this.ui.cardArea.innerHTML = '<div class="finish-message">🏁 LA DESCENTE EST TERMINÉE ! 🏁</div>'; return; }
             if (!card) { this.ui.cardArea.innerHTML = '<div class="empty-card">🎴 Choisissez une descente !</div>'; return; }
-            this.ui.cardArea.innerHTML = `<div class="card" draggable="true" data-image="${card.image}"><img src="${card.image}" alt="Carte" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
+            this.ui.cardArea.innerHTML = `<div class="card" draggable="true" data-image="${card.image}"><img src="${card.image}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style="padding:40px">🃟</div>'"></div>`;
             const cardEl = this.ui.cardArea.querySelector('.card');
             cardEl.addEventListener('mouseenter', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
             cardEl.addEventListener('mousemove', (e) => { const src = cardEl.getAttribute('data-image'); if (src) showHoverZoom(src, e.clientX, e.clientY); });
@@ -820,18 +603,7 @@
         }
         
         resetDeck() { if (this.isUpdating) return; if (this.isButins) { this.currentDeck = shuffleArray([...this.cardList]); this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); } }
-        
-        setNewDeck(newDeck) {
-            if (this.isUpdating) return;
-            this.currentDeck = [...newDeck];
-            this.currentCard = null;
-            this.isFinished = false;
-            this.saveCurrentCard(null);
-            this.saveDeck();
-            this.displayCard(null);
-            this.updateCardsLeftDisplay();
-            this.updateFinishedState();
-        }
+        setNewDeck(newDeck) { if (this.isUpdating) return; this.currentDeck = [...newDeck]; this.currentCard = null; this.isFinished = false; this.saveCurrentCard(null); this.saveDeck(); this.displayCard(null); this.updateCardsLeftDisplay(); this.updateFinishedState(); }
         
         init() {
             this.firebaseRef.child('deck').once('value', (snap) => {
@@ -860,52 +632,49 @@
     
     buildInventories();
     
+    // ========== BOUTONS ==========
     document.getElementById('descente1Btn').addEventListener('click', () => {
-        if (confirm("Lancer la DESCENTE 1 ?\n8 monstres + 12 événements")) {
-            const newDeck = generateDescente1();
-            donjonPioche.setNewDeck(newDeck);
-        }
+        if (confirm("Lancer la DESCENTE 1 ?\n8 monstres + 12 événements")) donjonPioche.setNewDeck(generateDescente1());
     });
-    
     document.getElementById('descente2Btn').addEventListener('click', () => {
-        if (lastDescente1Cards.monstres.length === 0) {
-            alert("Veuillez d'abord lancer la DESCENTE 1 !");
-            return;
-        }
-        if (confirm("Lancer la DESCENTE 2 ?\n12 monstres + 16 événements (différents de la descente 1)")) {
-            const newDeck = generateDescente2();
-            donjonPioche.setNewDeck(newDeck);
-        }
+        if (lastDescente1Cards.monstres.length === 0) alert("Veuillez d'abord lancer la DESCENTE 1 !");
+        else if (confirm("Lancer la DESCENTE 2 ?")) donjonPioche.setNewDeck(generateDescente2());
     });
-    
     document.getElementById('descente3Btn').addEventListener('click', () => {
-        if (lastDescente1Cards.monstres.length === 0 || lastDescente2Cards.monstres.length === 0) {
-            alert("Veuillez d'abord lancer la DESCENTE 1 et la DESCENTE 2 !");
-            return;
-        }
-        if (confirm("Lancer la DESCENTE 3 ?\nDescente 1 + Descente 2 + 2 Boss")) {
-            const newDeck = generateDescente3();
-            donjonPioche.setNewDeck(newDeck);
+        if (lastDescente1Cards.monstres.length === 0 || lastDescente2Cards.monstres.length === 0) alert("Veuillez d'abord lancer la DESCENTE 1 et 2 !");
+        else if (confirm(`Lancer la DESCENTE 3 ?\nDescente 1 + Descente 2 + ${extraBossCount} boss`)) {
+            donjonPioche.setNewDeck(generateDescente3WithBosses());
         }
     });
     
-    document.getElementById('resetAllBtn').addEventListener('click', () => { if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) { butinsPioche.resetDeck(); donjonPioche.setNewDeck([]); allSlots.forEach(s => s.clear()); lastDescente1Cards = { monstres: [], evenements: [] }; lastDescente2Cards = { monstres: [], evenements: [] }; 
-        // Reset des sliders
-        for (let i = 0; i < 4; i++) {
-            database.ref(`/sliders/inv${i+1}_slider1`).set(0);
-            database.ref(`/sliders/inv${i+1}_slider2`).set(0);
-            sliderValues[i] = { slider1: 0, slider2: 0 };
+    document.getElementById('resetAllBtn').addEventListener('click', () => {
+        if (confirm("⚠️ RÉINITIALISATION TOTALE ?")) {
+            butinsPioche.resetDeck(); donjonPioche.setNewDeck([]); allSlots.forEach(s => s.clear());
+            lastDescente1Cards = { monstres: [], evenements: [] }; lastDescente2Cards = { monstres: [], evenements: [] };
+            extraBossCount = 2;
+            updateBossDisplay();
+            for (let i = 1; i <= 4; i++) { database.ref(`/sliders/inv${i}_slider1`).set(0); database.ref(`/sliders/inv${i}_slider2`).set(0); }
+            database.ref('/donjonHp').set(50);
         }
-    } });
+    });
     
+    database.ref('/donjonHp').on('value', (snap) => {
+        const val = snap.val();
+        if (val !== null && donjonHpSlider.value != val) { donjonHpSlider.value = val; donjonHpValue.textContent = val; }
+    });
+    
+    // ========== PRÉSENCE ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_final_v5');
-    presenceRef.on('value', (snap) => { if (snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
+    const connectedPlayersRef = database.ref('/presence_v8');
+    presenceRef.on('value', (snap) => {
+        if (snap.val() === true && !myPresenceKey) {
+            myPresenceKey = connectedPlayersRef.push().key;
+            connectedPlayersRef.child(myPresenceKey).set({ online: true });
+            connectedPlayersRef.child(myPresenceKey).onDisconnect().remove();
+        }
+    });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
-    
-    console.log("✅ Configuration finale avec 2 sliders par inventaire !");
-    console.log(`📊 ${ALL_MONSTRES.length} Monstres, ${ALL_EVENEMENTS.length} Événements, ${BUTINS_CARDS.length} Butins, ${ALL_BOSS.length} Boss`);
 </script>
 </body>
 </html>
