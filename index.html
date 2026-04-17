@@ -177,7 +177,20 @@
         .slider-wrapper input { width: 100%; cursor: pointer; accent-color: #ffaa44; }
         .slider-wrapper span { display: block; color: #fef0cf; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
         
-        .role-circle { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 3px solid #ffaa44; margin-bottom: 10px; }
+        .role-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 3px solid #ffaa44;
+            margin-bottom: 10px;
+        }
         .role-circle:hover { transform: scale(1.05); }
         .role-circle.bleu { background: #2c5f8a; }
         .role-circle.rouge { background: #8a2c2c; }
@@ -269,7 +282,7 @@
     <footer>⚡ Synchronisation temps réel • Glissez une carte BUTIN vers une zone • Cliquez sur une carte pour la retourner • Passez la souris sur une carte pour zoomer • Glissez sur la POUBELLE pour supprimer</footer>
 </div>
 
-<!-- MODALE DES RÈGLES - VERSION COMPLÈTE -->
+<!-- MODALE DES RÈGLES -->
 <div id="rulesModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -438,6 +451,9 @@
     const roles = [{ emoji: "🛡️", classe: "bleu" }, { emoji: "⚔️", classe: "rouge" }, { emoji: "🏹", classe: "vert" }, { emoji: "📖", classe: "blanc" }];
     let inventoryNames = ["Joueur 1", "Joueur 2", "Joueur 3", "Joueur 4"];
     
+    // Référence pour les rôles synchronisés
+    const rolesRef = database.ref('/roles_sync');
+    
     class InventorySlot {
         constructor(invNum, slotNum, firebaseRef, element, emoji) {
             this.invNum = invNum; this.slotNum = slotNum; this.firebaseRef = firebaseRef; this.element = element;
@@ -493,14 +509,21 @@
     }
     
     // ========== CONSTRUCTION DES INVENTAIRES ==========
-    const donjonRef = database.ref('/donjon_final_v15');
-    const butinsRef = database.ref('/butins_final_v15');
-    const inventoryNamesRef = database.ref('/inventory_names_v15');
-    const slidersRef = database.ref('/sliders_v15');
-    const slotsBaseRef = database.ref('/slots_v15');
+    const donjonRef = database.ref('/donjon_final_v16');
+    const butinsRef = database.ref('/butins_final_v16');
+    const inventoryNamesRef = database.ref('/inventory_names_v16');
+    const slidersRef = database.ref('/sliders_v16');
+    const slotsBaseRef = database.ref('/slots_v16');
     
     let butinsPioche = null;
     let donjonPioche = null;
+    
+    // Fonction pour mettre à jour l'affichage d'un cercle de rôle
+    function updateRoleCircleDisplay(circle, invIndex) {
+        const role = roles[roleStates[invIndex]];
+        circle.textContent = role.emoji;
+        circle.className = `role-circle ${role.classe}`;
+    }
     
     function buildInventories() {
         const grid = document.getElementById('inventoriesGrid');
@@ -511,9 +534,26 @@
         for(let inv = 1; inv <= 4; inv++) {
             const wrapper = document.createElement('div'); wrapper.className = 'inventory-wrapper';
             
-            const roleCircle = document.createElement('div'); roleCircle.className = 'role-circle bleu'; roleCircle.textContent = '🛡️';
+            const roleCircle = document.createElement('div'); 
+            roleCircle.className = 'role-circle bleu'; 
+            roleCircle.textContent = '🛡️';
             const circleIndex = inv - 1;
-            roleCircle.onclick = () => { roleStates[circleIndex] = (roleStates[circleIndex] + 1) % 4; roleCircle.textContent = roles[roleStates[circleIndex]].emoji; roleCircle.className = `role-circle ${roles[roleStates[circleIndex]].classe}`; };
+            
+            // Charger la valeur depuis Firebase
+            rolesRef.child(`inv${inv}`).on('value', (snap) => {
+                const savedState = snap.val();
+                if(savedState !== null && savedState !== undefined) {
+                    roleStates[circleIndex] = savedState;
+                    updateRoleCircleDisplay(roleCircle, circleIndex);
+                }
+            });
+            
+            // Sauvegarder dans Firebase quand on clique
+            roleCircle.onclick = () => {
+                roleStates[circleIndex] = (roleStates[circleIndex] + 1) % 4;
+                updateRoleCircleDisplay(roleCircle, circleIndex);
+                rolesRef.child(`inv${inv}`).set(roleStates[circleIndex]);
+            };
             
             const inventoryBox = document.createElement('div'); inventoryBox.className = 'inventory-box';
             const title = document.createElement('div'); title.className = 'inventory-title'; title.textContent = inventoryNames[inv-1];
@@ -685,13 +725,16 @@
             for(let i = 1; i <= 4; i++) { slidersRef.child(`inv${i}_s1`).set(0); slidersRef.child(`inv${i}_s2`).set(0); }
             database.ref('/donjonHp').set(50);
             for(let i = 1; i <= 4; i++) { inventoryNamesRef.child(`inv${i}`).set(`Joueur ${i}`); }
+            // Reset des rôles
+            for(let i = 1; i <= 4; i++) { rolesRef.child(`inv${i}`).set(0); }
+            roleStates = [0, 0, 0, 0];
         }
     };
     
     // ========== PRÉSENCE ==========
     const presenceRef = database.ref('.info/connected');
     let myPresenceKey = null;
-    const connectedPlayersRef = database.ref('/presence_v15');
+    const connectedPlayersRef = database.ref('/presence_v16');
     presenceRef.on('value', (snap) => { if(snap.val() === true && !myPresenceKey) { myPresenceKey = connectedPlayersRef.push().key; connectedPlayersRef.child(myPresenceKey).set({ online: true }); connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); } });
     connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
 </script>
