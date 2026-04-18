@@ -590,32 +590,63 @@
         newVoteRougeBtn.onclick = () => { if (voteVert + voteRouge >= MAX_VOTES) { alert(`Maximum de ${MAX_VOTES} votes atteint !`); return; } voteRouge++; saveVoteToFirebase(); };
         newVoteResetBtn.onclick = () => { voteVert = 0; voteRouge = 0; saveVoteToFirebase(); };
         
-        // ====== DÉS ======
+               // ====== DÉS ======
         function rollDice(sides) { return Math.floor(Math.random() * sides) + 1; }
         function animateDice(el) { el.classList.add('dice-rolling'); setTimeout(() => el.classList.remove('dice-rolling'), 300); }
         
-        const d4Val = document.getElementById('d4Value'), d6Val = document.getElementById('d6Value'), d8Val = document.getElementById('d8Value');
-        const diceD4 = document.getElementById('diceD4'), diceD6 = document.getElementById('diceD6'), diceD8 = document.getElementById('diceD8');
+        const d4Val = document.getElementById('d4Value');
+        const d6Val = document.getElementById('d6Value');
+        const d8Val = document.getElementById('d8Value');
+        const diceD4 = document.getElementById('diceD4');
+        const diceD6 = document.getElementById('diceD6');
+        const diceD8 = document.getElementById('diceD8');
         
         diceRef.off();
         diceRef.child('d4').off();
         diceRef.child('d6').off();
         diceRef.child('d8').off();
         
-        diceRef.child('d4').on('value', (s) => { const v = s.val(); if(v !== null && d4Val.textContent != v) { d4Val.textContent = v; animateDice(diceD4); } });
-        diceRef.child('d6').on('value', (s) => { const v = s.val(); if(v !== null && d6Val.textContent != v) { d6Val.textContent = v; animateDice(diceD6); } });
-        diceRef.child('d8').on('value', (s) => { const v = s.val(); if(v !== null && d8Val.textContent != v) { d8Val.textContent = v; animateDice(diceD8); } });
+        diceRef.child('d4').on('value', (s) => { 
+            const v = s.val(); 
+            if(v !== null && d4Val.textContent != v) { 
+                d4Val.textContent = v; 
+                animateDice(diceD4); 
+            } 
+        });
+        diceRef.child('d6').on('value', (s) => { 
+            const v = s.val(); 
+            if(v !== null && d6Val.textContent != v) { 
+                d6Val.textContent = v; 
+                animateDice(diceD6); 
+            } 
+        });
+        diceRef.child('d8').on('value', (s) => { 
+            const v = s.val(); 
+            if(v !== null && d8Val.textContent != v) { 
+                d8Val.textContent = v; 
+                animateDice(diceD8); 
+            } 
+        });
         
-        const newDiceD4 = diceD4.cloneNode(true);
-        const newDiceD6 = diceD6.cloneNode(true);
-        const newDiceD8 = diceD8.cloneNode(true);
-        diceD4.parentNode.replaceChild(newDiceD4, diceD4);
-        diceD6.parentNode.replaceChild(newDiceD6, diceD6);
-        diceD8.parentNode.replaceChild(newDiceD8, diceD8);
-        
-        newDiceD4.onclick = () => { const r = rollDice(4); diceRef.child('d4').set(r); d4Val.textContent = r; animateDice(newDiceD4); };
-        newDiceD6.onclick = () => { const r = rollDice(6); diceRef.child('d6').set(r); d6Val.textContent = r; animateDice(newDiceD6); };
-        newDiceD8.onclick = () => { const r = rollDice(8); diceRef.child('d8').set(r); d8Val.textContent = r; animateDice(newDiceD8); };
+        // Événements click - pas de clone, utilisation directe
+        diceD4.onclick = () => { 
+            const r = rollDice(4); 
+            diceRef.child('d4').set(r); 
+            d4Val.textContent = r; 
+            animateDice(diceD4); 
+        };
+        diceD6.onclick = () => { 
+            const r = rollDice(6); 
+            diceRef.child('d6').set(r); 
+            d6Val.textContent = r; 
+            animateDice(diceD6); 
+        };
+        diceD8.onclick = () => { 
+            const r = rollDice(8); 
+            diceRef.child('d8').set(r); 
+            d8Val.textContent = r; 
+            animateDice(diceD8); 
+        };
         
         // ====== CONFIGURATION DES CARTES ======
         function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
