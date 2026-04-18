@@ -46,7 +46,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            border: 2px solid #c47b3e;
+            border: 2px solid #cb3e;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .dice:hover { transform: scale(1.05); border-color: #ffaa44; box-shadow: 0 0 15px rgba(255,170,68,0.5); }
@@ -622,7 +622,7 @@
         function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
         
         const ALL_MONSTRES = []; for (let i = 0; i < 32; i++) ALL_MONSTRES.push({ id: `M_${formatCardNumber(i)}`, image: `Monstre/${formatCardNumber(i)}.png`, type: 'monstre' });
-        const ALL_EVENEMENTS = []; for (let i = 0; i < 47; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
+        const ALL_EVENEMENTS = []; for (let i = 0; i < 37; i++) ALL_EVENEMENTS.push({ id: `E_${formatCardNumber(i)}`, image: `Evenements/${formatCardNumber(i)}.png`, type: 'evenement' });
         const ALL_BOSS = []; for (let i = 0; i < 8; i++) ALL_BOSS.push({ id: `BOSS_${formatCardNumber(i)}`, image: `Boss/${formatCardNumber(i)}.png`, type: 'boss' });
         const BUTINS_CARDS = []; for (let i = 0; i < 50; i++) BUTINS_CARDS.push({ id: `B_${formatCardNumber(i)}`, image: `Butins/${formatCardNumber(i)}.png`, type: 'butin' });
         
