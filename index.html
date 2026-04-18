@@ -19,88 +19,6 @@
             position: relative;
         }
         
-        /* MODALE DE SALON */
-        .room-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            backdrop-filter: blur(8px);
-            z-index: 30000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .room-modal-content {
-            background: #2c2b28;
-            border-radius: 48px;
-            padding: 40px;
-            text-align: center;
-            border: 2px solid #ffaa44;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-        .room-modal-content h2 {
-            color: #ffaa44;
-            font-size: 2rem;
-            margin-bottom: 20px;
-        }
-        .room-modal-content p {
-            color: #fef0cf;
-            margin-bottom: 25px;
-        }
-        .room-input {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
-            text-align: center;
-            background: #1a1a1a;
-            border: 2px solid #c47b3e;
-            border-radius: 30px;
-            color: #ffaa44;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .room-input:focus {
-            outline: none;
-            border-color: #ffaa44;
-        }
-        .room-btn {
-            background: #ffaa44;
-            border: none;
-            color: #2d1f12;
-            font-weight: bold;
-            padding: 12px 30px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            margin: 5px;
-            transition: all 0.2s;
-        }
-        .room-btn:hover {
-            background: #ffcc66;
-            transform: scale(1.02);
-        }
-        .room-btn.secondary {
-            background: #c47b3e;
-            color: white;
-        }
-        .room-btn.secondary:hover {
-            background: #a85f2c;
-        }
-        .room-id-display {
-            background: #1a1a1a;
-            padding: 10px;
-            border-radius: 30px;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #ecd9b4;
-            display: inline-block;
-        }
-        
         .dice-panel {
             position: fixed;
             left: 20px;
@@ -445,7 +363,6 @@
         <div class="modal-body">
             <h3>🎮 LE JEU EN BREF</h3>
             <p>C'est un jeu de descente de donjon dans lequel les joueurs vont devoir coopérer afin d'obtenir du butin...</p>
-            <!-- Contenu complet des règles -->
         </div>
     </div>
 </div>
@@ -453,10 +370,13 @@
 <div id="hoverZoomCard" class="hover-zoom-card"><img id="hoverZoomImg" src=""></div>
 
 <script>
-    // ========== GESTION DES SALONS ==========
+    // ========== CONFIGURATION FIREBASE UNIQUE ==========
+    const firebaseConfig = { databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/" };
+    const app = firebase.initializeApp(firebaseConfig);
+    const rootDatabase = firebase.database(app);
+    
     let currentRoom = null;
-    let database = null;
-    let app = null;
+    let currentRoomRef = null;
     
     // Éléments DOM
     const roomModal = document.getElementById('roomModal');
@@ -466,39 +386,53 @@
     
     // Fonction pour générer un code aléatoire
     function generateRandomRoom() {
-        const adjectives = ['DRAGON', 'GUILD', 'AVENTURE', 'HEROS', 'DONJON', 'GRIMOIRE', 'ELFES', 'NAINS'];
+        const adjectives = ['DRAGON', 'GUILD', 'AVENTURE', 'HEROS', 'DONJON', 'GRIMOIRE', 'ELFES', 'NAINS', 'SORCIER', 'BATAILLE', 'GUERRIER', 'MAGE', 'VAMPIRE', 'LOUP'];
         const numbers = Math.floor(Math.random() * 100);
-        return adjectives[Math.floor(Math.random() * adjectives.length)] + numbers;
+        return adjectives[Math.floor(Math.random() * adjectives.length)] + numbers.toString().padStart(2, '0');
     }
     
-    // Fonction pour initialiser le jeu avec un salon
+    // Fonction pour arrêter tous les listeners d'une référence
+    function detachAllListeners(ref) {
+        if (ref) {
+            ref.off();
+        }
+    }
+    
+    // Fonction pour initialiser le jeu avec un salon (utilise un sous-chemin dans Firebase)
     function initGameWithRoom(roomCode) {
+        if (currentRoomRef) {
+            // Déconnecter les anciens listeners
+            detachAllListeners(currentRoomRef);
+        }
+        
         currentRoom = roomCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (currentRoom.length === 0) currentRoom = generateRandomRoom();
         
         roomNameDisplay.textContent = currentRoom;
         
-        // Initialiser Firebase avec le chemin du salon
-        const firebaseConfig = { databaseURL: "https://needandgreedproto-default-rtdb.europe-west1.firebasedatabase.app/" };
-        app = firebase.initializeApp(firebaseConfig, currentRoom);
-        database = firebase.database(app);
+        // Créer une référence spécifique au salon dans Firebase
+        // TOUTES les données seront stockées sous /rooms/{roomCode}/
+        currentRoomRef = rootDatabase.ref(`/rooms/${currentRoom}`);
         
         // Masquer la modale et afficher le jeu
         roomModal.style.display = 'none';
         gameContainer.style.display = 'block';
         
-        // Lancer l'initialisation complète du jeu avec ce salon
-        initGameWithDatabase(database, currentRoom);
+        // Lancer l'initialisation complète du jeu avec cette référence
+        initGameWithRoomRef(currentRoomRef, currentRoom);
     }
     
     // Fonction pour changer de salon
     function changeRoom() {
-        if (confirm("Changer de salon effacera la partie en cours. Continuer ?")) {
-            // Réinitialiser Firebase
-            if (app) app.delete();
+        if (confirm("Changer de salon effacera la partie en cours (localement). Continuer ?")) {
+            if (currentRoomRef) {
+                detachAllListeners(currentRoomRef);
+            }
             roomModal.style.display = 'flex';
             gameContainer.style.display = 'none';
             roomCodeInput.value = '';
+            currentRoom = null;
+            currentRoomRef = null;
         }
     }
     
@@ -521,31 +455,26 @@
     document.getElementById('changeRoomBtn').onclick = changeRoom;
     
     // Suggestions aléatoires
-    const suggestions = ['DRAGON01', 'AVENTURE', 'GUILD', 'HEROS', 'DONJON', 'GRIMOIRE', 'ELFES', 'NAINS', 'SORCIER', 'BATAILLE'];
+    const suggestions = ['DRAGON01', 'AVENTURE', 'GUILD42', 'HEROS', 'DONJON', 'GRIMOIRE', 'ELFES', 'NAINS', 'SORCIER', 'BATAILLE'];
     setInterval(() => {
         const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
         document.getElementById('roomSuggestion').textContent = `Suggestions: ${randomSuggestion}`;
     }, 3000);
     
-    // ========== LE RESTE DU JEU (avec database dynamique) ==========
-    // Toutes les fonctions du jeu doivent utiliser la variable 'database'
-    // et les chemins doivent être relatifs au salon
-    
-    function initGameWithDatabase(database, roomName) {
-        console.log(`🎮 Initialisation du salon: ${roomName}`);
+    // ========== INITIALISATION DU JEU AVEC UNE RÉFÉRENCE SPÉCIFIQUE ==========
+    function initGameWithRoomRef(roomRef, roomName) {
+        console.log(`🎮 Initialisation du salon: ${roomName} (chemin: /rooms/${roomName}/)`);
         
-        // Références Firebase spécifiques au salon
-        const voteRef = database.ref('/vote_counter');
-        const diceRef = database.ref('/dice_values');
-        const donjonRef = database.ref('/donjon_sync');
-        const butinsRef = database.ref('/butins_sync');
-        const inventoryNamesRef = database.ref('/inventory_names');
-        const slidersRef = database.ref('/sliders');
-        const slotsBaseRef = database.ref('/slots');
-        const rolesRef = database.ref('/roles_sync');
-        
-        // ... (toute la logique du jeu ici, en utilisant ces références)
-        // Pour éviter de dupliquer tout le code, je reprends la structure précédente
+        // Créer les sous-références spécifiques au salon
+        const voteRef = roomRef.child('/vote_counter');
+        const diceRef = roomRef.child('/dice_values');
+        const donjonRef = roomRef.child('/donjon_sync');
+        const butinsRef = roomRef.child('/butins_sync');
+        const inventoryNamesRef = roomRef.child('/inventory_names');
+        const slidersRef = roomRef.child('/sliders');
+        const slotsBaseRef = roomRef.child('/slots');
+        const rolesRef = roomRef.child('/roles_sync');
+        const donjonHpRef = roomRef.child('/donjonHp');
         
         // ====== COMPTEUR DE VOTES ======
         let voteVert = 0, voteRouge = 0;
@@ -570,6 +499,7 @@
         
         function saveVoteToFirebase() { voteRef.set({ vert: voteVert, rouge: voteRouge }); }
         
+        voteRef.off(); // Enlever les anciens listeners
         voteRef.on('value', (snap) => {
             const data = snap.val();
             if (data) { voteVert = data.vert || 0; voteRouge = data.rouge || 0; }
@@ -577,15 +507,27 @@
             updateVoteUI();
         });
         
-        document.getElementById('voteVertBtn').onclick = () => {
+        // Enlever les anciens event listeners des boutons de vote avant d'en ajouter de nouveaux
+        const voteVertBtn = document.getElementById('voteVertBtn');
+        const voteRougeBtn = document.getElementById('voteRougeBtn');
+        const voteResetBtn = document.getElementById('voteResetBtn');
+        
+        const newVoteVertBtn = voteVertBtn.cloneNode(true);
+        const newVoteRougeBtn = voteRougeBtn.cloneNode(true);
+        const newVoteResetBtn = voteResetBtn.cloneNode(true);
+        voteVertBtn.parentNode.replaceChild(newVoteVertBtn, voteVertBtn);
+        voteRougeBtn.parentNode.replaceChild(newVoteRougeBtn, voteRougeBtn);
+        voteResetBtn.parentNode.replaceChild(newVoteResetBtn, voteResetBtn);
+        
+        newVoteVertBtn.onclick = () => {
             if (voteVert + voteRouge >= MAX_VOTES) { alert(`Maximum de ${MAX_VOTES} votes atteint !`); return; }
             voteVert++; saveVoteToFirebase();
         };
-        document.getElementById('voteRougeBtn').onclick = () => {
+        newVoteRougeBtn.onclick = () => {
             if (voteVert + voteRouge >= MAX_VOTES) { alert(`Maximum de ${MAX_VOTES} votes atteint !`); return; }
             voteRouge++; saveVoteToFirebase();
         };
-        document.getElementById('voteResetBtn').onclick = () => { voteVert = 0; voteRouge = 0; saveVoteToFirebase(); };
+        newVoteResetBtn.onclick = () => { voteVert = 0; voteRouge = 0; saveVoteToFirebase(); };
         
         // ====== DÉS ======
         function rollDice(sides) { return Math.floor(Math.random() * sides) + 1; }
@@ -594,13 +536,25 @@
         const d4Val = document.getElementById('d4Value'), d6Val = document.getElementById('d6Value'), d8Val = document.getElementById('d8Value');
         const diceD4 = document.getElementById('diceD4'), diceD6 = document.getElementById('diceD6'), diceD8 = document.getElementById('diceD8');
         
+        diceRef.off();
+        diceRef.child('d4').off();
+        diceRef.child('d6').off();
+        diceRef.child('d8').off();
+        
         diceRef.child('d4').on('value', (s) => { const v = s.val(); if(v !== null && d4Val.textContent != v) { d4Val.textContent = v; animateDice(diceD4); } });
         diceRef.child('d6').on('value', (s) => { const v = s.val(); if(v !== null && d6Val.textContent != v) { d6Val.textContent = v; animateDice(diceD6); } });
         diceRef.child('d8').on('value', (s) => { const v = s.val(); if(v !== null && d8Val.textContent != v) { d8Val.textContent = v; animateDice(diceD8); } });
         
-        diceD4.onclick = () => { const r = rollDice(4); diceRef.child('d4').set(r); d4Val.textContent = r; animateDice(diceD4); };
-        diceD6.onclick = () => { const r = rollDice(6); diceRef.child('d6').set(r); d6Val.textContent = r; animateDice(diceD6); };
-        diceD8.onclick = () => { const r = rollDice(8); diceRef.child('d8').set(r); d8Val.textContent = r; animateDice(diceD8); };
+        const newDiceD4 = diceD4.cloneNode(true);
+        const newDiceD6 = diceD6.cloneNode(true);
+        const newDiceD8 = diceD8.cloneNode(true);
+        diceD4.parentNode.replaceChild(newDiceD4, diceD4);
+        diceD6.parentNode.replaceChild(newDiceD6, diceD6);
+        diceD8.parentNode.replaceChild(newDiceD8, diceD8);
+        
+        newDiceD4.onclick = () => { const r = rollDice(4); diceRef.child('d4').set(r); d4Val.textContent = r; animateDice(newDiceD4); };
+        newDiceD6.onclick = () => { const r = rollDice(6); diceRef.child('d6').set(r); d6Val.textContent = r; animateDice(newDiceD6); };
+        newDiceD8.onclick = () => { const r = rollDice(8); diceRef.child('d8').set(r); d8Val.textContent = r; animateDice(newDiceD8); };
         
         // ====== CONFIGURATION DES CARTES ======
         function formatCardNumber(num) { return num.toString().padStart(2, '0'); }
@@ -621,13 +575,19 @@
         let extraBossCount = 2;
         function updateBossDisplay() { document.getElementById('bossCountDisplay').textContent = extraBossCount; }
         function generateDescente3WithBosses() { const d1 = [...lastDescente1Cards.monstres, ...lastDescente1Cards.evenements]; const d2 = [...lastDescente2Cards.monstres, ...lastDescente2Cards.evenements]; const bosses = getRandomElements(ALL_BOSS, extraBossCount); return shuffleArray([...d1, ...d2, ...bosses]); }
-        document.getElementById('addBossBtn').onclick = () => { if (extraBossCount < 3) { extraBossCount++; updateBossDisplay(); alert(`Descente 3 aura ${extraBossCount} boss !`); } else alert("Max 3 bosses !"); };
+        
+        const addBossBtn = document.getElementById('addBossBtn');
+        const newAddBossBtn = addBossBtn.cloneNode(true);
+        addBossBtn.parentNode.replaceChild(newAddBossBtn, addBossBtn);
+        newAddBossBtn.onclick = () => { if (extraBossCount < 3) { extraBossCount++; updateBossDisplay(); alert(`Descente 3 aura ${extraBossCount} boss !`); } else alert("Max 3 bosses !"); };
         
         // ====== SLIDER DONJON ======
         const donjonHpSlider = document.getElementById('donjonHpSlider');
         const donjonHpValue = document.getElementById('donjonHpValue');
-        donjonHpSlider.oninput = (e) => { donjonHpValue.textContent = e.target.value; database.ref('/donjonHp').set(parseInt(e.target.value)); };
-        database.ref('/donjonHp').on('value', (s) => { const v = s.val(); if(v !== null && donjonHpSlider.value != v) { donjonHpSlider.value = v; donjonHpValue.textContent = v; } });
+        
+        donjonHpSlider.oninput = (e) => { donjonHpValue.textContent = e.target.value; donjonHpRef.set(parseInt(e.target.value)); };
+        donjonHpRef.off();
+        donjonHpRef.on('value', (s) => { const v = s.val(); if(v !== null && donjonHpSlider.value != v) { donjonHpSlider.value = v; donjonHpValue.textContent = v; } });
         
         // ====== ZOOM ======
         const hoverZoomDiv = document.getElementById('hoverZoomCard');
@@ -637,8 +597,12 @@
         
         // ====== MODALE RÈGLES ======
         const modal = document.getElementById('rulesModal');
-        document.getElementById('rulesBtn').onclick = () => modal.style.display = 'block';
-        document.getElementById('closeModalBtn').onclick = () => modal.style.display = 'none';
+        const rulesBtn = document.getElementById('rulesBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const newRulesBtn = rulesBtn.cloneNode(true);
+        rulesBtn.parentNode.replaceChild(newRulesBtn, rulesBtn);
+        newRulesBtn.onclick = () => modal.style.display = 'block';
+        closeModalBtn.onclick = () => modal.style.display = 'none';
         window.onclick = (e) => { if(e.target == modal) modal.style.display = 'none'; };
         
         // ====== EMOJIS INVENTAIRES ======
@@ -725,6 +689,7 @@
                 roleCircle.textContent = '🛡️';
                 const circleIndex = inv - 1;
                 
+                rolesRef.child(`inv${inv}`).off();
                 rolesRef.child(`inv${inv}`).on('value', (snap) => {
                     const savedState = snap.val();
                     if(savedState !== null && savedState !== undefined) {
@@ -763,8 +728,12 @@
                 const s2w = document.createElement('div'); s2w.className = 'slider-wrapper'; s2w.innerHTML = '<label>💀 PV</label><input type="range" min="0" max="50" value="0"><span>0</span>';
                 const s2 = s2w.querySelector('input'), v2 = s2w.querySelector('span');
                 s2.oninput = (e) => { v2.textContent = e.target.value; slidersRef.child(`inv${inv}_s2`).set(parseInt(e.target.value)); };
+                
+                slidersRef.child(`inv${inv}_s1`).off();
                 slidersRef.child(`inv${inv}_s1`).on('value', (snap) => { const val = snap.val(); if(val !== null && s1.value != val) { s1.value = val; v1.textContent = val; } });
+                slidersRef.child(`inv${inv}_s2`).off();
                 slidersRef.child(`inv${inv}_s2`).on('value', (snap) => { const val = snap.val(); if(val !== null && s2.value != val) { s2.value = val; v2.textContent = val; } });
+                
                 slidersDiv.appendChild(s1w); slidersDiv.appendChild(s2w);
                 
                 const clearBtn = document.createElement('button'); clearBtn.className = 'clear-inv'; clearBtn.innerText = `🗑️ Vider inventaire ${inv}`;
@@ -777,10 +746,13 @@
         
         // ====== CORBEILLE ======
         const trashZone = document.getElementById('trashZone');
-        trashZone.ondragover = (e) => { e.preventDefault(); trashZone.classList.add('drag-over'); };
-        trashZone.ondragleave = () => { trashZone.classList.remove('drag-over'); };
-        trashZone.ondrop = (e) => {
-            e.preventDefault(); trashZone.classList.remove('drag-over');
+        const newTrashZone = trashZone.cloneNode(true);
+        trashZone.parentNode.replaceChild(newTrashZone, trashZone);
+        
+        newTrashZone.ondragover = (e) => { e.preventDefault(); newTrashZone.classList.add('drag-over'); };
+        newTrashZone.ondragleave = () => { newTrashZone.classList.remove('drag-over'); };
+        newTrashZone.ondrop = (e) => {
+            e.preventDefault(); newTrashZone.classList.remove('drag-over');
             try {
                 const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                 if(data.type === 'move') { const source = allSlots.find(s => s.invNum === data.fromInv && s.slotNum === data.fromSlot); if(source && source.currentCard) source.clear(); }
@@ -915,6 +887,7 @@
             }
             
             init() {
+                this.firebaseRef.child('deck').off();
                 this.firebaseRef.child('deck').on('value', (snap) => {
                     const data = snap.val();
                     if(data && Array.isArray(data)) {
@@ -929,12 +902,14 @@
                 });
                 
                 if(this.isDonjon) {
+                    this.firebaseRef.child('isFinished').off();
                     this.firebaseRef.child('isFinished').on('value', (snap) => {
                         const finished = snap.val() === true;
                         this.updateFinishedState(finished);
                     });
                 }
                 
+                this.firebaseRef.child('currentCard').off();
                 this.firebaseRef.child('currentCard').on('value', (snap) => {
                     const cardData = snap.val();
                     if(cardData && cardData.image) {
@@ -946,8 +921,15 @@
                     }
                 });
                 
+                const newDrawBtn = this.ui.drawBtn.cloneNode(true);
+                this.ui.drawBtn.parentNode.replaceChild(newDrawBtn, this.ui.drawBtn);
+                this.ui.drawBtn = newDrawBtn;
                 this.ui.drawBtn.onclick = () => this.drawCard();
+                
                 if(this.ui.resetBtn && this.isButins) {
+                    const newResetBtn = this.ui.resetBtn.cloneNode(true);
+                    this.ui.resetBtn.parentNode.replaceChild(newResetBtn, this.ui.resetBtn);
+                    this.ui.resetBtn = newResetBtn;
                     this.ui.resetBtn.onclick = () => { if(confirm("Remettre toutes les cartes Butins ?")) this.resetDeck(); };
                 }
             }
@@ -958,18 +940,34 @@
         donjonPioche = new Pioche('Donjon', [], donjonRef, { cardArea: 'donjonCardArea', cardsLeft: 'donjonCardsLeft', drawBtn: 'donjonDrawBtn', resetBtn: null, composition: 'donjonComposition', finishedBadge: 'donjonFinishedBadge' }, true, false);
         butinsPioche = new Pioche('Butins', BUTINS_CARDS, butinsRef, { cardArea: 'butinsCardArea', cardsLeft: 'butinsCardsLeft', drawBtn: 'butinsDrawBtn', resetBtn: 'resetButinsBtn', composition: null, finishedBadge: null }, false, true);
         
+        inventoryNamesRef.off();
         inventoryNamesRef.on('value', (snap) => {
             const data = snap.val();
             if(data) { for(let i = 1; i <= 4; i++) { if(data[`inv${i}`]) inventoryNames[i-1] = data[`inv${i}`]; } }
             buildInventories();
         });
         
-        // ====== BOUTONS ======
-        document.getElementById('descente1Btn').onclick = () => { if(confirm("Lancer DESCENTE 1 ?")) donjonPioche.setNewDeck(generateDescente1()); };
-        document.getElementById('descente2Btn').onclick = () => { if(lastDescente1Cards.monstres.length === 0) alert("Lancez d'abord DESCENTE 1 !"); else if(confirm("Lancer DESCENTE 2 ?")) donjonPioche.setNewDeck(generateDescente2()); };
-        document.getElementById('descente3Btn').onclick = () => { if(lastDescente1Cards.monstres.length === 0 || lastDescente2Cards.monstres.length === 0) alert("Lancez d'abord DESCENTE 1 et 2 !"); else if(confirm(`Lancer DESCENTE 3 ? (${extraBossCount} bosses)`)) donjonPioche.setNewDeck(generateDescente3WithBosses()); };
+        // ====== BOUTONS DESCENTE ======
+        const desc1Btn = document.getElementById('descente1Btn');
+        const desc2Btn = document.getElementById('descente2Btn');
+        const desc3Btn = document.getElementById('descente3Btn');
+        const resetAllBtn = document.getElementById('resetAllBtn');
         
-        document.getElementById('resetAllBtn').onclick = () => {
+        const newDesc1Btn = desc1Btn.cloneNode(true);
+        const newDesc2Btn = desc2Btn.cloneNode(true);
+        const newDesc3Btn = desc3Btn.cloneNode(true);
+        const newResetAllBtn = resetAllBtn.cloneNode(true);
+        
+        desc1Btn.parentNode.replaceChild(newDesc1Btn, desc1Btn);
+        desc2Btn.parentNode.replaceChild(newDesc2Btn, desc2Btn);
+        desc3Btn.parentNode.replaceChild(newDesc3Btn, desc3Btn);
+        resetAllBtn.parentNode.replaceChild(newResetAllBtn, resetAllBtn);
+        
+        newDesc1Btn.onclick = () => { if(confirm("Lancer DESCENTE 1 ?")) donjonPioche.setNewDeck(generateDescente1()); };
+        newDesc2Btn.onclick = () => { if(lastDescente1Cards.monstres.length === 0) alert("Lancez d'abord DESCENTE 1 !"); else if(confirm("Lancer DESCENTE 2 ?")) donjonPioche.setNewDeck(generateDescente2()); };
+        newDesc3Btn.onclick = () => { if(lastDescente1Cards.monstres.length === 0 || lastDescente2Cards.monstres.length === 0) alert("Lancez d'abord DESCENTE 1 et 2 !"); else if(confirm(`Lancer DESCENTE 3 ? (${extraBossCount} bosses)`)) donjonPioche.setNewDeck(generateDescente3WithBosses()); };
+        
+        newResetAllBtn.onclick = () => {
             if(confirm("⚠️ RÉINITIALISATION TOTALE ?")) {
                 butinsPioche.resetDeck(); 
                 donjonPioche.setNewDeck([]); 
@@ -979,7 +977,7 @@
                 extraBossCount = 2; 
                 updateBossDisplay();
                 for(let i = 1; i <= 4; i++) { slidersRef.child(`inv${i}_s1`).set(0); slidersRef.child(`inv${i}_s2`).set(0); }
-                database.ref('/donjonHp').set(50);
+                donjonHpRef.set(50);
                 for(let i = 1; i <= 4; i++) { inventoryNamesRef.child(`inv${i}`).set(`Joueur ${i}`); }
                 for(let i = 1; i <= 4; i++) { rolesRef.child(`inv${i}`).set(0); }
                 roleStates = [0, 0, 0, 0];
@@ -988,19 +986,21 @@
         };
         
         // ====== PRÉSENCE ======
-        const presenceRef = database.ref('.info/connected');
+        const presenceRef = roomRef.child('/presence');
         let myPresenceKey = null;
-        const connectedPlayersRef = database.ref('/presence');
-        presenceRef.on('value', (snap) => { 
+        const connectedRef = rootDatabase.ref('.info/connected');
+        connectedRef.off();
+        connectedRef.on('value', (snap) => { 
             if(snap.val() === true && !myPresenceKey) { 
-                myPresenceKey = connectedPlayersRef.push().key; 
-                connectedPlayersRef.child(myPresenceKey).set({ online: true }); 
-                connectedPlayersRef.child(myPresenceKey).onDisconnect().remove(); 
+                myPresenceKey = presenceRef.push().key; 
+                presenceRef.child(myPresenceKey).set({ online: true, timestamp: Date.now() }); 
+                presenceRef.child(myPresenceKey).onDisconnect().remove(); 
             } 
         });
-        connectedPlayersRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
+        presenceRef.off();
+        presenceRef.on('value', (snap) => document.getElementById('playerCountDisplay').innerHTML = `👥 Connectés: ${snap.numChildren()}`);
         
-        console.log(`✅ Salon "${roomName}" initialisé avec succès !`);
+        console.log(`✅ Salon "${roomName}" initialisé avec succès (chemin: /rooms/${roomName}/) !`);
     }
 </script>
 </body>
